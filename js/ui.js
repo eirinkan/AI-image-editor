@@ -585,56 +585,41 @@ const UI = (() => {
     return card;
   }
 
+  // JSON内のオブジェクト・テキスト・人物を統一リストに展開
+  function flattenElements(json) {
+    const list = [];
+    let markerIndex = 1;
+    if (json.objects) {
+      json.objects.forEach((obj, i) => {
+        list.push({ item: obj, type: 'object', id: obj.id || `obj_${i}`, markerIndex: markerIndex++ });
+      });
+    }
+    if (json.text_elements) {
+      json.text_elements.forEach((te, i) => {
+        list.push({ item: te, type: 'text', id: te.id || `text_${i}`, markerIndex: markerIndex++ });
+      });
+    }
+    if (json.people) {
+      json.people.forEach((p, i) => {
+        list.push({ item: p, type: 'person', id: p.id || `person_${i}`, markerIndex: markerIndex++ });
+      });
+    }
+    return list;
+  }
+
   // 画像上にマーカーを描画する
   function renderMarkers(json) {
     const overlay = document.getElementById('markerOverlay');
     if (!overlay) return;
     overlay.innerHTML = '';
 
-    let markerIndex = 1;
-    const allElements = [];
-
-    // objects
-    if (json.objects) {
-      json.objects.forEach((obj, i) => {
-        if (obj.position_coords) {
-          allElements.push({
-            index: markerIndex,
-            coords: obj.position_coords,
-            id: obj.id || `obj_${i}`,
-          });
-        }
-        markerIndex++;
-      });
-    }
-
-    // text_elements
-    if (json.text_elements) {
-      json.text_elements.forEach((te, i) => {
-        if (te.position_coords) {
-          allElements.push({
-            index: markerIndex,
-            coords: te.position_coords,
-            id: te.id || `text_${i}`,
-          });
-        }
-        markerIndex++;
-      });
-    }
-
-    // people
-    if (json.people) {
-      json.people.forEach((p, i) => {
-        if (p.position_coords) {
-          allElements.push({
-            index: markerIndex,
-            coords: p.position_coords,
-            id: p.id || `person_${i}`,
-          });
-        }
-        markerIndex++;
-      });
-    }
+    const allElements = flattenElements(json)
+      .filter(({ item }) => item.position_coords)
+      .map(({ item, id, markerIndex }) => ({
+        index: markerIndex,
+        coords: item.position_coords,
+        id,
+      }));
 
     // マーカーDOM生成
     allElements.forEach(({ index, coords, id }) => {
@@ -694,6 +679,9 @@ const UI = (() => {
         card.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
       }
     }
+
+    // 選択数カウンター更新
+    updateSelectionCounter();
 
     // 編集パネルの表示更新
     if (selectedElements.length > 0) {
@@ -779,9 +767,25 @@ const UI = (() => {
     });
   }
 
+  // 選択数カウンターを更新
+  function updateSelectionCounter() {
+    const header = elements.elementsSection.querySelector('h2');
+    if (!header) return;
+    // 既存のバッジを削除
+    const existing = header.querySelector('.selection-badge');
+    if (existing) existing.remove();
+    if (selectedElements.length > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'selection-badge ml-2 px-2 py-0.5 text-xs font-bold bg-blue-500 text-white rounded-full';
+      badge.textContent = `${selectedElements.length}件選択中`;
+      header.appendChild(badge);
+    }
+  }
+
   // 全選択をクリア（画像削除時等）
   function clearSelectedElements() {
     selectedElements = [];
+    updateSelectionCounter();
   }
 
   function getPlaceholder(type) {
@@ -801,6 +805,29 @@ const UI = (() => {
     elements.customElementInput.value = '';
     elements.customElementModal.classList.remove('hidden');
     setTimeout(() => elements.customElementInput.focus(), 50);
+
+    // フォーカストラップ：モーダル内でTabキーが循環する
+    const modal = elements.customElementModal;
+    const focusableEls = modal.querySelectorAll('input, button, [tabindex]:not([tabindex="-1"])');
+    const firstEl = focusableEls[0];
+    const lastEl = focusableEls[focusableEls.length - 1];
+
+    function trapFocus(e) {
+      if (e.key !== 'Tab') return;
+      if (e.shiftKey) {
+        if (document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl.focus();
+        }
+      } else {
+        if (document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl.focus();
+        }
+      }
+    }
+    modal._trapFocus = trapFocus;
+    modal.addEventListener('keydown', trapFocus);
   }
 
   function confirmCustomElement() {
@@ -817,6 +844,10 @@ const UI = (() => {
   }
 
   function closeCustomElementModal() {
+    // フォーカストラップ解除
+    if (elements.customElementModal._trapFocus) {
+      elements.customElementModal.removeEventListener('keydown', elements.customElementModal._trapFocus);
+    }
     elements.customElementModal.classList.add('hidden');
   }
 
@@ -842,6 +873,14 @@ const UI = (() => {
     requestAnimationFrame(() => {
       elements.resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
+
+    // Before画像がある場合、スライダーの存在をアニメーションで示唆
+    if (hasBeforeImage) {
+      setTimeout(() => {
+        activateCompare();
+        setTimeout(() => deactivateCompare(), 1000);
+      }, 500);
+    }
   }
 
   // --- Before/After比較（ホバー式スライダー） ---
@@ -1064,13 +1103,28 @@ const UI = (() => {
   // --- エラー / 成功メッセージ ---
   function showError(message) {
     clearTimeout(errorTimer);
-    elements.errorMessage.textContent = message;
     elements.errorToast.classList.remove('hidden', 'bg-green-100', 'border-green-400');
     elements.errorToast.classList.add('bg-red-100', 'border-red-400');
     elements.errorMessage.classList.remove('text-green-800');
     elements.errorMessage.classList.add('text-red-800');
     elements.errorClose.classList.remove('text-green-500');
     elements.errorClose.classList.add('text-red-500');
+
+    // APIキー関連エラー時はリカバリアクションを追加
+    if (message.includes('APIキー')) {
+      elements.errorMessage.innerHTML = escapeHtml(message) +
+        ' <a href="#" class="underline font-medium" id="errorRecoveryLink">APIキーを設定する</a>';
+      const link = document.getElementById('errorRecoveryLink');
+      if (link) {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          hideError();
+          elements.apiKeyInput.focus();
+        });
+      }
+    } else {
+      elements.errorMessage.textContent = message;
+    }
     errorTimer = setTimeout(hideError, 8000);
   }
 

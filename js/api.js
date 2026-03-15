@@ -367,14 +367,16 @@ Generate the edited image.`;
             continue;
           }
 
+          // ユーザー向けは汎用メッセージ、詳細はconsoleのみ
+          console.error('API Error:', response.status, errorMessage);
           if (response.status === 401 || response.status === 403) {
-            throw new Error(`APIキーが無効です: ${errorMessage}`);
+            throw new Error('APIキーが無効です。正しいキーを入力してください。');
           } else if (response.status === 429) {
-            throw new Error(`レート制限に達しました。しばらく待ってから再試行してください: ${errorMessage}`);
+            throw new Error('レート制限に達しました。しばらく待ってから再試行してください。');
           } else if (response.status === 400) {
-            throw new Error(`リクエストエラー: ${errorMessage}`);
+            throw new Error('リクエストエラーが発生しました。入力内容を確認してください。');
           } else {
-            throw new Error(`APIエラー (${response.status}): ${errorMessage}`);
+            throw new Error(`APIエラーが発生しました (${response.status})。しばらく待ってから再試行してください。`);
           }
         }
 

@@ -55,18 +55,18 @@
           <div class="upload-prompt">
             <div class="text-4xl mb-3">📸</div>
             <p class="text-gray-600 font-medium">クリックまたはドラッグ&ドロップで画像をアップロード</p>
-            <p class="text-sm text-gray-400 mt-1">JPG, PNG, WEBP対応</p>
+            <p class="text-sm text-gray-500 mt-1">JPG, PNG, WEBP対応</p>
           </div>
           <div id="imagePreview" class="hidden relative">
             <div class="flex gap-4 justify-center items-start">
               <!-- 元画像（マーカーなし） -->
               <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
-                <p class="text-xs text-gray-400">元画像</p>
+                <p class="text-xs text-gray-500">元画像</p>
                 <img id="previewImageClean" class="max-h-80 rounded-lg shadow-md block w-full object-contain" alt="元画像">
               </div>
               <!-- マーカー付き画像 -->
               <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
-                <p class="text-xs text-gray-400">要素マーカー</p>
+                <p class="text-xs text-gray-500">要素マーカー</p>
                 <div id="imageWrapper" class="relative inline-block w-full">
                   <img id="previewImage" class="max-h-80 rounded-lg shadow-md block w-full object-contain" alt="マーカー付き">
                   <div id="markerOverlay" class="absolute inset-0 pointer-events-none rounded-lg overflow-hidden"></div>
@@ -347,11 +347,11 @@
   </div>
 
   <!-- スクリプト -->
-  <script src="js/api.js?v=7"></script>
-  <script src="js/history.js?v=7"></script>
+  <script src="js/api.js?v=8"></script>
+  <script src="js/history.js?v=8"></script>
   <script src="js/camera-editor.js?v=1"></script>
-  <script src="js/ui.js?v=7"></script>
-  <script src="js/generate.js?v=7"></script>
-  <script src="js/app.js?v=7"></script>
+  <script src="js/ui.js?v=8"></script>
+  <script src="js/generate.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>

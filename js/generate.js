@@ -118,6 +118,14 @@ const TextToImage = (() => {
       subTabUpload.classList.remove('active');
       subTabUpload.classList.add('text-gray-500');
       subTabGenerate.classList.remove('text-gray-500');
+
+      // 生成タブに切り替えた際、フローの状態をリセット
+      const ideaInputSection = document.getElementById('ideaInputSection');
+      const promptReviewSection = document.getElementById('promptReviewSection');
+      const generateResultPreview = document.getElementById('generateResultPreview');
+      if (ideaInputSection) ideaInputSection.classList.remove('hidden');
+      if (promptReviewSection) promptReviewSection.classList.add('hidden');
+      if (generateResultPreview) generateResultPreview.classList.add('hidden');
     }
   }
 

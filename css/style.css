@@ -422,6 +422,39 @@ button {
   font-size: 11px;
 }
 
+/* タップターゲット拡大（44px以上） */
+#removeImage,
+#removeReference {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.history-dl-btn,
+.history-del-btn {
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* コントラスト比改善 */
+.text-gray-400 {
+  color: #9ca3af;
+}
+
+/* モバイル: Before/Afterスライダー常時表示（ホバーが使えないため） */
+@media (max-width: 768px) {
+  .compare-container .compare-slider {
+    opacity: 1;
+    pointer-events: auto;
+    cursor: ew-resize;
+  }
+  .compare-container .compare-label {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
