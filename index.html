@@ -95,6 +95,21 @@
     <section id="editSection" class="hidden">
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 3: 変更内容を指示（複数選択可）</h2>
       <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+        <!-- プリセットテンプレート -->
+        <div id="presetTemplates" class="hidden">
+          <p class="text-xs text-gray-500 mb-2">プリセットテンプレート</p>
+          <div class="flex flex-wrap gap-2" id="presetList">
+            <button class="preset-btn px-3 py-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 rounded-full hover:bg-orange-100 transition-colors" data-preset="golden_hour">🌅 ゴールデンアワー</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors" data-preset="winter">❄️ 冬景色</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-purple-50 text-purple-700 border border-purple-200 rounded-full hover:bg-purple-100 transition-colors" data-preset="anime">🎨 アニメ風</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-gray-50 text-gray-700 border border-gray-200 rounded-full hover:bg-gray-100 transition-colors" data-preset="night">🌙 夜景</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-green-50 text-green-700 border border-green-200 rounded-full hover:bg-green-100 transition-colors" data-preset="spring">🌸 春の雰囲気</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full hover:bg-yellow-100 transition-colors" data-preset="vintage">📷 ヴィンテージ</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-full hover:bg-cyan-100 transition-colors" data-preset="minimalist">✨ ミニマリスト</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-red-50 text-red-700 border border-red-200 rounded-full hover:bg-red-100 transition-colors" data-preset="dramatic">🎭 ドラマチック</button>
+          </div>
+        </div>
+
         <!-- 選択中の要素ごとの指示入力欄 -->
         <div id="editInstructionsList" class="space-y-3">
           <!-- 動的に挿入される -->
@@ -127,13 +142,38 @@
     <section id="resultSection" class="hidden">
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">生成結果</h2>
-        <button id="downloadBtn" class="px-4 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          ダウンロード
-        </button>
+        <div class="flex items-center gap-2">
+          <button id="compareToggle" class="hidden px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+            Before/After
+          </button>
+          <button id="downloadBtn" class="px-4 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            ダウンロード
+          </button>
+        </div>
       </div>
       <div class="bg-white rounded-2xl border border-gray-200 p-5">
-        <img id="resultImage" class="w-full rounded-lg" alt="生成結果">
+        <!-- 通常表示 -->
+        <div id="resultNormal">
+          <img id="resultImage" class="w-full rounded-lg" alt="生成結果">
+        </div>
+        <!-- Before/After比較スライダー -->
+        <div id="resultCompare" class="hidden">
+          <div id="compareContainer" class="compare-container relative rounded-lg overflow-hidden select-none">
+            <img id="compareAfter" class="compare-after w-full block rounded-lg" alt="After">
+            <div id="compareBefore" class="compare-before absolute inset-0 overflow-hidden">
+              <img id="compareBeforeImg" class="compare-before-img block rounded-lg" alt="Before">
+            </div>
+            <div id="compareSlider" class="compare-slider absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize z-10" style="left: 50%;">
+              <div class="compare-handle absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l-4 5 4 5m8-10l4 5-4 5"></path></svg>
+              </div>
+            </div>
+            <span class="compare-label compare-label-before absolute top-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded">Before</span>
+            <span class="compare-label compare-label-after absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded">After</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -157,11 +197,36 @@
 
   </main>
 
-  <!-- ローディングオーバーレイ -->
+  <!-- ローディングオーバーレイ（ステップ別プログレス + キャンセル） -->
   <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl">
+    <div class="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl min-w-[280px]">
       <div class="spinner"></div>
+      <div id="loadingSteps" class="w-full space-y-2 hidden">
+        <div class="loading-step flex items-center gap-2" data-step="1">
+          <span class="step-icon w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">1</span>
+          <span class="step-label text-sm text-gray-500">JSON更新中...</span>
+        </div>
+        <div class="loading-step flex items-center gap-2" data-step="2">
+          <span class="step-icon w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">2</span>
+          <span class="step-label text-sm text-gray-500">画像生成中...</span>
+        </div>
+      </div>
       <p id="loadingText" class="text-gray-600 font-medium">処理中...</p>
+      <button id="cancelBtn" class="hidden px-4 py-1.5 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-red-100 hover:text-red-600 transition-colors">キャンセル</button>
+    </div>
+  </div>
+
+  <!-- カスタム要素追加モーダル -->
+  <div id="customElementModal" class="hidden fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-sm mx-4">
+      <h3 class="text-lg font-bold text-gray-800 mb-3">カスタム要素を追加</h3>
+      <input type="text" id="customElementInput"
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent mb-4"
+        placeholder="要素の名前（例: 窓の外の景色、床のタイル）">
+      <div class="flex justify-end gap-2">
+        <button id="customElementCancel" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">キャンセル</button>
+        <button id="customElementConfirm" class="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">追加</button>
+      </div>
     </div>
   </div>
 
@@ -172,9 +237,9 @@
   </div>
 
   <!-- スクリプト -->
-  <script src="js/api.js"></script>
-  <script src="js/history.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/api.js?v=2"></script>
+  <script src="js/history.js?v=2"></script>
+  <script src="js/ui.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
 </body>
 </html>

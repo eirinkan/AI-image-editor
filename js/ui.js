@@ -7,6 +7,10 @@ const UI = (() => {
   // 複数選択中の要素リスト
   let selectedElements = []; // [{ id, type, name, data }]
 
+  // Before/After比較状態
+  let compareMode = false;
+  let beforeImageData = null; // 比較用の元画像
+
   // 初期化
   function init() {
     cacheElements();
@@ -64,6 +68,28 @@ const UI = (() => {
       // ローディング
       loadingOverlay: document.getElementById('loadingOverlay'),
       loadingText: document.getElementById('loadingText'),
+      loadingSteps: document.getElementById('loadingSteps'),
+      cancelBtn: document.getElementById('cancelBtn'),
+
+      // Before/After比較
+      compareToggle: document.getElementById('compareToggle'),
+      resultNormal: document.getElementById('resultNormal'),
+      resultCompare: document.getElementById('resultCompare'),
+      compareContainer: document.getElementById('compareContainer'),
+      compareAfter: document.getElementById('compareAfter'),
+      compareBefore: document.getElementById('compareBefore'),
+      compareBeforeImg: document.getElementById('compareBeforeImg'),
+      compareSlider: document.getElementById('compareSlider'),
+
+      // プリセット
+      presetTemplates: document.getElementById('presetTemplates'),
+      presetList: document.getElementById('presetList'),
+
+      // カスタム要素モーダル
+      customElementModal: document.getElementById('customElementModal'),
+      customElementInput: document.getElementById('customElementInput'),
+      customElementConfirm: document.getElementById('customElementConfirm'),
+      customElementCancel: document.getElementById('customElementCancel'),
 
       // エラー
       errorToast: document.getElementById('errorToast'),
@@ -84,7 +110,11 @@ const UI = (() => {
     elements.uploadArea.addEventListener('dragover', handleDragOver);
     elements.uploadArea.addEventListener('dragleave', handleDragLeave);
     elements.uploadArea.addEventListener('drop', handleDrop);
-    elements.uploadArea.addEventListener('click', () => elements.fileInput.click());
+    elements.uploadArea.addEventListener('click', () => {
+      // 画像プレビュー表示中はファイル選択ダイアログを開かない
+      if (!elements.imagePreview.classList.contains('hidden')) return;
+      elements.fileInput.click();
+    });
     elements.fileInput.addEventListener('change', handleFileSelect);
     elements.removeImage.addEventListener('click', removeUploadedImage);
 
@@ -119,6 +149,27 @@ const UI = (() => {
 
     // エラー閉じる
     elements.errorClose.addEventListener('click', hideError);
+
+    // Before/After比較トグル
+    elements.compareToggle.addEventListener('click', toggleCompareMode);
+
+    // 比較スライダーのドラッグ操作
+    setupCompareSlider();
+
+    // カスタム要素モーダル
+    elements.customElementConfirm.addEventListener('click', confirmCustomElement);
+    elements.customElementCancel.addEventListener('click', closeCustomElementModal);
+    elements.customElementInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') confirmCustomElement();
+      if (e.key === 'Escape') closeCustomElementModal();
+    });
+    // モーダル背景クリックで閉じる
+    elements.customElementModal.addEventListener('click', (e) => {
+      if (e.target === elements.customElementModal) closeCustomElementModal();
+    });
+
+    // プリセットテンプレート
+    elements.presetList.addEventListener('click', handlePresetClick);
   }
 
   // --- APIキー ---
@@ -300,6 +351,14 @@ const UI = (() => {
     return elements.customInstruction.value.trim();
   }
 
+  // カテゴリヘッダーを生成
+  function createCategoryHeader(icon, label) {
+    const header = document.createElement('div');
+    header.className = 'category-header';
+    header.innerHTML = `<span>${icon}</span> ${escapeHtml(label)}`;
+    return header;
+  }
+
   // --- 要素カード表示 ---
   function renderElements(json) {
     elements.elementsSection.classList.remove('hidden');
@@ -310,6 +369,7 @@ const UI = (() => {
 
     // オブジェクト
     if (json.objects && json.objects.length > 0) {
+      elements.elementsList.appendChild(createCategoryHeader('🪑', `オブジェクト (${json.objects.length})`));
       json.objects.forEach((obj, i) => {
         const card = createElementCard({
           id: obj.id || `obj_${i}`,
@@ -327,6 +387,7 @@ const UI = (() => {
 
     // テキスト要素
     if (json.text_elements && json.text_elements.length > 0) {
+      elements.elementsList.appendChild(createCategoryHeader('📝', `テキスト (${json.text_elements.length})`));
       json.text_elements.forEach((te, i) => {
         const card = createElementCard({
           id: te.id || `text_${i}`,
@@ -344,6 +405,7 @@ const UI = (() => {
 
     // 人物
     if (json.people && json.people.length > 0) {
+      elements.elementsList.appendChild(createCategoryHeader('👤', `人物 (${json.people.length})`));
       json.people.forEach((p, i) => {
         const card = createElementCard({
           id: p.id || `person_${i}`,
@@ -357,6 +419,12 @@ const UI = (() => {
         elements.elementsList.appendChild(card);
         markerIndex++;
       });
+    }
+
+    // 環境カテゴリ（雰囲気・カメラ・シーン）
+    const hasEnv = json.atmosphere || json.camera || json.scene;
+    if (hasEnv) {
+      elements.elementsList.appendChild(createCategoryHeader('🌐', '環境・設定'));
     }
 
     // 雰囲気・照明（常に表示・マーカーなし）
@@ -402,6 +470,9 @@ const UI = (() => {
 
     // 画像上にマーカーを描画
     renderMarkers(json);
+
+    // アクションボタンカテゴリ
+    elements.elementsList.appendChild(createCategoryHeader('⚡', 'アクション'));
 
     // カスタム要素追加ボタン
     const addBtn = document.createElement('button');
@@ -574,9 +645,17 @@ const UI = (() => {
     // 編集パネルの表示更新
     if (selectedElements.length > 0) {
       elements.editSection.classList.remove('hidden');
+      // 「画像全体」が選択されている場合のみプリセットを表示
+      const hasGlobal = selectedElements.some(el => el.type === 'global');
+      if (hasGlobal) {
+        elements.presetTemplates.classList.remove('hidden');
+      } else {
+        elements.presetTemplates.classList.add('hidden');
+      }
       renderEditInstructions();
     } else {
       elements.editSection.classList.add('hidden');
+      elements.presetTemplates.classList.add('hidden');
     }
 
     // Appに通知
@@ -654,7 +733,13 @@ const UI = (() => {
   }
 
   function showCustomElementDialog() {
-    const name = prompt('追加する要素の名前を入力してください（例: 窓の外の景色、床のタイル）');
+    elements.customElementInput.value = '';
+    elements.customElementModal.classList.remove('hidden');
+    setTimeout(() => elements.customElementInput.focus(), 50);
+  }
+
+  function confirmCustomElement() {
+    const name = elements.customElementInput.value.trim();
     if (name) {
       selectElement({
         id: 'custom_' + Date.now(),
@@ -663,13 +748,114 @@ const UI = (() => {
         data: { name, custom: true },
       });
     }
+    closeCustomElementModal();
+  }
+
+  function closeCustomElementModal() {
+    elements.customElementModal.classList.add('hidden');
   }
 
   // --- 結果表示 ---
-  function showResult(imageData) {
+  function showResult(imageData, originalImageData = null) {
     elements.resultSection.classList.remove('hidden');
     elements.resultImage.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
-    elements.resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Before/After比較用データ設定
+    if (originalImageData) {
+      beforeImageData = originalImageData;
+      elements.compareToggle.classList.remove('hidden');
+      // After画像も設定
+      elements.compareAfter.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+      elements.compareBeforeImg.src = `data:${originalImageData.mimeType};base64,${originalImageData.base64}`;
+    }
+
+    // 比較モードをリセット
+    compareMode = false;
+    elements.resultNormal.classList.remove('hidden');
+    elements.resultCompare.classList.add('hidden');
+    elements.compareToggle.textContent = '';
+    elements.compareToggle.innerHTML = `<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>Before/After`;
+
+    // hidden解除後にスクロール（requestAnimationFrameで確実に描画後）
+    requestAnimationFrame(() => {
+      elements.resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+
+  // --- Before/After比較 ---
+  function toggleCompareMode() {
+    compareMode = !compareMode;
+    if (compareMode) {
+      elements.resultNormal.classList.add('hidden');
+      elements.resultCompare.classList.remove('hidden');
+      elements.compareToggle.innerHTML = `<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"></path></svg>生成結果のみ`;
+      // Before画像のサイズをAfter画像に合わせる
+      syncCompareImages();
+    } else {
+      elements.resultNormal.classList.remove('hidden');
+      elements.resultCompare.classList.add('hidden');
+      elements.compareToggle.innerHTML = `<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>Before/After`;
+    }
+  }
+
+  function syncCompareImages() {
+    // After画像の読み込み後にBefore画像の幅を合わせる
+    const afterImg = elements.compareAfter;
+    const setSize = () => {
+      elements.compareBeforeImg.style.width = afterImg.offsetWidth + 'px';
+      elements.compareBeforeImg.style.height = afterImg.offsetHeight + 'px';
+      // スライダー位置をリセット
+      updateSliderPosition(0.5);
+    };
+    if (afterImg.complete) {
+      setSize();
+    } else {
+      afterImg.onload = setSize;
+    }
+  }
+
+  function updateSliderPosition(ratio) {
+    const pct = Math.max(0, Math.min(1, ratio)) * 100;
+    elements.compareBefore.style.width = pct + '%';
+    elements.compareSlider.style.left = pct + '%';
+  }
+
+  function setupCompareSlider() {
+    let isDragging = false;
+
+    function getSliderRatio(e) {
+      const rect = elements.compareContainer.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      return (clientX - rect.left) / rect.width;
+    }
+
+    function onStart(e) {
+      isDragging = true;
+      e.preventDefault();
+      updateSliderPosition(getSliderRatio(e));
+    }
+
+    function onMove(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      updateSliderPosition(getSliderRatio(e));
+    }
+
+    function onEnd() {
+      isDragging = false;
+    }
+
+    // マウスイベント
+    elements.compareSlider.addEventListener('mousedown', onStart);
+    elements.compareContainer.addEventListener('mousedown', onStart);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onEnd);
+
+    // タッチイベント
+    elements.compareSlider.addEventListener('touchstart', onStart, { passive: false });
+    elements.compareContainer.addEventListener('touchstart', onStart, { passive: false });
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
   }
 
   // --- 履歴タイムライン ---
@@ -712,13 +898,64 @@ const UI = (() => {
   }
 
   // --- ローディング ---
-  function showLoading(text = '処理中...') {
+  function showLoading(text = '処理中...', options = {}) {
     elements.loadingOverlay.classList.remove('hidden');
     elements.loadingText.textContent = text;
+
+    // キャンセルボタン表示
+    if (options.showCancel) {
+      elements.cancelBtn.classList.remove('hidden');
+    } else {
+      elements.cancelBtn.classList.add('hidden');
+    }
+
+    // ステップ表示をリセット
+    if (!options.showSteps) {
+      elements.loadingSteps.classList.add('hidden');
+    }
+  }
+
+  // ステップ付きローディング表示を開始
+  function showLoadingWithSteps(cancelCallback) {
+    elements.loadingOverlay.classList.remove('hidden');
+    elements.loadingSteps.classList.remove('hidden');
+    elements.cancelBtn.classList.remove('hidden');
+    elements.loadingText.textContent = '';
+
+    // ステップをリセット
+    elements.loadingSteps.querySelectorAll('.loading-step').forEach(step => {
+      step.classList.remove('active', 'done');
+    });
+
+    // キャンセルボタンのイベント（一度だけ）
+    const newCancelBtn = elements.cancelBtn.cloneNode(true);
+    elements.cancelBtn.parentNode.replaceChild(newCancelBtn, elements.cancelBtn);
+    elements.cancelBtn = newCancelBtn;
+    elements.cancelBtn.addEventListener('click', () => {
+      if (cancelCallback) cancelCallback();
+    });
+  }
+
+  // ステップを更新
+  function updateLoadingStep(stepNumber) {
+    elements.loadingSteps.querySelectorAll('.loading-step').forEach(step => {
+      const num = parseInt(step.dataset.step);
+      if (num < stepNumber) {
+        step.classList.remove('active');
+        step.classList.add('done');
+      } else if (num === stepNumber) {
+        step.classList.remove('done');
+        step.classList.add('active');
+      } else {
+        step.classList.remove('active', 'done');
+      }
+    });
   }
 
   function hideLoading() {
     elements.loadingOverlay.classList.add('hidden');
+    elements.loadingSteps.classList.add('hidden');
+    elements.cancelBtn.classList.add('hidden');
   }
 
   // --- エラー / 成功メッセージ ---
@@ -757,6 +994,36 @@ const UI = (() => {
 
   function updateJsonDisplay(json) {
     elements.jsonContent.textContent = JSON.stringify(json, null, 2);
+  }
+
+  // --- プリセットテンプレート ---
+  const PRESETS = {
+    golden_hour: '全体的にゴールデンアワーの暖かい照明に変更。夕日の柔らかいオレンジ色の光が差し込む雰囲気にする',
+    winter: '季節を冬に変更。雪が積もり、冷たい空気感のある冬景色にする',
+    anime: '全体をアニメ・イラスト風のスタイルに変換する。鮮やかな色彩とフラットな質感で描く',
+    night: '時間帯を夜に変更。街灯やイルミネーションの光が美しい夜景にする',
+    spring: '季節を春に変更。桜や花が咲き、明るく柔らかい春の雰囲気にする',
+    vintage: 'レトロ・ヴィンテージ風の色調に変更。セピアトーンとフィルム粒子感を加える',
+    minimalist: 'ミニマリストデザインに変更。余計な要素を減らし、シンプルで洗練された印象にする',
+    dramatic: 'ドラマチックな照明に変更。強いコントラストと印象的な影を加える',
+  };
+
+  function handlePresetClick(e) {
+    const btn = e.target.closest('[data-preset]');
+    if (!btn) return;
+    const presetKey = btn.dataset.preset;
+    const instruction = PRESETS[presetKey];
+    if (!instruction) return;
+
+    // 「画像全体」のtextareaに指示をセット
+    const globalRow = elements.editInstructionsList.querySelector('[data-instruction-for="global"]');
+    if (globalRow) {
+      const textarea = globalRow.querySelector('textarea');
+      if (textarea) {
+        textarea.value = instruction;
+        textarea.focus();
+      }
+    }
   }
 
   // --- ユーティリティ ---
@@ -800,6 +1067,8 @@ const UI = (() => {
     renderHistory,
     showResult,
     showLoading,
+    showLoadingWithSteps,
+    updateLoadingStep,
     hideLoading,
     showError,
     showSuccess,

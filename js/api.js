@@ -187,17 +187,65 @@ If any instruction implies adding new properties or changing the structure, do s
 Output ONLY the updated JSON, no other text.`;
   }
 
-  // 画像生成用のプロンプトを構築
-  function buildGenerationPrompt(originalJson, updatedJson) {
-    return `Modify this image based on the following JSON specification.
+  // JSON差分を計算（トークン削減用）
+  function computeJsonDiff(original, updated) {
+    const diff = {};
+    const allKeys = new Set([...Object.keys(original), ...Object.keys(updated)]);
 
-Original image description:
-${JSON.stringify(originalJson, null, 2)}
+    for (const key of allKeys) {
+      const origVal = original[key];
+      const updVal = updated[key];
+
+      if (JSON.stringify(origVal) !== JSON.stringify(updVal)) {
+        if (Array.isArray(origVal) && Array.isArray(updVal)) {
+          // 配列: 変更された要素のみ抽出
+          const changes = [];
+          const maxLen = Math.max(origVal.length, updVal.length);
+          for (let i = 0; i < maxLen; i++) {
+            if (i >= origVal.length) {
+              changes.push({ action: 'added', value: updVal[i] });
+            } else if (i >= updVal.length) {
+              changes.push({ action: 'removed', value: origVal[i] });
+            } else if (JSON.stringify(origVal[i]) !== JSON.stringify(updVal[i])) {
+              changes.push({ action: 'modified', from: origVal[i], to: updVal[i] });
+            }
+          }
+          if (changes.length > 0) diff[key] = changes;
+        } else if (typeof origVal === 'object' && origVal && typeof updVal === 'object' && updVal) {
+          diff[key] = { from: origVal, to: updVal };
+        } else {
+          diff[key] = { from: origVal, to: updVal };
+        }
+      }
+    }
+    return diff;
+  }
+
+  // 画像生成用のプロンプトを構築（差分ベース）
+  function buildGenerationPrompt(originalJson, updatedJson) {
+    const diff = computeJsonDiff(originalJson, updatedJson);
+    const hasDiff = Object.keys(diff).length > 0;
+
+    if (hasDiff) {
+      return `Modify this image based on the following changes.
+
+Changes to apply:
+${JSON.stringify(diff, null, 2)}
+
+Full updated specification for reference:
+${JSON.stringify(updatedJson, null, 2)}
+
+Apply ONLY the specified changes.
+Keep everything else identical to the original image - same composition, same perspective, same objects that weren't changed.
+Generate the edited image.`;
+    }
+
+    // 差分が取れない場合はフォールバック
+    return `Modify this image based on the following JSON specification.
 
 Updated specification (apply these changes):
 ${JSON.stringify(updatedJson, null, 2)}
 
-Apply ONLY the differences between the original and updated JSON.
 Keep everything else identical to the original image - same composition, same perspective, same objects that weren't changed.
 Generate the edited image.`;
   }
@@ -260,8 +308,8 @@ Generate the edited image.`;
     });
   }
 
-  // API呼び出しの共通処理
-  async function callAPI(model, requestBody) {
+  // API呼び出しの共通処理（signal: AbortControllerのsignal）
+  async function callAPI(model, requestBody, signal = null) {
     const apiKey = getApiKey();
     if (!apiKey) {
       throw new Error('APIキーが設定されていません。ヘッダーのAPIキー欄に入力してください。');
@@ -269,11 +317,14 @@ Generate the edited image.`;
 
     const url = `${BASE_URL}/${model}:generateContent?key=${apiKey}`;
 
-    const response = await fetch(url, {
+    const fetchOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody),
-    });
+    };
+    if (signal) fetchOptions.signal = signal;
+
+    const response = await fetch(url, fetchOptions);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -294,7 +345,7 @@ Generate the edited image.`;
   }
 
   // 画像分析（要素抽出）
-  async function analyzeImage(imageData, focusTags = ['all'], customInstruction = '') {
+  async function analyzeImage(imageData, focusTags = ['all'], customInstruction = '', signal = null) {
     const prompt = buildAnalysisPrompt(focusTags, customInstruction);
 
     const requestBody = {
@@ -311,10 +362,11 @@ Generate the edited image.`;
       }],
       generationConfig: {
         responseMimeType: 'application/json',
+        temperature: 0,
       },
     };
 
-    const result = await callAPI(TEXT_MODEL, requestBody);
+    const result = await callAPI(TEXT_MODEL, requestBody, signal);
 
     // レスポンスからJSONを抽出
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -336,7 +388,7 @@ Generate the edited image.`;
 
   // JSON更新（ユーザーの自然言語指示を反映）
   // editInstructions: [{ elementName, instruction }] または単一オブジェクト
-  async function updateJson(currentJson, editInstructions) {
+  async function updateJson(currentJson, editInstructions, signal = null) {
     const prompt = buildUpdatePrompt(currentJson, editInstructions);
 
     const requestBody = {
@@ -345,10 +397,11 @@ Generate the edited image.`;
       }],
       generationConfig: {
         responseMimeType: 'application/json',
+        temperature: 0,
       },
     };
 
-    const result = await callAPI(TEXT_MODEL, requestBody);
+    const result = await callAPI(TEXT_MODEL, requestBody, signal);
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
@@ -367,7 +420,7 @@ Generate the edited image.`;
   }
 
   // 画像生成
-  async function generateImage(imageData, originalJson, updatedJson, referenceImageData = null) {
+  async function generateImage(imageData, originalJson, updatedJson, referenceImageData = null, signal = null) {
     const prompt = buildGenerationPrompt(originalJson, updatedJson);
 
     const parts = [
@@ -398,7 +451,7 @@ Generate the edited image.`;
       },
     };
 
-    const result = await callAPI(IMAGE_MODEL, requestBody);
+    const result = await callAPI(IMAGE_MODEL, requestBody, signal);
 
     // レスポンスから画像を抽出
     const responseParts = result.candidates?.[0]?.content?.parts;

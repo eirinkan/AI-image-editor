@@ -5,8 +5,40 @@ const EditHistory = (() => {
   let currentIndex = -1;
   let listeners = [];
 
+  // サムネイルを生成（メモリ軽量化）
+  function createThumbnail(imageData, maxSize = 128) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width <= maxSize && height <= maxSize) {
+          resolve(`data:${imageData.mimeType};base64,${imageData.base64}`);
+          return;
+        }
+        if (width > height) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.onerror = () => resolve('');
+      img.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+    });
+  }
+
   // 履歴エントリの作成
-  function createEntry(imageData, json, instruction = null, parentId = null) {
+  async function createEntry(imageData, json, instruction = null, parentId = null) {
+    // サムネイルを非同期生成
+    const thumbnailUrl = await createThumbnail(imageData);
+
     const entry = {
       id: entries.length,
       label: instruction || 'オリジナル',
@@ -15,6 +47,7 @@ const EditHistory = (() => {
       instruction: instruction,
       parentId: parentId,
       timestamp: new Date().toISOString(),
+      thumbnailUrl: thumbnailUrl, // 軽量サムネイル
     };
     entries.push(entry);
     currentIndex = entry.id;
@@ -89,9 +122,11 @@ const EditHistory = (() => {
     }
   }
 
-  // サムネイル用のDataURLを生成
+  // サムネイル用のDataURLを取得（軽量版があればそれを使用）
   function getThumbnailUrl(entry) {
-    if (!entry || !entry.image) return '';
+    if (!entry) return '';
+    if (entry.thumbnailUrl) return entry.thumbnailUrl;
+    if (!entry.image) return '';
     return `data:${entry.image.mimeType};base64,${entry.image.base64}`;
   }
 

@@ -9,7 +9,11 @@ const App = (() => {
     currentJson: null,       // 現在のJSON構造
     originalJson: null,      // 変更前のJSON（差分検出用）
     selectedElements: [],    // 選択中の要素 [{ id, type, name, data }]
+    pendingJson: null,       // JSON更新成功→画像生成失敗時のリカバリ用
   };
+
+  // AbortController管理
+  let currentAbortController = null;
 
   // 初期化
   function init() {
@@ -53,6 +57,14 @@ const App = (() => {
     state.selectedElements = elements;
   }
 
+  // 処理をキャンセル
+  function cancelCurrentOperation() {
+    if (currentAbortController) {
+      currentAbortController.abort();
+      currentAbortController = null;
+    }
+  }
+
   // 分析を実行
   async function analyze() {
     if (!state.currentImage) {
@@ -68,9 +80,19 @@ const App = (() => {
     const focusTags = UI.getSelectedFocusTags();
     const customInstruction = UI.getCustomInstruction();
 
+    // AbortController設定
+    cancelCurrentOperation();
+    currentAbortController = new AbortController();
+    const signal = currentAbortController.signal;
+
     try {
-      UI.showLoading('画像を分析中...');
-      const json = await GeminiAPI.analyzeImage(state.currentImage, focusTags, customInstruction);
+      UI.showLoading('画像を分析中...', { showCancel: true });
+      // キャンセルボタンのイベント設定
+      const cancelBtn = document.getElementById('cancelBtn');
+      const onCancel = () => cancelCurrentOperation();
+      cancelBtn.addEventListener('click', onCancel, { once: true });
+
+      const json = await GeminiAPI.analyzeImage(state.currentImage, focusTags, customInstruction, signal);
       state.currentJson = json;
       state.originalJson = JSON.parse(JSON.stringify(json)); // ディープコピー
 
@@ -86,7 +108,13 @@ const App = (() => {
       UI.showSuccess('画像の分析が完了しました');
     } catch (err) {
       UI.hideLoading();
-      UI.showError(err.message);
+      if (err.name === 'AbortError') {
+        UI.showSuccess('分析をキャンセルしました');
+      } else {
+        UI.showError(err.message);
+      }
+    } finally {
+      currentAbortController = null;
     }
   }
 
@@ -108,18 +136,31 @@ const App = (() => {
       return;
     }
 
+    // AbortController設定
+    cancelCurrentOperation();
+    currentAbortController = new AbortController();
+    const signal = currentAbortController.signal;
+
+    // 生成前の画像を保持（Before/After比較用）
+    const imageBeforeGeneration = { ...state.currentImage };
+
     try {
+      // ステップ付きローディング表示
+      UI.showLoadingWithSteps(() => cancelCurrentOperation());
+
       // Step 1: JSONを一括更新
-      UI.showLoading(`変更内容をJSONに反映中...（${editInstructions.length}件の指示）`);
-      const updatedJson = await GeminiAPI.updateJson(state.currentJson, editInstructions);
+      UI.updateLoadingStep(1);
+      const updatedJson = await GeminiAPI.updateJson(state.currentJson, editInstructions, signal);
+      state.pendingJson = updatedJson; // リカバリ用に保持
 
       // Step 2: 画像を生成
-      UI.showLoading('画像を生成中...（20〜60秒かかります）');
+      UI.updateLoadingStep(2);
       const result = await GeminiAPI.generateImage(
         state.currentImage,
         state.currentJson,
         updatedJson,
-        state.referenceImage
+        state.referenceImage,
+        signal
       );
 
       // 状態更新
@@ -127,9 +168,10 @@ const App = (() => {
       state.currentImage = newImageData;
       state.currentJson = updatedJson;
       state.originalJson = JSON.parse(JSON.stringify(updatedJson));
+      state.pendingJson = null;
 
-      // 結果表示
-      UI.showResult(newImageData);
+      // 結果表示（元画像も渡してBefore/After比較を有効化）
+      UI.showResult(newImageData, imageBeforeGeneration);
       UI.updateJsonDisplay(updatedJson);
       UI.updateMainPreview(newImageData);
 
@@ -149,7 +191,22 @@ const App = (() => {
       UI.showSuccess('画像の生成が完了しました');
     } catch (err) {
       UI.hideLoading();
-      UI.showError(err.message);
+      if (err.name === 'AbortError') {
+        UI.showSuccess('生成をキャンセルしました');
+        state.pendingJson = null;
+      } else if (state.pendingJson) {
+        // JSON更新は成功したが画像生成に失敗した場合
+        UI.showError(`画像生成に失敗しました: ${err.message}\nJSON更新は完了しています。「画像を生成」ボタンで再試行できます。`);
+        // JSONは更新済みの状態を維持
+        state.currentJson = state.pendingJson;
+        state.originalJson = JSON.parse(JSON.stringify(state.pendingJson));
+        UI.updateJsonDisplay(state.pendingJson);
+        state.pendingJson = null;
+      } else {
+        UI.showError(err.message);
+      }
+    } finally {
+      currentAbortController = null;
     }
   }
 

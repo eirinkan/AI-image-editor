@@ -169,3 +169,92 @@
     opacity: 1;
   }
 }
+
+/* ステップ別プログレス */
+.loading-step {
+  transition: all 0.3s ease;
+}
+
+.loading-step.active .step-icon {
+  background: #3b82f6;
+  color: white;
+}
+
+.loading-step.active .step-label {
+  color: #1e40af;
+  font-weight: 500;
+}
+
+.loading-step.done .step-icon {
+  background: #22c55e;
+  color: white;
+}
+
+.loading-step.done .step-label {
+  color: #16a34a;
+  text-decoration: line-through;
+}
+
+/* Before/After比較スライダー */
+.compare-container {
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.compare-after {
+  width: 100%;
+  display: block;
+}
+
+.compare-before {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  width: 50%;
+}
+
+.compare-before-img {
+  width: auto;
+  height: 100%;
+  max-width: none;
+}
+
+.compare-slider {
+  width: 3px;
+  background: white;
+  box-shadow: 0 0 6px rgba(0,0,0,0.4);
+}
+
+.compare-handle {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.compare-label {
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* カテゴリヘッダー */
+.category-header {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  padding: 4px 0;
+  margin-top: 4px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-header:first-child {
+  margin-top: 0;
+}
+
+/* カスタム要素モーダル */
+#customElementModal {
+  backdrop-filter: blur(4px);
+}
