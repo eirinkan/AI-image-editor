@@ -4,8 +4,8 @@ const GeminiAPI = (() => {
   const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
   // 画像生成対応モデル（Nano Banana 2）
   const IMAGE_MODEL = 'gemini-3.1-flash-image-preview';
-  // テキスト専用モデル（JSON分析用）
-  const TEXT_MODEL = 'gemini-3.1-flash-image-preview';
+  // テキスト分析モデル（JSON分析・更新用）
+  const TEXT_MODEL = 'gemini-3.1-pro-preview';
 
   function getApiKey() {
     return localStorage.getItem('gemini_api_key') || '';
