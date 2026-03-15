@@ -880,23 +880,49 @@ const UI = (() => {
     elements.historyTimeline.innerHTML = '';
 
     entries.forEach((entry, i) => {
-      const item = document.createElement('button');
+      const item = document.createElement('div');
       const isCurrent = i === currentIndex;
-      item.className = `history-item flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-lg transition-all cursor-pointer ${isCurrent ? 'bg-blue-100 ring-2 ring-blue-400' : 'bg-gray-100 hover:bg-gray-200'}`;
+      item.className = `history-item flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${isCurrent ? 'bg-blue-100 ring-2 ring-blue-400' : 'bg-gray-100 hover:bg-gray-200'}`;
       item.style.width = '100px';
 
       const thumbUrl = EditHistory.getThumbnailUrl(entry);
       item.innerHTML = `
-        <div class="w-16 h-16 rounded-md overflow-hidden bg-gray-200 flex-shrink-0">
+        <div class="w-16 h-16 rounded-md overflow-hidden bg-gray-200 flex-shrink-0 cursor-pointer history-thumb">
           ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>'}
         </div>
-        <span class="text-xs font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-600'} text-center leading-tight line-clamp-2">${escapeHtml(entry.label)}</span>
+        <span class="text-xs font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-600'} text-center leading-tight line-clamp-2 cursor-pointer history-thumb">${escapeHtml(entry.label)}</span>
         <span class="text-[10px] text-gray-400">v${i}</span>
+        <div class="flex gap-1 mt-0.5">
+          <button class="history-dl-btn text-gray-400 hover:text-blue-500 transition-colors" title="ダウンロード">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          </button>
+          ${i > 0 ? `<button class="history-del-btn text-gray-400 hover:text-red-500 transition-colors" title="削除">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          </button>` : ''}
+        </div>
       `;
 
-      item.addEventListener('click', () => {
-        if (typeof App !== 'undefined') App.goToHistory(i);
+      // サムネイル・ラベルクリックで履歴切り替え
+      item.querySelectorAll('.history-thumb').forEach(el => {
+        el.addEventListener('click', () => {
+          if (typeof App !== 'undefined') App.goToHistory(i);
+        });
       });
+
+      // ダウンロードボタン
+      item.querySelector('.history-dl-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        EditHistory.downloadImage(entry);
+      });
+
+      // 削除ボタン（オリジナル以外）
+      const delBtn = item.querySelector('.history-del-btn');
+      if (delBtn) {
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          EditHistory.removeEntry(i);
+        });
+      }
 
       elements.historyTimeline.appendChild(item);
 

@@ -80,6 +80,29 @@ const EditHistory = (() => {
     return [...entries];
   }
 
+  // 個別エントリを削除
+  function removeEntry(id) {
+    if (id < 0 || id >= entries.length) return;
+    // オリジナル（id=0）は削除不可
+    if (id === 0 && entries.length > 1) return;
+    entries.splice(id, 1);
+    // IDを振り直す
+    entries.forEach((e, i) => { e.id = i; });
+    // currentIndexの調整
+    if (currentIndex >= entries.length) {
+      currentIndex = entries.length - 1;
+    } else if (currentIndex > id) {
+      currentIndex--;
+    } else if (currentIndex === id) {
+      currentIndex = Math.min(id, entries.length - 1);
+    }
+    if (entries.length === 0) {
+      currentIndex = -1;
+    }
+    notifyListeners();
+    save();
+  }
+
   // 履歴をクリア
   function clear() {
     entries = [];
@@ -148,6 +171,7 @@ const EditHistory = (() => {
     getCurrentIndex,
     getAll,
     clear,
+    removeEntry,
     onChange,
     getThumbnailUrl,
     downloadImage,
