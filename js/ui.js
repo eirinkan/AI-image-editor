@@ -693,28 +693,40 @@ const UI = (() => {
         <button class="remove-instruction text-gray-400 hover:text-red-500 text-lg leading-none" data-remove-id="${el.id}">&times;</button>
       `;
 
-      const textarea = document.createElement('textarea');
-      textarea.rows = 2;
-      textarea.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none';
-      textarea.placeholder = getPlaceholder(el.type);
-      textarea.dataset.elementId = el.id;
-      // 保存していた値を復元
-      if (savedValues[el.id]) textarea.value = savedValues[el.id];
-
       row.appendChild(header);
-      row.appendChild(textarea);
-      container.appendChild(row);
+
+      if (el.type === 'camera' && typeof CameraEditor !== 'undefined') {
+        // カメラ要素: ビジュアルエディタを描画
+        const editorContainer = document.createElement('div');
+        editorContainer.className = 'camera-editor-container space-y-3';
+        editorContainer.dataset.elementId = el.id;
+        row.appendChild(editorContainer);
+        container.appendChild(row);
+
+        // カメラエディタを描画（DOMに追加後に実行）
+        setTimeout(() => CameraEditor.render(editorContainer, el.data), 0);
+      } else {
+        // 通常: テキストエリア
+        const textarea = document.createElement('textarea');
+        textarea.rows = 2;
+        textarea.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none';
+        textarea.placeholder = getPlaceholder(el.type);
+        textarea.dataset.elementId = el.id;
+        if (savedValues[el.id]) textarea.value = savedValues[el.id];
+        row.appendChild(textarea);
+        container.appendChild(row);
+
+        // 最後に追加された要素にフォーカス
+        if (i === selectedElements.length - 1 && !savedValues[el.id]) {
+          setTimeout(() => textarea.focus(), 50);
+        }
+      }
 
       // 削除ボタン
       header.querySelector('.remove-instruction').addEventListener('click', (e) => {
         e.stopPropagation();
         selectElement({ id: el.id, type: el.type, name: el.name, data: el.data });
       });
-
-      // 最後に追加された要素にフォーカス
-      if (i === selectedElements.length - 1 && !savedValues[el.id]) {
-        setTimeout(() => textarea.focus(), 50);
-      }
     });
   }
 
@@ -1045,10 +1057,25 @@ const UI = (() => {
     if (!container) return instructions;
 
     container.querySelectorAll('[data-instruction-for]').forEach(row => {
-      const textarea = row.querySelector('textarea');
       const elementId = row.dataset.instructionFor;
       const el = selectedElements.find(e => e.id === elementId);
-      if (el && textarea && textarea.value.trim()) {
+      if (!el) return;
+
+      // カメラ要素: ビジュアルエディタから取得
+      if (el.type === 'camera' && typeof CameraEditor !== 'undefined') {
+        const promptText = CameraEditor.getPromptText();
+        if (promptText) {
+          instructions.push({
+            elementName: el.name,
+            instruction: promptText,
+          });
+        }
+        return;
+      }
+
+      // 通常: textareaから取得
+      const textarea = row.querySelector('textarea');
+      if (textarea && textarea.value.trim()) {
         instructions.push({
           elementName: el.name,
           instruction: textarea.value.trim(),

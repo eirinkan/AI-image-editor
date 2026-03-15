@@ -226,6 +226,11 @@ button {
   position: relative;
   user-select: none;
   -webkit-user-select: none;
+  cursor: default;
+}
+
+/* ドラッグ中はタッチスクロール無効化 */
+.compare-container.compare-active {
   touch-action: none;
 }
 
@@ -238,7 +243,8 @@ button {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  width: 50%;
+  width: 0%;
+  transition: width 0.3s ease;
 }
 
 .compare-before-img {
@@ -247,10 +253,14 @@ button {
   max-width: none;
 }
 
+/* スライダー・ラベルは初期非表示、ホバーでフェードイン */
 .compare-slider {
   width: 3px;
   background: white;
   box-shadow: 0 0 6px rgba(0,0,0,0.4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .compare-handle {
@@ -260,6 +270,23 @@ button {
 .compare-label {
   pointer-events: none;
   z-index: 5;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* ホバー時: スライダーとラベル表示 */
+.compare-container.compare-active .compare-before {
+  transition: none;
+}
+
+.compare-container.compare-active .compare-slider {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: ew-resize;
+}
+
+.compare-container.compare-active .compare-label {
+  opacity: 1;
 }
 
 /* カテゴリヘッダー */
@@ -329,4 +356,58 @@ button {
 /* パラメータ入力行 */
 .param-row {
   animation: fadeIn 0.15s ease;
+}
+
+/* ========== ビジュアルカメラエディタ ========== */
+
+.camera-control-section {
+  padding-bottom: 8px;
+}
+
+.cam-select-btn {
+  cursor: pointer;
+  user-select: none;
+}
+
+.cam-select-btn.selected {
+  border-color: #8b5cf6 !important;
+  background-color: #f5f3ff;
+  color: #6d28d9;
+  font-weight: 600;
+}
+
+/* スライダー */
+.cam-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e7eb;
+  outline: none;
+}
+
+.cam-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  border: 2px solid white;
+}
+
+.cam-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  border: 2px solid white;
+}
+
+.camera-prompt-preview {
+  font-size: 11px;
 }
