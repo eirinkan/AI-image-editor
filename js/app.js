@@ -22,6 +22,26 @@ const App = (() => {
     EditHistory.onChange(onHistoryChange);
   }
 
+  // AI生成した画像を編集モードで使用する
+  function onGeneratedImageEdit(imageData) {
+    state.originalImage = imageData;
+    state.currentImage = imageData;
+    state.currentJson = null;
+    state.originalJson = null;
+    EditHistory.clear();
+
+    // プレビュー画像を表示してanalysisSection を開く
+    const previewImage = document.getElementById('previewImage');
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadPrompt = document.querySelector('#uploadArea .upload-prompt');
+    const analysisSection = document.getElementById('analysisSection');
+
+    if (previewImage) previewImage.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+    if (imagePreview) imagePreview.classList.remove('hidden');
+    if (uploadPrompt) uploadPrompt.classList.add('hidden');
+    if (analysisSection) analysisSection.classList.remove('hidden');
+  }
+
   // 画像がアップロードされた
   function onImageUploaded(imageData) {
     state.originalImage = imageData;
@@ -264,6 +284,7 @@ const App = (() => {
     onReferenceUploaded,
     onReferenceRemoved,
     onElementsSelected,
+    onGeneratedImageEdit,
     analyze,
     generate,
     goToHistory,

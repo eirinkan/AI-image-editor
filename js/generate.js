@@ -160,6 +160,50 @@ const TextToImage = (() => {
     },
   };
 
+  // パラメータの日本語解説マップ（key → ラベル + 説明生成関数）
+  const PARAM_LABELS = {
+    shot_type: { icon: '📸', label: 'ショットタイプ' },
+    subject: { icon: '🎯', label: '被写体' },
+    action: { icon: '🏃', label: '動作・表情' },
+    environment: { icon: '🌍', label: '環境' },
+    lighting: { icon: '💡', label: '照明' },
+    mood: { icon: '🎭', label: '雰囲気' },
+    camera: { icon: '📷', label: 'カメラ・レンズ' },
+    expression: { icon: '😊', label: '表情・ポーズ' },
+    clothing: { icon: '👔', label: '服装' },
+    background: { icon: '🖼️', label: '背景' },
+    style: { icon: '🎨', label: 'スタイル' },
+    characteristics: { icon: '✨', label: '特徴' },
+    color_palette: { icon: '🎨', label: '配色' },
+    line_style: { icon: '✏️', label: '線のスタイル' },
+    shading: { icon: '🌑', label: '影のスタイル' },
+    image_type: { icon: '🖼️', label: '種類' },
+    brand: { icon: '🏷️', label: 'ブランド名' },
+    text: { icon: '🔤', label: '表示テキスト' },
+    font_style: { icon: '🔡', label: 'フォント' },
+    style_desc: { icon: '✨', label: 'スタイル' },
+    color_scheme: { icon: '🎨', label: '配色' },
+    product: { icon: '📦', label: '商品' },
+    angle: { icon: '📐', label: 'アングル' },
+    feature: { icon: '🔍', label: '注目ポイント' },
+    position: { icon: '📍', label: '配置' },
+    bg_color: { icon: '🖌️', label: '背景色' },
+    character: { icon: '🦸', label: 'キャラクター' },
+    scene: { icon: '🎬', label: 'シーン' },
+    panels: { icon: '📄', label: 'パネル数' },
+    topic: { icon: '📚', label: 'トピック' },
+    dish: { icon: '🍽️', label: '料理' },
+    plating: { icon: '🍱', label: '盛り付け' },
+    garnish: { icon: '🌿', label: 'ガーニッシュ' },
+    type: { icon: '🏛️', label: '種類' },
+    materials: { icon: '🧱', label: '素材' },
+    details: { icon: '🔍', label: 'ディテール' },
+    weather: { icon: '🌤️', label: '天候・時間帯' },
+    model: { icon: '🧑', label: 'モデル' },
+    outfit: { icon: '👗', label: '衣装' },
+    setting: { icon: '📍', label: 'ロケーション' },
+  };
+
   // 状態
   const state = {
     subMode: 'template', // 'template' | 'freeform'
@@ -168,16 +212,18 @@ const TextToImage = (() => {
     aspectRatio: '1:1',
     imageSize: '1K',
     categoryRendered: false,
+    lastGeneratedImageData: null, // 最後に生成した画像データ
+    lastGeneratedPrompt: '',      // 最後に使用したプロンプト
   };
 
   function init() {
-    // タブ切替
-    const tabEdit = document.getElementById('tabEdit');
-    const tabGenerate = document.getElementById('tabGenerate');
-    if (tabEdit) tabEdit.addEventListener('click', () => switchTab('edit'));
-    if (tabGenerate) tabGenerate.addEventListener('click', () => switchTab('generate'));
+    // サブタブ切替（アップロード / AI生成）
+    const subTabUpload = document.getElementById('subTabUpload');
+    const subTabGenerate = document.getElementById('subTabGenerate');
+    if (subTabUpload) subTabUpload.addEventListener('click', () => switchSubTab('upload'));
+    if (subTabGenerate) subTabGenerate.addEventListener('click', () => switchSubTab('generate'));
 
-    // サブモード切替
+    // サブモード切替（テンプレート / 自由入力）
     const consultBtn = document.getElementById('consultModeBtn');
     const freeformBtn = document.getElementById('freeformModeBtn');
     if (consultBtn) consultBtn.addEventListener('click', () => switchSubMode('template'));
@@ -215,40 +261,74 @@ const TextToImage = (() => {
       });
     }
 
-    // 生成ボタン
-    const genBtn = document.getElementById('textGenerateBtn');
-    if (genBtn) genBtn.addEventListener('click', generate);
+    // プロンプト確認ボタン
+    const reviewBtn = document.getElementById('promptReviewBtn');
+    if (reviewBtn) reviewBtn.addEventListener('click', showPromptReview);
+
+    // 承認して生成ボタン
+    const approveBtn = document.getElementById('promptApproveBtn');
+    if (approveBtn) approveBtn.addEventListener('click', approveAndGenerate);
+
+    // 戻って修正ボタン
+    const backBtn = document.getElementById('promptBackBtn');
+    if (backBtn) backBtn.addEventListener('click', hidePromptReview);
+
+    // 「この画像を編集する」ボタン
+    const editGeneratedBtn = document.getElementById('editGeneratedBtn');
+    if (editGeneratedBtn) editGeneratedBtn.addEventListener('click', editGeneratedImage);
+
+    // 「再生成」ボタン
+    const regenerateBtn = document.getElementById('regenerateBtn');
+    if (regenerateBtn) regenerateBtn.addEventListener('click', () => {
+      // 生成結果プレビューを隠してプロンプト確認に戻る
+      document.getElementById('generateResultPreview').classList.add('hidden');
+      showPromptReview();
+    });
+
+    // 「ダウンロード」ボタン（生成結果プレビュー用）
+    const downloadGeneratedBtn = document.getElementById('downloadGeneratedBtn');
+    if (downloadGeneratedBtn) {
+      downloadGeneratedBtn.addEventListener('click', () => {
+        if (!state.lastGeneratedImageData) return;
+        const link = document.createElement('a');
+        link.href = `data:${state.lastGeneratedImageData.mimeType};base64,${state.lastGeneratedImageData.base64}`;
+        link.download = 'ai_generated.jpg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    }
+
+    // カテゴリカードを初期描画
+    renderCategoryCards();
+    state.categoryRendered = true;
   }
 
-  // タブ切替
-  function switchTab(mode) {
-    const editContent = document.getElementById('editModeContent');
-    const genContent = document.getElementById('generateModeContent');
-    const tabEdit = document.getElementById('tabEdit');
-    const tabGenerate = document.getElementById('tabGenerate');
+  // ========== サブタブ切替（アップロード / AI生成） ==========
+  function switchSubTab(tab) {
+    const uploadPanel = document.getElementById('uploadPanel');
+    const generatePanel = document.getElementById('generatePanel');
+    const subTabUpload = document.getElementById('subTabUpload');
+    const subTabGenerate = document.getElementById('subTabGenerate');
 
-    if (mode === 'edit') {
-      editContent.classList.remove('hidden');
-      genContent.classList.add('hidden');
-      tabEdit.classList.add('bg-white', 'shadow', 'text-blue-600');
-      tabEdit.classList.remove('text-gray-500');
-      tabGenerate.classList.remove('bg-white', 'shadow', 'text-blue-600');
-      tabGenerate.classList.add('text-gray-500');
+    if (tab === 'upload') {
+      uploadPanel.classList.remove('hidden');
+      generatePanel.classList.add('hidden');
+      subTabUpload.classList.add('active');
+      subTabGenerate.classList.remove('active');
+      subTabGenerate.classList.add('text-gray-500');
+      subTabUpload.classList.remove('text-gray-500');
     } else {
-      editContent.classList.add('hidden');
-      genContent.classList.remove('hidden');
-      tabGenerate.classList.add('bg-white', 'shadow', 'text-purple-600');
-      tabGenerate.classList.remove('text-gray-500');
-      tabEdit.classList.remove('bg-white', 'shadow', 'text-blue-600');
-      tabEdit.classList.add('text-gray-500');
-      if (!state.categoryRendered) {
-        renderCategoryCards();
-        state.categoryRendered = true;
-      }
+      uploadPanel.classList.add('hidden');
+      generatePanel.classList.remove('hidden');
+      subTabGenerate.classList.add('active');
+      subTabUpload.classList.remove('active');
+      subTabUpload.classList.add('text-gray-500');
+      subTabGenerate.classList.remove('text-gray-500');
     }
   }
 
-  // サブモード切替
+  // ========== サブモード切替（テンプレート / 自由入力） ==========
   function switchSubMode(mode) {
     state.subMode = mode;
     const templateMode = document.getElementById('templateMode');
@@ -272,6 +352,187 @@ const TextToImage = (() => {
       consultBtn.classList.add('bg-gray-200', 'text-gray-600');
     }
   }
+
+  // ========== プロンプト確認フロー ==========
+
+  // プロンプト確認画面を表示
+  function showPromptReview() {
+    let prompt = '';
+
+    if (state.subMode === 'freeform') {
+      const textarea = document.getElementById('freeformPrompt');
+      prompt = textarea ? textarea.value.trim() : '';
+      if (!prompt) {
+        UI.showError('プロンプトを入力してください。');
+        return;
+      }
+    } else {
+      if (!state.selectedCategory) {
+        UI.showError('スタイルカテゴリを選択してください。');
+        return;
+      }
+      // 未入力パラメータチェック
+      const tmpl = TEMPLATES[state.selectedCategory];
+      const emptyParams = tmpl.params.filter(p =>
+        !state.templateValues[p.key] || !state.templateValues[p.key].trim()
+      );
+      if (emptyParams.length > 0) {
+        UI.showError(`次のパラメータを入力してください: ${emptyParams.map(p => p.label).join(', ')}`);
+        return;
+      }
+      prompt = buildPromptFromTemplate(state.selectedCategory, state.templateValues);
+    }
+
+    // テキストエリアにプロンプトをセット
+    const promptEditArea = document.getElementById('promptEditArea');
+    if (promptEditArea) promptEditArea.value = prompt;
+
+    // 解説を生成・表示
+    buildPromptExplanation();
+
+    // 確認セクションを表示、生成結果プレビューを隠す
+    document.getElementById('promptReviewSection').classList.remove('hidden');
+    document.getElementById('generateResultPreview').classList.add('hidden');
+
+    // スクロール
+    requestAnimationFrame(() => {
+      document.getElementById('promptReviewSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+
+  // プロンプト解説を生成
+  function buildPromptExplanation() {
+    const explanationEl = document.getElementById('promptExplanation');
+    if (!explanationEl) return;
+
+    explanationEl.innerHTML = '';
+
+    if (state.subMode === 'freeform') {
+      explanationEl.innerHTML = '<p class="text-gray-500 text-sm">自由入力モードです。上のテキストエリアで直接プロンプトを編集できます。</p>';
+      return;
+    }
+
+    if (!state.selectedCategory) return;
+
+    const tmpl = TEMPLATES[state.selectedCategory];
+    const title = document.createElement('p');
+    title.className = 'text-xs font-semibold text-gray-500 mb-2';
+    title.textContent = `カテゴリ: ${tmpl.icon} ${tmpl.label}`;
+    explanationEl.appendChild(title);
+
+    // 各パラメータの解説
+    tmpl.params.forEach(param => {
+      const val = state.templateValues[param.key];
+      if (!val || !val.trim()) return;
+
+      const info = PARAM_LABELS[param.key] || { icon: '•', label: param.label };
+      const row = document.createElement('div');
+      row.className = 'flex items-start gap-2 py-1 border-b border-gray-100 last:border-0';
+      row.innerHTML = `
+        <span class="flex-shrink-0 text-base">${info.icon}</span>
+        <div>
+          <span class="font-medium text-gray-700 text-xs">${info.label}:</span>
+          <span class="text-gray-600 text-xs ml-1">${escapeHtml(val)}</span>
+        </div>
+      `;
+      explanationEl.appendChild(row);
+    });
+  }
+
+  // プロンプト確認画面を閉じる
+  function hidePromptReview() {
+    document.getElementById('promptReviewSection').classList.add('hidden');
+  }
+
+  // 承認して生成
+  async function approveAndGenerate() {
+    const promptEditArea = document.getElementById('promptEditArea');
+    const finalPrompt = promptEditArea ? promptEditArea.value.trim() : '';
+
+    if (!finalPrompt) {
+      UI.showError('プロンプトが空です。');
+      return;
+    }
+
+    if (!GeminiAPI.getApiKey()) {
+      UI.showError('APIキーを入力してください。');
+      return;
+    }
+
+    state.lastGeneratedPrompt = finalPrompt;
+
+    try {
+      UI.showLoading('画像を生成中...（20〜60秒かかります）');
+
+      const result = await GeminiAPI.generateFromText(finalPrompt, {
+        aspectRatio: state.aspectRatio,
+        imageSize: state.imageSize,
+      });
+
+      const imageData = { base64: result.base64, mimeType: result.mimeType };
+      state.lastGeneratedImageData = imageData;
+
+      // 生成結果プレビューを表示
+      const previewSection = document.getElementById('generateResultPreview');
+      const previewImg = document.getElementById('generateResultImage');
+      previewImg.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+      previewSection.classList.remove('hidden');
+
+      // プロンプト確認画面を閉じる
+      hidePromptReview();
+
+      // 履歴に追加（resultSectionは表示しないが、履歴には追加）
+      const label = '生成: ' + finalPrompt.slice(0, 30) + (finalPrompt.length > 30 ? '...' : '');
+      await EditHistory.createEntry(
+        imageData,
+        { prompt: finalPrompt, mode: 'text-to-image', aspectRatio: state.aspectRatio },
+        label
+      );
+
+      UI.hideLoading();
+      UI.showSuccess('画像の生成が完了しました');
+
+      // スクロール
+      requestAnimationFrame(() => {
+        previewSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    } catch (err) {
+      UI.hideLoading();
+      if (err.name === 'AbortError') {
+        UI.showSuccess('生成をキャンセルしました');
+      } else {
+        UI.showError(err.message);
+      }
+    }
+  }
+
+  // ========== 生成結果からの連携 ==========
+
+  // 生成した画像を編集モードへ渡す
+  function editGeneratedImage() {
+    if (!state.lastGeneratedImageData) return;
+
+    // アップロードパネルに切り替え
+    switchSubTab('upload');
+
+    // App経由でアップロード済み画像として設定
+    if (typeof App !== 'undefined') {
+      App.onGeneratedImageEdit(state.lastGeneratedImageData);
+    }
+
+    // 生成結果プレビューを閉じる
+    document.getElementById('generateResultPreview').classList.add('hidden');
+
+    UI.showSuccess('生成した画像を編集モードにセットしました');
+
+    // analysisSection にスクロール
+    requestAnimationFrame(() => {
+      const analysisSection = document.getElementById('analysisSection');
+      if (analysisSection) analysisSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+
+  // ========== カテゴリ・パラメータ描画 ==========
 
   // カテゴリカード描画
   function renderCategoryCards() {
@@ -307,6 +568,10 @@ const TextToImage = (() => {
     // パラメータフォーム表示
     renderParamForm(key);
     document.getElementById('paramSection').classList.remove('hidden');
+
+    // プロンプト確認画面は閉じる
+    hidePromptReview();
+    document.getElementById('generateResultPreview').classList.add('hidden');
   }
 
   // パラメータフォーム描画
@@ -361,75 +626,22 @@ const TextToImage = (() => {
     return prompt;
   }
 
-  // 画像生成実行
-  async function generate() {
-    if (!GeminiAPI.getApiKey()) {
-      UI.showError('APIキーを入力してください。');
-      return;
-    }
+  // ========== ユーティリティ ==========
 
-    let finalPrompt = '';
-    if (state.subMode === 'freeform') {
-      const textarea = document.getElementById('freeformPrompt');
-      finalPrompt = textarea ? textarea.value.trim() : '';
-    } else {
-      if (!state.selectedCategory) {
-        UI.showError('スタイルカテゴリを選択してください。');
-        return;
-      }
-      finalPrompt = buildPromptFromTemplate(state.selectedCategory, state.templateValues);
-    }
-
-    if (!finalPrompt) {
-      UI.showError('プロンプトを入力してください。');
-      return;
-    }
-
-    // 未入力のプレースホルダーが残っている場合は警告
-    if (state.subMode === 'template' && finalPrompt.includes('[')) {
-      const hasEmpty = TEMPLATES[state.selectedCategory].params.some(p => {
-        return !state.templateValues[p.key] || !state.templateValues[p.key].trim();
-      });
-      if (hasEmpty) {
-        UI.showError('すべてのパラメータを入力してください。');
-        return;
-      }
-    }
-
-    try {
-      UI.showLoading('画像を生成中...（20〜60秒かかります）');
-
-      const result = await GeminiAPI.generateFromText(finalPrompt, {
-        aspectRatio: state.aspectRatio,
-        imageSize: state.imageSize,
-      });
-
-      const imageData = { base64: result.base64, mimeType: result.mimeType };
-
-      UI.showResult(imageData);
-
-      // 履歴に追加
-      const label = '生成: ' + finalPrompt.slice(0, 30) + (finalPrompt.length > 30 ? '...' : '');
-      await EditHistory.createEntry(
-        imageData,
-        { prompt: finalPrompt, mode: 'text-to-image', aspectRatio: state.aspectRatio },
-        label
-      );
-
-      UI.hideLoading();
-      UI.showSuccess('画像の生成が完了しました');
-    } catch (err) {
-      UI.hideLoading();
-      if (err.name === 'AbortError') {
-        UI.showSuccess('生成をキャンセルしました');
-      } else {
-        UI.showError(err.message);
-      }
-    }
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   return {
     init,
-    switchTab,
+    switchSubTab,
+    switchSubMode,
+    showPromptReview,
+    hidePromptReview,
+    approveAndGenerate,
+    editGeneratedImage,
   };
 })();

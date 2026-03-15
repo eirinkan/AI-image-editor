@@ -259,9 +259,21 @@
   backdrop-filter: blur(4px);
 }
 
+/* ========== サブタブ（Step 1: アップロード / AI生成） ========== */
+
+.sub-tab {
+  transition: all 0.2s ease;
+}
+
+.sub-tab.active {
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: #2563eb;
+}
+
 /* ========== 画像生成モード ========== */
 
-/* タブUI */
+/* タブUI（後方互換のため残す） */
 .tab-btn {
   transition: all 0.2s ease;
 }
