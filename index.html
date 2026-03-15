@@ -35,8 +35,23 @@
     </div>
   </header>
 
+  <!-- モードタブ -->
+  <div class="max-w-5xl mx-auto px-4 pt-4">
+    <div class="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+      <button id="tabEdit" class="tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all bg-white shadow text-blue-600">
+        ✏️ 画像編集
+      </button>
+      <button id="tabGenerate" class="tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all text-gray-500 hover:text-gray-700">
+        ✨ 画像生成
+      </button>
+    </div>
+  </div>
+
   <!-- メインコンテンツ -->
   <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- ========== 画像編集モード ========== -->
+    <div id="editModeContent">
 
     <!-- Step 1: 画像アップロード -->
     <section>
@@ -138,6 +153,92 @@
       </div>
     </section>
 
+    </div><!-- /editModeContent -->
+
+    <!-- ========== 画像生成モード ========== -->
+    <div id="generateModeContent" class="hidden space-y-6">
+
+      <!-- サブモード切替 -->
+      <div class="flex gap-2">
+        <button id="consultModeBtn" class="px-4 py-2 rounded-lg text-sm font-medium bg-purple-500 text-white transition-colors">
+          💬 テンプレートで作成
+        </button>
+        <button id="freeformModeBtn" class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors">
+          ✍️ 自由入力
+        </button>
+      </div>
+
+      <!-- テンプレートモード -->
+      <div id="templateMode">
+        <section>
+          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 1: スタイルを選択</h2>
+          <div id="categoryList" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <!-- カテゴリカードが動的挿入される -->
+          </div>
+        </section>
+
+        <section id="paramSection" class="hidden mt-6">
+          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 2: 内容を入力</h2>
+          <div id="paramForm" class="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
+            <!-- パラメータフォームが動的挿入される -->
+          </div>
+          <div class="bg-gray-900 rounded-xl p-4 mt-3">
+            <p class="text-xs text-gray-400 mb-1">生成プロンプト（プレビュー）</p>
+            <p id="promptPreviewText" class="text-sm text-green-400 font-mono whitespace-pre-wrap"></p>
+          </div>
+        </section>
+      </div>
+
+      <!-- 自由入力モード -->
+      <div id="freeformMode" class="hidden">
+        <section>
+          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">プロンプトを入力</h2>
+          <textarea id="freeformPrompt" rows="5"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-none"
+            placeholder="生成したい画像を英語または日本語で詳しく説明してください..."></textarea>
+        </section>
+      </div>
+
+      <!-- 出力設定 -->
+      <section>
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">出力設定</h2>
+        <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+          <div>
+            <p class="text-sm text-gray-600 mb-2">アスペクト比</p>
+            <div id="aspectRatioList" class="flex flex-wrap gap-2">
+              <button data-ratio="1:1" class="aspect-btn selected px-3 py-1.5 text-sm rounded-lg border-2 transition-colors">1:1</button>
+              <button data-ratio="2:3" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">2:3</button>
+              <button data-ratio="3:2" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">3:2</button>
+              <button data-ratio="3:4" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">3:4</button>
+              <button data-ratio="4:3" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4:3</button>
+              <button data-ratio="4:5" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4:5</button>
+              <button data-ratio="5:4" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">5:4</button>
+              <button data-ratio="9:16" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">9:16</button>
+              <button data-ratio="16:9" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">16:9</button>
+            </div>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 mb-2">解像度</p>
+            <div id="imageSizeList" class="flex gap-2">
+              <button data-size="1K" class="size-btn selected px-4 py-1.5 text-sm rounded-lg border-2 transition-colors">1K（標準）</button>
+              <button data-size="2K" class="size-btn px-4 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">2K（高解像度）</button>
+              <button data-size="4K" class="size-btn px-4 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4K（最高品質）</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 生成ボタン -->
+      <div class="flex justify-end">
+        <button id="textGenerateBtn" class="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm shadow-lg hover:shadow-xl flex items-center gap-2">
+          ✨ 画像を生成
+        </button>
+      </div>
+
+    </div><!-- /generateModeContent -->
+
+    <!-- ========== 両モード共通 ========== -->
+
     <!-- 結果表示 -->
     <section id="resultSection" class="hidden">
       <div class="flex items-center justify-between mb-3">
@@ -237,9 +338,10 @@
   </div>
 
   <!-- スクリプト -->
-  <script src="js/api.js?v=2"></script>
-  <script src="js/history.js?v=2"></script>
-  <script src="js/ui.js?v=2"></script>
-  <script src="js/app.js?v=2"></script>
+  <script src="js/api.js?v=3"></script>
+  <script src="js/history.js?v=3"></script>
+  <script src="js/ui.js?v=3"></script>
+  <script src="js/generate.js?v=1"></script>
+  <script src="js/app.js?v=3"></script>
 </body>
 </html>

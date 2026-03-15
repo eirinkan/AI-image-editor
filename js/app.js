@@ -18,6 +18,7 @@ const App = (() => {
   // 初期化
   function init() {
     UI.init();
+    TextToImage.init();
     EditHistory.onChange(onHistoryChange);
   }
 
@@ -218,13 +219,19 @@ const App = (() => {
     // 状態を復元
     state.currentImage = entry.image;
     state.currentJson = entry.json;
-    state.originalJson = JSON.parse(JSON.stringify(entry.json));
+    state.originalJson = entry.json && !entry.json.mode ? JSON.parse(JSON.stringify(entry.json)) : null;
 
     // UI更新
+    UI.showResult(entry.image);
+
+    // text-to-image履歴の場合は要素一覧・JSON表示をスキップ
+    if (entry.json && entry.json.mode === 'text-to-image') {
+      return;
+    }
+
     UI.updateMainPreview(entry.image);
     UI.renderElements(entry.json);
     UI.updateJsonDisplay(entry.json);
-    UI.showResult(entry.image);
   }
 
   // 履歴変更時のコールバック

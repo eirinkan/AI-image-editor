@@ -481,6 +481,46 @@ Generate the edited image.`;
     };
   }
 
+  // テキストから画像生成（text-to-image）
+  async function generateFromText(prompt, options = {}, signal = null) {
+    const { aspectRatio = '1:1', imageSize = '1K' } = options;
+
+    const generationConfig = {
+      responseModalities: ['TEXT', 'IMAGE'],
+    };
+
+    // アスペクト比・解像度の指定
+    if (aspectRatio || imageSize) {
+      generationConfig.image_config = {};
+      if (aspectRatio) generationConfig.image_config.aspect_ratio = aspectRatio;
+      if (imageSize) generationConfig.image_config.image_size = imageSize;
+    }
+
+    const requestBody = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig,
+    };
+
+    const result = await callAPI(IMAGE_MODEL, requestBody, signal);
+
+    const responseParts = result.candidates?.[0]?.content?.parts;
+    if (!responseParts) {
+      throw new Error('画像生成の結果が空でした。');
+    }
+
+    const imagePart = responseParts.find(p => p.inlineData);
+    if (!imagePart) {
+      const textPart = responseParts.find(p => p.text);
+      throw new Error(`画像が生成されませんでした。${textPart ? 'レスポンス: ' + textPart.text : ''}`);
+    }
+
+    return {
+      base64: imagePart.inlineData.data,
+      mimeType: imagePart.inlineData.mimeType,
+      text: responseParts.find(p => p.text)?.text || '',
+    };
+  }
+
   return {
     getApiKey,
     setApiKey,
@@ -489,6 +529,7 @@ Generate the edited image.`;
     analyzeImage,
     updateJson,
     generateImage,
+    generateFromText,
     buildAnalysisPrompt,
   };
 })();

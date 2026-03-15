@@ -258,3 +258,37 @@
 #customElementModal {
   backdrop-filter: blur(4px);
 }
+
+/* ========== 画像生成モード ========== */
+
+/* タブUI */
+.tab-btn {
+  transition: all 0.2s ease;
+}
+
+/* カテゴリカード */
+.category-card {
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.category-card:hover {
+  border-color: #8b5cf6;
+}
+.category-card.selected {
+  border-color: #8b5cf6;
+  background-color: #f5f3ff;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+/* アスペクト比・解像度ボタン */
+.aspect-btn.selected,
+.size-btn.selected {
+  border-color: #8b5cf6 !important;
+  background-color: #f5f3ff;
+  color: #6d28d9;
+}
+
+/* パラメータ入力行 */
+.param-row {
+  animation: fadeIn 0.15s ease;
+}
