@@ -481,6 +481,59 @@ Generate the edited image.`;
     };
   }
 
+  // プロンプトエンジニア：日本語入力を高品質な英語プロンプトに変換
+  async function craftPrompt(userInput, signal = null) {
+    const systemPrompt = `あなたは画像生成AI「Gemini」の機能を熟知したプロンプトエンジニアです。
+ユーザーの日本語による指示を、高品質な画像生成用英語プロンプトに変換することがあなたの使命です。
+
+## 制約
+- 英語出力: プロンプト本文は必ず英語で記述
+- 肯定的記述: 否定形（no cars）ではなく肯定形（empty deserted street）で表現
+- 具体性の徹底: 色、素材、形状、照明を具体的に記述（例: "fantasy armor"ではなく"ornate elven plate armor with silver leaf etchings"）
+- テキストの正確性: 画像内テキストは指定内容を一字一句正確に反映
+- 画像内テキストの言語: 特に指定がない限り日本語を使用（ブランド名が英語の場合を除く）
+- フォトリアリズム: 商品写真は過度な加工感を避け、スタジオ撮影品質を優先
+
+## プロンプト構造
+基本構造: [Subject], [Environment], [Lighting], [Style], [Camera/Technical details]
+テキスト指定: text "[TEXT]" の形式で明確に指示
+
+## 出力フォーマット（JSON）
+{
+  "prompt": "英語のプロンプト全文（そのまま画像生成に使用できる形式）",
+  "recommended_settings": {
+    "aspect_ratio": "用途に最適な比率（1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9）",
+    "resolution": "2K または 4K"
+  },
+  "explanation": "プロンプトの各要素について日本語で解説。なぜその構図・照明・スタイルを選んだか、テキストの言語選択の理由なども含める。マークダウン形式で見やすく。"
+}`;
+
+    const requestBody = {
+      contents: [{
+        parts: [{ text: userInput }],
+      }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.7,
+      },
+    };
+
+    // system_instruction を使用（Gemini REST API形式）
+    requestBody.system_instruction = { parts: [{ text: systemPrompt }] };
+
+    const result = await callAPI(TEXT_MODEL, requestBody, signal);
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('プロンプト生成の結果が空でした。');
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) return JSON.parse(match[0]);
+      throw new Error('プロンプトの解析に失敗しました。');
+    }
+  }
+
   // テキストから画像生成（text-to-image）
   async function generateFromText(prompt, options = {}, signal = null) {
     const { aspectRatio = '1:1', imageSize = '1K' } = options;
@@ -530,6 +583,7 @@ Generate the edited image.`;
     updateJson,
     generateImage,
     generateFromText,
+    craftPrompt,
     buildAnalysisPrompt,
   };
 })();

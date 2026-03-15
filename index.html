@@ -68,119 +68,110 @@
       </div>
 
       <!-- AI生成パネル -->
-      <div id="generatePanel" class="hidden">
+      <div id="generatePanel" class="hidden space-y-6">
 
-        <!-- サブモード切替 -->
-        <div class="flex gap-2 mb-4">
-          <button id="consultModeBtn" class="px-4 py-2 rounded-lg text-sm font-medium bg-purple-500 text-white transition-colors">
-            💬 テンプレートで作成
-          </button>
-          <button id="freeformModeBtn" class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors">
-            ✍️ 自由入力
-          </button>
-        </div>
-
-        <!-- テンプレートモード -->
-        <div id="templateMode">
-          <section>
-            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">スタイルを選択</h3>
-            <div id="categoryList" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              <!-- カテゴリカードが動的挿入される -->
-            </div>
-          </section>
-
-          <section id="paramSection" class="hidden mt-6">
-            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">内容を入力</h3>
-            <div id="paramForm" class="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
-              <!-- パラメータフォームが動的挿入される -->
-            </div>
-            <div class="bg-gray-900 rounded-xl p-4 mt-3">
-              <p class="text-xs text-gray-400 mb-1">生成プロンプト（プレビュー）</p>
-              <p id="promptPreviewText" class="text-sm text-green-400 font-mono whitespace-pre-wrap"></p>
-            </div>
-          </section>
-        </div>
-
-        <!-- 自由入力モード -->
-        <div id="freeformMode" class="hidden">
-          <section>
-            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">プロンプトを入力</h3>
-            <textarea id="freeformPrompt" rows="5"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-none"
-              placeholder="生成したい画像を英語または日本語で詳しく説明してください..."></textarea>
-          </section>
-        </div>
-
-        <!-- 出力設定 -->
-        <section class="mt-6">
-          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">出力設定</h3>
+        <!-- アイデア入力セクション -->
+        <section id="ideaInputSection">
+          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">作りたい画像を日本語で入力</h3>
           <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
-            <div>
-              <p class="text-sm text-gray-600 mb-2">アスペクト比</p>
-              <div id="aspectRatioList" class="flex flex-wrap gap-2">
-                <button data-ratio="1:1" class="aspect-btn selected px-3 py-1.5 text-sm rounded-lg border-2 transition-colors">1:1</button>
-                <button data-ratio="2:3" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">2:3</button>
-                <button data-ratio="3:2" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">3:2</button>
-                <button data-ratio="3:4" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">3:4</button>
-                <button data-ratio="4:3" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4:3</button>
-                <button data-ratio="4:5" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4:5</button>
-                <button data-ratio="5:4" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">5:4</button>
-                <button data-ratio="9:16" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">9:16</button>
-                <button data-ratio="16:9" class="aspect-btn px-3 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">16:9</button>
+            <textarea id="userIdeaInput" rows="4"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-none"
+              placeholder="例: 白い背景にZitA SQUAREのゴミ箱を置いた商品写真。清潔感のあるスタジオ照明で、正面やや上からのアングル。"></textarea>
+
+            <!-- 出力設定 -->
+            <div class="space-y-3">
+              <div>
+                <p class="text-sm text-gray-600 mb-2">アスペクト比</p>
+                <div id="aspectRatioList" class="flex flex-wrap gap-2">
+                  <button data-ratio="1:1" class="aspect-btn selected px-3 py-1.5 text-xs rounded-lg border-2 transition-colors">1:1</button>
+                  <button data-ratio="2:3" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">2:3</button>
+                  <button data-ratio="3:2" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">3:2</button>
+                  <button data-ratio="3:4" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">3:4</button>
+                  <button data-ratio="4:3" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4:3</button>
+                  <button data-ratio="4:5" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4:5</button>
+                  <button data-ratio="5:4" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">5:4</button>
+                  <button data-ratio="9:16" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">9:16</button>
+                  <button data-ratio="16:9" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">16:9</button>
+                </div>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600 mb-2">解像度</p>
+                <div id="imageSizeList" class="flex gap-2">
+                  <button data-size="1K" class="size-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">1K</button>
+                  <button data-size="2K" class="size-btn selected px-3 py-1.5 text-xs rounded-lg border-2 transition-colors">2K</button>
+                  <button data-size="4K" class="size-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4K</button>
+                </div>
               </div>
             </div>
-            <div>
-              <p class="text-sm text-gray-600 mb-2">解像度</p>
-              <div id="imageSizeList" class="flex gap-2">
-                <button data-size="1K" class="size-btn selected px-4 py-1.5 text-sm rounded-lg border-2 transition-colors">1K（標準）</button>
-                <button data-size="2K" class="size-btn px-4 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">2K（高解像度）</button>
-                <button data-size="4K" class="size-btn px-4 py-1.5 text-sm rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4K（最高品質）</button>
-              </div>
+
+            <div class="flex justify-end">
+              <button id="craftPromptBtn" class="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm shadow-lg flex items-center gap-2">
+                ✨ プロンプトを作成
+              </button>
             </div>
           </div>
         </section>
 
-        <!-- プロンプト確認ボタン -->
-        <div class="flex justify-end mt-4">
-          <button id="promptReviewBtn" class="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm shadow-lg hover:shadow-xl flex items-center gap-2">
-            🔍 プロンプトを確認
-          </button>
-        </div>
+        <!-- プロンプト確認・編集セクション -->
+        <section id="promptReviewSection" class="hidden">
+          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">プロンプトを確認・編集</h3>
+          <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+            <!-- 英語プロンプト（編集可能） -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">英語プロンプト</label>
+              <textarea id="promptEditArea" rows="6"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-vertical"
+                placeholder=""></textarea>
+            </div>
 
-        <!-- プロンプト確認セクション（initially hidden） -->
-        <div id="promptReviewSection" class="hidden mt-6 bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
-          <h3 class="text-sm font-semibold text-gray-700 mb-2">プロンプトを確認・編集</h3>
-          <textarea id="promptEditArea" rows="6"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-none font-mono"></textarea>
-          <!-- 解説エリア -->
-          <div id="promptExplanation" class="bg-gray-50 rounded-xl p-4 space-y-1 text-sm text-gray-600">
-            <!-- 各パートの解説が入る -->
-          </div>
-          <!-- ボタン -->
-          <div class="flex gap-3 justify-end">
-            <button id="promptBackBtn" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium">← 戻って修正</button>
-            <button id="promptApproveBtn" class="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm shadow flex items-center gap-2">
-              ✨ 承認して生成
-            </button>
-          </div>
-        </div>
+            <!-- 推奨設定の表示 -->
+            <div id="recommendedSettings" class="flex gap-4 text-sm">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-500">推奨アスペクト比:</span>
+                <span id="recommendedRatio" class="font-medium text-purple-600"></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-gray-500">推奨解像度:</span>
+                <span id="recommendedResolution" class="font-medium text-purple-600"></span>
+              </div>
+            </div>
 
-        <!-- 生成結果プレビュー（生成後に表示） -->
-        <div id="generateResultPreview" class="hidden mt-6 bg-white rounded-2xl border border-gray-200 p-5">
+            <!-- 解説 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">解説</label>
+              <div id="promptExplanation" class="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 leading-relaxed"></div>
+            </div>
+
+            <!-- ボタン -->
+            <div class="flex gap-3 justify-end">
+              <button id="promptBackBtn" class="px-5 py-2.5 text-sm text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">
+                ← 戻って修正
+              </button>
+              <button id="promptApproveBtn" class="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm shadow-lg flex items-center gap-2">
+                ✨ 承認して生成
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 生成結果プレビュー -->
+        <section id="generateResultPreview" class="hidden">
           <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">生成結果</h3>
-          <img id="generateResultImage" class="max-h-96 mx-auto rounded-lg shadow-md block" alt="生成結果">
-          <div class="flex justify-center gap-3 mt-4 flex-wrap">
-            <button id="editGeneratedBtn" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium flex items-center gap-1">
-              ✏️ この画像を編集する
-            </button>
-            <button id="regenerateBtn" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium flex items-center gap-1">
-              🔄 再生成
-            </button>
-            <button id="downloadGeneratedBtn" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium flex items-center gap-1">
-              💾 ダウンロード
-            </button>
+          <div class="bg-white rounded-2xl border border-gray-200 p-5">
+            <img id="generateResultImage" class="max-h-[500px] mx-auto rounded-lg shadow-md block" alt="生成結果">
+            <div class="flex justify-center gap-3 mt-4">
+              <button id="editGeneratedBtn" class="px-5 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1.5">
+                ✏️ この画像を編集
+              </button>
+              <button id="regenerateBtn" class="px-5 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-1.5">
+                🔄 再生成
+              </button>
+              <button id="downloadGeneratedBtn" class="px-5 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1.5">
+                💾 ダウンロード
+              </button>
+            </div>
           </div>
-        </div>
+        </section>
 
       </div><!-- /generatePanel -->
     </section>
@@ -364,10 +355,10 @@
   </div>
 
   <!-- スクリプト -->
-  <script src="js/api.js?v=4"></script>
-  <script src="js/history.js?v=3"></script>
-  <script src="js/ui.js?v=4"></script>
-  <script src="js/generate.js?v=2"></script>
-  <script src="js/app.js?v=4"></script>
+  <script src="js/api.js?v=5"></script>
+  <script src="js/history.js?v=5"></script>
+  <script src="js/ui.js?v=5"></script>
+  <script src="js/generate.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>
