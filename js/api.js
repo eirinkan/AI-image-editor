@@ -131,7 +131,8 @@ Include even small items like cups, books, plants, decorative objects.`,
       "color": "specific color",
       "material": "specific material",
       "position": "position description",
-      "details": "any additional details"
+      "details": "any additional details",
+      "position_coords": { "x": 0.5, "y": 0.3 }
     }
   ],
   "text_elements": [
@@ -139,7 +140,8 @@ Include even small items like cups, books, plants, decorative objects.`,
       "id": "unique_id",
       "content": "exact text",
       "style": "font/style description",
-      "position": "position description"
+      "position": "position description",
+      "position_coords": { "x": 0.5, "y": 0.3 }
     }
   ],
   "people": [
@@ -148,12 +150,14 @@ Include even small items like cups, books, plants, decorative objects.`,
       "description": "brief description",
       "clothing": "...",
       "pose": "...",
-      "position": "..."
+      "position": "...",
+      "position_coords": { "x": 0.5, "y": 0.3 }
     }
   ]
 }
 
 Include only sections that are relevant. If no text/people/etc are found, use empty arrays.
+For each element in objects, text_elements, and people, position_coords must be the approximate center of the object as a fraction of image width (x) and height (y), ranging from 0.0 to 1.0. For example, an object in the top-left quarter would have {"x": 0.25, "y": 0.25}.
 Output ONLY the JSON, no other text.`;
 
     return prompt;

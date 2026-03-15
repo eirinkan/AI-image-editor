@@ -303,6 +303,9 @@ const UI = (() => {
     elements.elementsSection.classList.remove('hidden');
     elements.elementsList.innerHTML = '';
 
+    // マーカーインデックスカウンター（objects→text_elements→peopleの順）
+    let markerIndex = 1;
+
     // オブジェクト
     if (json.objects && json.objects.length > 0) {
       json.objects.forEach((obj, i) => {
@@ -313,8 +316,10 @@ const UI = (() => {
           subtitle: [obj.color, obj.material].filter(Boolean).join('・'),
           icon: '🪑',
           data: obj,
+          markerIndex: markerIndex,
         });
         elements.elementsList.appendChild(card);
+        markerIndex++;
       });
     }
 
@@ -328,8 +333,10 @@ const UI = (() => {
           subtitle: te.style || '',
           icon: '📝',
           data: te,
+          markerIndex: markerIndex,
         });
         elements.elementsList.appendChild(card);
+        markerIndex++;
       });
     }
 
@@ -343,12 +350,14 @@ const UI = (() => {
           subtitle: p.clothing || '',
           icon: '👤',
           data: p,
+          markerIndex: markerIndex,
         });
         elements.elementsList.appendChild(card);
+        markerIndex++;
       });
     }
 
-    // 雰囲気・照明（常に表示）
+    // 雰囲気・照明（常に表示・マーカーなし）
     if (json.atmosphere) {
       const atm = json.atmosphere;
       const card = createElementCard({
@@ -362,7 +371,7 @@ const UI = (() => {
       elements.elementsList.appendChild(card);
     }
 
-    // カメラ
+    // カメラ（マーカーなし）
     if (json.camera) {
       const cam = json.camera;
       const card = createElementCard({
@@ -376,7 +385,7 @@ const UI = (() => {
       elements.elementsList.appendChild(card);
     }
 
-    // シーン全体
+    // シーン全体（マーカーなし）
     if (json.scene) {
       const card = createElementCard({
         id: 'scene',
@@ -388,6 +397,9 @@ const UI = (() => {
       });
       elements.elementsList.appendChild(card);
     }
+
+    // 画像上にマーカーを描画
+    renderMarkers(json);
 
     // カスタム要素追加ボタン
     const addBtn = document.createElement('button');
@@ -415,17 +427,125 @@ const UI = (() => {
     elements.elementsList.appendChild(globalBtn);
   }
 
-  function createElementCard({ id, type, name, subtitle, icon, data }) {
+  function createElementCard({ id, type, name, subtitle, icon, data, markerIndex }) {
     const card = document.createElement('button');
-    card.className = 'element-card bg-white border-2 border-gray-200 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
+    card.className = 'element-card relative bg-white border-2 border-gray-200 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
     card.dataset.elementId = id;
+
+    // position_coords がある場合のみバッジを表示
+    let badgeHtml = '';
+    if (markerIndex && data.position_coords) {
+      badgeHtml = `<span class="element-badge">${markerIndex}</span>`;
+    }
+
     card.innerHTML = `
+      ${badgeHtml}
       <span class="text-2xl">${icon}</span>
       <span class="font-medium text-gray-800 text-sm leading-tight">${escapeHtml(name)}</span>
       <span class="text-xs text-gray-500 leading-tight">${escapeHtml(subtitle)}</span>
     `;
+
+    // ホバー時に画像上のマーカーと連動
+    card.addEventListener('mouseenter', () => {
+      const marker = document.querySelector(`.image-marker[data-element-id="${id}"]`);
+      if (marker) marker.classList.add('active');
+    });
+    card.addEventListener('mouseleave', () => {
+      const marker = document.querySelector(`.image-marker[data-element-id="${id}"]`);
+      if (marker) marker.classList.remove('active');
+    });
+
     card.addEventListener('click', () => selectElement({ id, type, name, data }));
     return card;
+  }
+
+  // 画像上にマーカーを描画する
+  function renderMarkers(json) {
+    const overlay = document.getElementById('markerOverlay');
+    if (!overlay) return;
+    overlay.innerHTML = '';
+
+    let markerIndex = 1;
+    const allElements = [];
+
+    // objects
+    if (json.objects) {
+      json.objects.forEach((obj, i) => {
+        if (obj.position_coords) {
+          allElements.push({
+            index: markerIndex,
+            coords: obj.position_coords,
+            id: obj.id || `obj_${i}`,
+          });
+        }
+        markerIndex++;
+      });
+    }
+
+    // text_elements
+    if (json.text_elements) {
+      json.text_elements.forEach((te, i) => {
+        if (te.position_coords) {
+          allElements.push({
+            index: markerIndex,
+            coords: te.position_coords,
+            id: te.id || `text_${i}`,
+          });
+        }
+        markerIndex++;
+      });
+    }
+
+    // people
+    if (json.people) {
+      json.people.forEach((p, i) => {
+        if (p.position_coords) {
+          allElements.push({
+            index: markerIndex,
+            coords: p.position_coords,
+            id: p.id || `person_${i}`,
+          });
+        }
+        markerIndex++;
+      });
+    }
+
+    // マーカーDOM生成
+    allElements.forEach(({ index, coords, id }) => {
+      const marker = document.createElement('div');
+      marker.className = 'image-marker';
+      marker.dataset.markerIndex = index;
+      marker.dataset.elementId = id;
+      marker.style.left = `${coords.x * 100}%`;
+      marker.style.top = `${coords.y * 100}%`;
+      marker.textContent = index;
+
+      // ホバーでカード連動
+      marker.addEventListener('mouseenter', () => highlightCard(id));
+      marker.addEventListener('mouseleave', () => unhighlightCard(id));
+      marker.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // 対応するカードのクリックをシミュレート
+        const card = document.querySelector(`.element-card[data-element-id="${id}"]`);
+        if (card) card.click();
+      });
+
+      overlay.appendChild(marker);
+    });
+  }
+
+  function highlightCard(elementId) {
+    const card = document.querySelector(`.element-card[data-element-id="${elementId}"]`);
+    if (card) card.classList.add('highlighted');
+    const marker = document.querySelector(`.image-marker[data-element-id="${elementId}"]`);
+    if (marker) marker.classList.add('active');
+  }
+
+  function unhighlightCard(elementId) {
+    const card = document.querySelector(`.element-card[data-element-id="${elementId}"]`);
+    if (card) card.classList.remove('highlighted');
+    const marker = document.querySelector(`.image-marker[data-element-id="${elementId}"]`);
+    if (marker) marker.classList.remove('active');
   }
 
   function selectElement({ id, type, name, data }) {
@@ -591,6 +711,7 @@ const UI = (() => {
   return {
     init,
     renderElements,
+    renderMarkers,
     renderHistory,
     showResult,
     showLoading,
