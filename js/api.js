@@ -18,15 +18,23 @@ const GeminiAPI = (() => {
   // フォーカスタグに応じた分析プロンプトを構築
   function buildAnalysisPrompt(focusTags, customInstruction) {
     const focusInstructions = {
-      'all': `Analyze this image comprehensively. Identify ALL elements including:
-- Every object/furniture (name, color, material, position, size)
+      'all': `Analyze this image exhaustively. Your goal is to detect AS MANY elements as possible — the user needs a comprehensive inventory of everything visible in this image. Do NOT skip anything, even if it seems small, partially visible, or unimportant.
+
+Identify ALL elements in these categories:
+- Large furniture & major objects (tables, chairs, sofas, beds, shelves, cabinets, appliances, etc.)
+- Small objects & accessories (cups, books, plants, vases, remote controls, cushions, picture frames, candles, bottles, bags, etc.)
+- Decorative elements (artwork, posters, wall hangings, ornaments, figurines, patterns on fabric, etc.)
+- Architectural elements (doors, windows, walls, columns, stairs, railings, moldings, ceiling fixtures, outlets, switches, etc.)
+- Surfaces & materials (flooring type, wall finish, countertop material, rug/carpet, curtains/blinds, etc.)
+- Background elements (items partially visible, objects seen through windows, reflections in mirrors, etc.)
+- Lighting fixtures (lamps, ceiling lights, sconces, candles, LED strips, natural light sources)
+- Text, logos, signage, labels on any object
+- People (clothing, pose, position, accessories) if present
 - Scene type (indoor/outdoor), style, atmosphere
-- Lighting conditions (direction, color temperature, intensity, shadows)
 - Weather/time of day if visible
 - Camera perspective (angle, focal length estimate)
-- Any text, logos, or signage
-- People (clothing, pose, position) if present
-- Background elements and decorative details`,
+
+IMPORTANT: List at least 15-30 objects in the "objects" array. Even mundane items like a power outlet, a door handle, a shadow on the wall, or a fold in a curtain should be listed. More is always better — the user will select which elements to edit.`,
 
       'furniture': `Focus specifically on furniture and objects in this image. For EACH item provide extremely detailed analysis:
 - Exact name/type of furniture
@@ -156,7 +164,7 @@ Include even small items like cups, books, plants, decorative objects.`,
   ]
 }
 
-Include only sections that are relevant. If no text/people/etc are found, use empty arrays.
+IMPORTANT: Detect as many elements as possible. It is far better to include too many elements than too few — the user needs a rich inventory to choose from. If no text/people/etc are found, use empty arrays.
 For each element in objects, text_elements, and people, position_coords must be the approximate center of the object as a fraction of image width (x) and height (y), ranging from 0.0 to 1.0. For example, an object in the top-left quarter would have {"x": 0.25, "y": 0.25}.
 Output ONLY the JSON, no other text.`;
 
