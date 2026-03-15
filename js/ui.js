@@ -8,8 +8,8 @@ const UI = (() => {
   let selectedElements = []; // [{ id, type, name, data }]
 
   // Before/After比較状態
-  let compareMode = false;
   let beforeImageData = null; // 比較用の元画像
+  let hasBeforeImage = false; // Before画像が設定済みか
 
   // 初期化
   function init() {
@@ -73,11 +73,7 @@ const UI = (() => {
       cancelBtn: document.getElementById('cancelBtn'),
 
       // Before/After比較
-      compareToggle: document.getElementById('compareToggle'),
-      resultNormal: document.getElementById('resultNormal'),
-      resultCompare: document.getElementById('resultCompare'),
       compareContainer: document.getElementById('compareContainer'),
-      compareAfter: document.getElementById('compareAfter'),
       compareBefore: document.getElementById('compareBefore'),
       compareBeforeImg: document.getElementById('compareBeforeImg'),
       compareSlider: document.getElementById('compareSlider'),
@@ -151,10 +147,7 @@ const UI = (() => {
     // エラー閉じる
     elements.errorClose.addEventListener('click', hideError);
 
-    // Before/After比較トグル
-    elements.compareToggle.addEventListener('click', toggleCompareMode);
-
-    // 比較スライダーのドラッグ操作
+    // Before/After比較スライダー（ホバー＋ドラッグ）
     setupCompareSlider();
 
     // カスタム要素モーダル
@@ -779,18 +772,15 @@ const UI = (() => {
     // Before/After比較用データ設定
     if (originalImageData) {
       beforeImageData = originalImageData;
-      elements.compareToggle.classList.remove('hidden');
-      // After画像も設定
-      elements.compareAfter.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+      hasBeforeImage = true;
       elements.compareBeforeImg.src = `data:${originalImageData.mimeType};base64,${originalImageData.base64}`;
+    } else {
+      hasBeforeImage = false;
     }
 
-    // 比較モードをリセット
-    compareMode = false;
-    elements.resultNormal.classList.remove('hidden');
-    elements.resultCompare.classList.add('hidden');
-    elements.compareToggle.textContent = '';
-    elements.compareToggle.innerHTML = `<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>Before/After`;
+    // スライダーを初期状態にリセット（Before非表示）
+    elements.compareContainer.classList.remove('compare-active');
+    updateSliderPosition(0);
 
     // hidden解除後にスクロール（requestAnimationFrameで確実に描画後）
     requestAnimationFrame(() => {
@@ -798,30 +788,13 @@ const UI = (() => {
     });
   }
 
-  // --- Before/After比較 ---
-  function toggleCompareMode() {
-    compareMode = !compareMode;
-    if (compareMode) {
-      elements.resultNormal.classList.add('hidden');
-      elements.resultCompare.classList.remove('hidden');
-      elements.compareToggle.innerHTML = `<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"></path></svg>生成結果のみ`;
-      // Before画像のサイズをAfter画像に合わせる
-      syncCompareImages();
-    } else {
-      elements.resultNormal.classList.remove('hidden');
-      elements.resultCompare.classList.add('hidden');
-      elements.compareToggle.innerHTML = `<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>Before/After`;
-    }
-  }
-
+  // --- Before/After比較（ホバー式スライダー） ---
   function syncCompareImages() {
-    // After画像の読み込み後にBefore画像の幅を合わせる
-    const afterImg = elements.compareAfter;
+    // After画像（resultImage）のサイズにBefore画像を合わせる
+    const afterImg = elements.resultImage;
     const setSize = () => {
       elements.compareBeforeImg.style.width = afterImg.offsetWidth + 'px';
       elements.compareBeforeImg.style.height = afterImg.offsetHeight + 'px';
-      // スライダー位置をリセット
-      updateSliderPosition(0.5);
     };
     if (afterImg.complete) {
       setSize();
@@ -836,6 +809,19 @@ const UI = (() => {
     elements.compareSlider.style.left = pct + '%';
   }
 
+  function activateCompare() {
+    if (!hasBeforeImage) return;
+    elements.compareContainer.classList.add('compare-active');
+    syncCompareImages();
+    updateSliderPosition(0.5);
+  }
+
+  function deactivateCompare() {
+    elements.compareContainer.classList.remove('compare-active');
+    // スライダーをアニメーションで閉じる
+    updateSliderPosition(0);
+  }
+
   function setupCompareSlider() {
     let isDragging = false;
 
@@ -846,7 +832,9 @@ const UI = (() => {
     }
 
     function onStart(e) {
+      if (!hasBeforeImage) return;
       isDragging = true;
+      activateCompare();
       e.preventDefault();
       updateSliderPosition(getSliderRatio(e));
     }
@@ -858,16 +846,28 @@ const UI = (() => {
     }
 
     function onEnd() {
+      if (!isDragging) return;
       isDragging = false;
+      deactivateCompare();
     }
 
-    // マウスイベント
+    // マウスホバーでスライダー表示
+    elements.compareContainer.addEventListener('mouseenter', () => {
+      if (!hasBeforeImage) return;
+      activateCompare();
+    });
+    elements.compareContainer.addEventListener('mouseleave', () => {
+      if (isDragging) return; // ドラッグ中は閉じない
+      deactivateCompare();
+    });
+
+    // マウスドラッグ
     elements.compareSlider.addEventListener('mousedown', onStart);
     elements.compareContainer.addEventListener('mousedown', onStart);
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onEnd);
 
-    // タッチイベント
+    // タッチ操作
     elements.compareSlider.addEventListener('touchstart', onStart, { passive: false });
     elements.compareContainer.addEventListener('touchstart', onStart, { passive: false });
     document.addEventListener('touchmove', onMove, { passive: false });
