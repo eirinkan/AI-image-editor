@@ -150,19 +150,11 @@ const TextToImage = (() => {
       const promptEditArea = document.getElementById('promptEditArea');
       if (promptEditArea) promptEditArea.value = result.prompt || '';
 
-      // 推奨設定を反映
+      // 推奨アスペクト比のみ自動反映（解像度はコスト面からユーザー選択）
       if (result.recommended_settings) {
         if (result.recommended_settings.aspect_ratio) {
           selectAspectRatio(result.recommended_settings.aspect_ratio);
         }
-        if (result.recommended_settings.resolution) {
-          selectImageSize(result.recommended_settings.resolution);
-        }
-        // 推奨設定の表示
-        const recRatio = document.getElementById('recommendedRatio');
-        const recRes = document.getElementById('recommendedResolution');
-        if (recRatio) recRatio.textContent = result.recommended_settings.aspect_ratio || '';
-        if (recRes) recRes.textContent = result.recommended_settings.resolution || '';
       }
 
       // 解説を表示（簡易マークダウン変換）
