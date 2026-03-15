@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI画像エディタ - JSON画像変更</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- ヘッダー -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+      <h1 class="text-lg font-bold text-gray-800 flex-shrink-0">
+        <span class="text-blue-500">AI</span> 画像エディタ
+      </h1>
+      <div class="flex items-center gap-2 flex-1 max-w-md">
+        <label class="text-sm text-gray-500 flex-shrink-0">APIキー:</label>
+        <div class="relative flex-1">
+          <input type="password" id="apiKeyInput"
+            class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent pr-10"
+            placeholder="Gemini APIキーを入力">
+          <button id="apiKeyToggle" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+          </button>
+        </div>
+        <button id="apiKeySave" class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex-shrink-0">
+          保存
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- Step 1: 画像アップロード -->
+    <section>
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 1: 画像をアップロード</h2>
+      <div id="uploadArea" class="upload-area border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all relative">
+        <div class="upload-prompt">
+          <div class="text-4xl mb-3">📸</div>
+          <p class="text-gray-600 font-medium">クリックまたはドラッグ&ドロップで画像をアップロード</p>
+          <p class="text-sm text-gray-400 mt-1">JPG, PNG, WEBP対応</p>
+        </div>
+        <div id="imagePreview" class="hidden relative">
+          <img id="previewImage" class="max-h-96 mx-auto rounded-lg shadow-md" alt="アップロード画像">
+          <button id="removeImage" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-lg text-lg leading-none">&times;</button>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" class="hidden">
+      </div>
+    </section>
+
+    <!-- Step 2: 分析フォーカス -->
+    <section id="analysisSection" class="hidden">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 2: 分析フォーカスを選択</h2>
+      <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+        <div id="focusTags" class="flex flex-wrap gap-2">
+          <button data-focus="all" class="px-4 py-2 rounded-full text-sm font-medium bg-blue-500 text-white transition-colors">全体</button>
+          <button data-focus="furniture" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">家具・物</button>
+          <button data-focus="color_material" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">色・素材</button>
+          <button data-focus="lighting" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">照明・天候</button>
+          <button data-focus="text_logo" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">テキスト・ロゴ</button>
+          <button data-focus="camera" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">カメラ</button>
+          <button data-focus="people" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">人物</button>
+        </div>
+        <div class="flex gap-3">
+          <input type="text" id="customInstruction"
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+            placeholder="追加の指示（例: 小物を細かく検出して）">
+          <button id="analyzeBtn" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm flex items-center gap-2 flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            分析する
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 要素一覧 -->
+    <section id="elementsSection" class="hidden">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">検出された要素</h2>
+      <div id="elementsList" class="bg-white rounded-2xl border border-gray-200 p-5">
+        <!-- 要素カードがここに動的に挿入される -->
+      </div>
+    </section>
+
+    <!-- 編集パネル -->
+    <section id="editSection" class="hidden">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 3: 変更内容を指示</h2>
+      <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-500">選択中:</span>
+          <span id="selectedElementName" class="font-medium text-blue-600"></span>
+        </div>
+        <textarea id="editInstruction" rows="3"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none"
+          placeholder="変更内容を入力してください"></textarea>
+
+        <div class="flex items-start gap-4">
+          <!-- 参照画像 -->
+          <div class="flex-1">
+            <p class="text-xs text-gray-500 mb-2">参照画像（任意: オブジェクト入替・ロゴ変更等に使用）</p>
+            <div id="referenceUploadArea" class="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-blue-300 transition-colors relative">
+              <span class="ref-prompt text-sm text-gray-400">クリックして参照画像を追加</span>
+              <img id="referencePreview" class="hidden max-h-32 mx-auto rounded" alt="参照画像">
+              <button id="removeReference" class="hidden absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600">&times;</button>
+              <input type="file" id="referenceFileInput" accept="image/*" class="hidden">
+            </div>
+          </div>
+
+          <!-- 生成ボタン -->
+          <div class="flex flex-col items-end gap-2 pt-6">
+            <button id="generateBtn" class="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all font-medium text-sm shadow-lg hover:shadow-xl flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+              画像を生成
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 結果表示 -->
+    <section id="resultSection" class="hidden">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">生成結果</h2>
+        <button id="downloadBtn" class="px-4 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          ダウンロード
+        </button>
+      </div>
+      <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <img id="resultImage" class="w-full rounded-lg" alt="生成結果">
+      </div>
+    </section>
+
+    <!-- 編集履歴 -->
+    <section id="historySection" class="hidden">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">編集履歴</h2>
+      <div class="bg-white rounded-2xl border border-gray-200 p-4">
+        <div id="historyTimeline">
+          <!-- 履歴エントリがここに動的に挿入される -->
+        </div>
+      </div>
+    </section>
+
+    <!-- JSON表示（上級者向けトグル） -->
+    <section class="pb-8">
+      <button id="jsonToggle" class="text-xs text-gray-400 hover:text-gray-600 transition-colors">JSONを表示 ▼</button>
+      <div id="jsonPanel" class="hidden mt-2 bg-gray-900 rounded-xl p-4">
+        <pre id="jsonContent" class="text-green-400 font-mono text-xs whitespace-pre-wrap"></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ローディングオーバーレイ -->
+  <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl">
+      <div class="spinner"></div>
+      <p id="loadingText" class="text-gray-600 font-medium">処理中...</p>
+    </div>
+  </div>
+
+  <!-- エラー/成功トースト -->
+  <div id="errorToast" class="hidden fixed top-4 right-4 z-50 border rounded-lg p-4 max-w-md shadow-lg flex items-start gap-3">
+    <p id="errorMessage" class="text-sm flex-1"></p>
+    <button id="errorClose" class="flex-shrink-0 text-lg leading-none">&times;</button>
+  </div>
+
+  <!-- スクリプト -->
+  <script src="js/api.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
