@@ -30,6 +30,7 @@ const UI = (() => {
       fileInput: document.getElementById('fileInput'),
       imagePreview: document.getElementById('imagePreview'),
       previewImage: document.getElementById('previewImage'),
+      previewImageClean: document.getElementById('previewImageClean'),
       removeImage: document.getElementById('removeImage'),
 
       // フォーカス選択
@@ -231,8 +232,10 @@ const UI = (() => {
       showLoading('画像を読み込み中...');
       const imageData = await GeminiAPI.resizeImage(file);
 
-      // プレビュー表示
-      elements.previewImage.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+      // プレビュー表示（元画像 + マーカー付き両方）
+      const dataUrl = `data:${imageData.mimeType};base64,${imageData.base64}`;
+      elements.previewImage.src = dataUrl;
+      if (elements.previewImageClean) elements.previewImageClean.src = dataUrl;
       elements.imagePreview.classList.remove('hidden');
       elements.uploadArea.querySelector('.upload-prompt').classList.add('hidden');
 
@@ -252,6 +255,7 @@ const UI = (() => {
   function removeUploadedImage(e) {
     e.stopPropagation();
     elements.previewImage.src = '';
+    if (elements.previewImageClean) elements.previewImageClean.src = '';
     elements.imagePreview.classList.add('hidden');
     elements.uploadArea.querySelector('.upload-prompt').classList.remove('hidden');
     elements.analysisSection.classList.add('hidden');
@@ -1056,7 +1060,9 @@ const UI = (() => {
 
   // 画像プレビューを更新（履歴から復元時）
   function updateMainPreview(imageData) {
-    elements.previewImage.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+    const dataUrl = `data:${imageData.mimeType};base64,${imageData.base64}`;
+    elements.previewImage.src = dataUrl;
+    if (elements.previewImageClean) elements.previewImageClean.src = dataUrl;
     elements.imagePreview.classList.remove('hidden');
   }
 

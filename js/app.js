@@ -36,7 +36,10 @@ const App = (() => {
     const uploadPrompt = document.querySelector('#uploadArea .upload-prompt');
     const analysisSection = document.getElementById('analysisSection');
 
-    if (previewImage) previewImage.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+    const dataUrl = `data:${imageData.mimeType};base64,${imageData.base64}`;
+    if (previewImage) previewImage.src = dataUrl;
+    const previewImageClean = document.getElementById('previewImageClean');
+    if (previewImageClean) previewImageClean.src = dataUrl;
     if (imagePreview) imagePreview.classList.remove('hidden');
     if (uploadPrompt) uploadPrompt.classList.add('hidden');
     if (analysisSection) analysisSection.classList.remove('hidden');
