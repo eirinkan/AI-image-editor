@@ -11,6 +11,12 @@ const UI = (() => {
   let beforeImageData = null; // 比較用の元画像
   let hasBeforeImage = false; // Before画像が設定済みか
 
+  // エラー/成功トーストのタイマー（競合防止）
+  let errorTimer = null;
+
+  // cancelBtnのイベントハンドラ（cloneNodeを使わず付け替えで管理）
+  let cancelHandler = null;
+
   // 初期化
   function init() {
     cacheElements();
@@ -172,15 +178,30 @@ const UI = (() => {
     if (key) {
       elements.apiKeyInput.value = key;
       elements.apiKeyInput.type = 'password';
+    } else {
+      // APIキー未設定時は分析ボタンを無効化し、注意文を表示
+      elements.analyzeBtn.disabled = true;
+      const notice = document.createElement('p');
+      notice.id = 'apiKeyNotice';
+      notice.className = 'text-xs text-amber-600 mt-1';
+      notice.textContent = 'APIキーを設定してからご利用ください';
+      elements.apiKeyInput.parentNode.insertBefore(notice, elements.apiKeyInput.nextSibling);
     }
   }
 
   function saveApiKey() {
     const key = elements.apiKeyInput.value.trim();
-    if (key) {
-      GeminiAPI.setApiKey(key);
-      showSuccess('APIキーを保存しました');
+    if (!key) {
+      showError('APIキーを入力してください');
+      elements.apiKeyInput.focus();
+      return;
     }
+    GeminiAPI.setApiKey(key);
+    // 保存成功後に分析ボタンを有効化し、注意文を削除
+    elements.analyzeBtn.disabled = false;
+    const notice = document.getElementById('apiKeyNotice');
+    if (notice) notice.remove();
+    showSuccess('APIキーを保存しました');
   }
 
   function toggleApiKeyVisibility() {
@@ -206,18 +227,43 @@ const UI = (() => {
     e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
   }
 
+  // 許可するMIMEタイプ
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+
+  function validateImageFile(file) {
+    if (!file) return 'ファイルが選択されていません。';
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return 'JPG、PNG、WEBP形式の画像のみ対応しています。';
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return 'ファイルサイズは20MB以下にしてください。';
+    }
+    return null;
+  }
+
   function handleDrop(e) {
     e.preventDefault();
     e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      processUploadedFile(file);
+    const error = validateImageFile(file);
+    if (error) {
+      if (file) showError(error);
+      return;
     }
+    processUploadedFile(file);
   }
 
   function handleFileSelect(e) {
     const file = e.target.files[0];
-    if (file) processUploadedFile(file);
+    if (!file) return;
+    const error = validateImageFile(file);
+    if (error) {
+      showError(error);
+      e.target.value = '';
+      return;
+    }
+    processUploadedFile(file);
   }
 
   async function processUploadedFile(file) {
@@ -265,14 +311,24 @@ const UI = (() => {
     e.preventDefault();
     e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      processReferenceFile(file);
+    const error = validateImageFile(file);
+    if (error) {
+      if (file) showError(error);
+      return;
     }
+    processReferenceFile(file);
   }
 
   function handleReferenceFileSelect(e) {
     const file = e.target.files[0];
-    if (file) processReferenceFile(file);
+    if (!file) return;
+    const error = validateImageFile(file);
+    if (error) {
+      showError(error);
+      e.target.value = '';
+      return;
+    }
+    processReferenceFile(file);
   }
 
   async function processReferenceFile(file) {
@@ -837,6 +893,11 @@ const UI = (() => {
       activateCompare();
       e.preventDefault();
       updateSliderPosition(getSliderRatio(e));
+      // ドラッグ開始時のみdocumentにリスナー登録（パフォーマンス最適化）
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onEnd);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onEnd);
     }
 
     function onMove(e) {
@@ -849,6 +910,11 @@ const UI = (() => {
       if (!isDragging) return;
       isDragging = false;
       deactivateCompare();
+      // ドラッグ終了時にdocumentのリスナーを解除
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onEnd);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
     }
 
     // マウスホバーでスライダー表示
@@ -861,17 +927,13 @@ const UI = (() => {
       deactivateCompare();
     });
 
-    // マウスドラッグ
+    // マウスドラッグ（documentリスナーはonStartで登録）
     elements.compareSlider.addEventListener('mousedown', onStart);
     elements.compareContainer.addEventListener('mousedown', onStart);
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onEnd);
 
-    // タッチ操作
+    // タッチ操作（documentリスナーはonStartで登録）
     elements.compareSlider.addEventListener('touchstart', onStart, { passive: false });
     elements.compareContainer.addEventListener('touchstart', onStart, { passive: false });
-    document.addEventListener('touchmove', onMove, { passive: false });
-    document.addEventListener('touchend', onEnd);
   }
 
   // --- 履歴タイムライン ---
@@ -891,7 +953,7 @@ const UI = (() => {
           ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>'}
         </div>
         <span class="text-xs font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-600'} text-center leading-tight line-clamp-2 cursor-pointer history-thumb">${escapeHtml(entry.label)}</span>
-        <span class="text-[10px] text-gray-400">v${i}</span>
+        <span class="text-xs text-gray-500">v${i}</span>
         <div class="flex gap-1 mt-0.5">
           <button class="history-dl-btn text-gray-400 hover:text-blue-500 transition-colors" title="ダウンロード">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -969,13 +1031,12 @@ const UI = (() => {
       step.classList.remove('active', 'done');
     });
 
-    // キャンセルボタンのイベント（一度だけ）
-    const newCancelBtn = elements.cancelBtn.cloneNode(true);
-    elements.cancelBtn.parentNode.replaceChild(newCancelBtn, elements.cancelBtn);
-    elements.cancelBtn = newCancelBtn;
-    elements.cancelBtn.addEventListener('click', () => {
-      if (cancelCallback) cancelCallback();
-    });
+    // キャンセルボタンのイベント管理（cloneNodeではなくremoveEventListenerで付け替え）
+    if (cancelHandler) {
+      elements.cancelBtn.removeEventListener('click', cancelHandler);
+    }
+    cancelHandler = () => { if (cancelCallback) cancelCallback(); };
+    elements.cancelBtn.addEventListener('click', cancelHandler);
   }
 
   // ステップを更新
@@ -1002,6 +1063,7 @@ const UI = (() => {
 
   // --- エラー / 成功メッセージ ---
   function showError(message) {
+    clearTimeout(errorTimer);
     elements.errorMessage.textContent = message;
     elements.errorToast.classList.remove('hidden', 'bg-green-100', 'border-green-400');
     elements.errorToast.classList.add('bg-red-100', 'border-red-400');
@@ -1009,10 +1071,11 @@ const UI = (() => {
     elements.errorMessage.classList.add('text-red-800');
     elements.errorClose.classList.remove('text-green-500');
     elements.errorClose.classList.add('text-red-500');
-    setTimeout(hideError, 8000);
+    errorTimer = setTimeout(hideError, 8000);
   }
 
   function showSuccess(message) {
+    clearTimeout(errorTimer);
     elements.errorMessage.textContent = message;
     elements.errorToast.classList.remove('hidden', 'bg-red-100', 'border-red-400');
     elements.errorToast.classList.add('bg-green-100', 'border-green-400');
@@ -1020,7 +1083,7 @@ const UI = (() => {
     elements.errorMessage.classList.add('text-green-800');
     elements.errorClose.classList.remove('text-red-500');
     elements.errorClose.classList.add('text-green-500');
-    setTimeout(hideError, 3000);
+    errorTimer = setTimeout(hideError, 3000);
   }
 
   function hideError() {
@@ -1071,9 +1134,7 @@ const UI = (() => {
   // --- ユーティリティ ---
   function escapeHtml(text) {
     if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
   }
 
   // 複数要素の指示を取得: [{ elementName, instruction }]

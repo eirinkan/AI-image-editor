@@ -124,14 +124,9 @@ const EditHistory = (() => {
     listeners.forEach(cb => cb(entries, currentIndex));
   }
 
-  // sessionStorageに保存（画像データが大きいので最新10件のみ）
+  // sessionStorageに保存（履歴のメタデータのみ・画像データはセッション中のみ）
   function save() {
     try {
-      const toSave = entries.slice(-10).map(e => ({
-        ...e,
-        // サムネイル用に画像を小さくして保存はしない（メモリ内で管理）
-      }));
-      // 履歴のメタデータのみ保存（画像データはセッション中のみ）
       const meta = entries.map(e => ({
         id: e.id,
         label: e.label,

@@ -9,6 +9,16 @@ const TextToImage = (() => {
     lastGeneratedImage: null, // { base64, mimeType }
   };
 
+  // AbortController管理
+  let currentAbortController = null;
+
+  function cancelCurrentOperation() {
+    if (currentAbortController) {
+      currentAbortController.abort();
+      currentAbortController = null;
+    }
+  }
+
   function init() {
     // サブタブ切替（アップロード / AI生成）
     const subTabUpload = document.getElementById('subTabUpload');
@@ -61,14 +71,22 @@ const TextToImage = (() => {
     if (downloadGeneratedBtn) {
       downloadGeneratedBtn.addEventListener('click', () => {
         if (!state.lastGeneratedImage) return;
+        const ext = getExtFromMime(state.lastGeneratedImage.mimeType);
         const link = document.createElement('a');
         link.href = `data:${state.lastGeneratedImage.mimeType};base64,${state.lastGeneratedImage.base64}`;
-        link.download = 'ai_generated.jpg';
+        link.download = `ai_generated${ext}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       });
     }
+  }
+
+  // MIMEタイプから拡張子を取得
+  function getExtFromMime(mime) {
+    if (mime === 'image/png') return '.png';
+    if (mime === 'image/webp') return '.webp';
+    return '.jpg';
   }
 
   // ========== サブタブ切替（アップロード / AI生成） ==========
@@ -85,6 +103,14 @@ const TextToImage = (() => {
       subTabGenerate.classList.remove('active');
       subTabGenerate.classList.add('text-gray-500');
       subTabUpload.classList.remove('text-gray-500');
+
+      // アップロードタブに切り替えた際、生成フローの状態をリセット
+      const ideaInputSection = document.getElementById('ideaInputSection');
+      const promptReviewSection = document.getElementById('promptReviewSection');
+      const generateResultPreview = document.getElementById('generateResultPreview');
+      if (ideaInputSection) ideaInputSection.classList.remove('hidden');
+      if (promptReviewSection) promptReviewSection.classList.add('hidden');
+      if (generateResultPreview) generateResultPreview.classList.add('hidden');
     } else {
       uploadPanel.classList.add('hidden');
       generatePanel.classList.remove('hidden');
@@ -141,9 +167,15 @@ const TextToImage = (() => {
       return;
     }
 
+    cancelCurrentOperation();
+    currentAbortController = new AbortController();
+
     try {
-      UI.showLoading('プロンプトを作成中...');
-      const result = await GeminiAPI.craftPrompt(userInput);
+      UI.showLoading('プロンプトを作成中...', { showCancel: true });
+      const cancelBtn = document.getElementById('cancelBtn');
+      if (cancelBtn) cancelBtn.addEventListener('click', () => cancelCurrentOperation(), { once: true });
+
+      const result = await GeminiAPI.craftPrompt(userInput, currentAbortController.signal);
       state.craftedResult = result;
 
       // 生成されたプロンプトをテキストエリアに表示
@@ -176,7 +208,13 @@ const TextToImage = (() => {
       });
     } catch (err) {
       UI.hideLoading();
-      UI.showError(err.message);
+      if (err.name === 'AbortError') {
+        UI.showSuccess('プロンプト作成をキャンセルしました');
+      } else {
+        UI.showError(err.message);
+      }
+    } finally {
+      currentAbortController = null;
     }
   }
 
@@ -200,13 +238,25 @@ const TextToImage = (() => {
       return;
     }
 
+    cancelCurrentOperation();
+    currentAbortController = new AbortController();
+    const signal = currentAbortController.signal;
+
+    // ボタン無効化
+    const approveBtn = document.getElementById('promptApproveBtn');
+    const regenBtn = document.getElementById('regenerateBtn');
+    if (approveBtn) approveBtn.disabled = true;
+    if (regenBtn) regenBtn.disabled = true;
+
     try {
-      UI.showLoading('画像を生成中...（20〜60秒かかります）');
+      UI.showLoading('画像を生成中...（20〜60秒かかります）', { showCancel: true });
+      const cancelBtn = document.getElementById('cancelBtn');
+      if (cancelBtn) cancelBtn.addEventListener('click', () => cancelCurrentOperation(), { once: true });
 
       const result = await GeminiAPI.generateFromText(prompt, {
         aspectRatio: state.aspectRatio,
         imageSize: state.imageSize,
-      });
+      }, signal);
 
       const imageData = { base64: result.base64, mimeType: result.mimeType };
       state.lastGeneratedImage = imageData;
@@ -237,6 +287,10 @@ const TextToImage = (() => {
       } else {
         UI.showError(err.message);
       }
+    } finally {
+      currentAbortController = null;
+      if (approveBtn) approveBtn.disabled = false;
+      if (regenBtn) regenBtn.disabled = false;
     }
   }
 
@@ -266,9 +320,17 @@ const TextToImage = (() => {
 
   // ========== 簡易マークダウン変換 ==========
 
+  // HTMLエスケープ
+  function escapeHtmlLocal(text) {
+    if (!text) return '';
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+  }
+
   function simpleMarkdown(text) {
     if (!text) return '';
-    return text
+    // 先にHTMLエスケープしてからマークダウン変換（XSS防止）
+    let escaped = escapeHtmlLocal(text);
+    return escaped
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/^### (.*$)/gm, '<h4 class="font-bold text-gray-800 mt-3 mb-1">$1</h4>')

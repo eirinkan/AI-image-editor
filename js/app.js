@@ -56,6 +56,7 @@ const App = (() => {
 
   // 画像が削除された
   function onImageRemoved() {
+    cancelCurrentOperation();
     state.originalImage = null;
     state.currentImage = null;
     state.referenceImage = null;
@@ -109,6 +110,10 @@ const App = (() => {
     currentAbortController = new AbortController();
     const signal = currentAbortController.signal;
 
+    // ボタン無効化（連続クリック防止）
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    if (analyzeBtn) analyzeBtn.disabled = true;
+
     try {
       UI.showLoading('画像を分析中...', { showCancel: true });
       // キャンセルボタンのイベント設定
@@ -139,6 +144,7 @@ const App = (() => {
       }
     } finally {
       currentAbortController = null;
+      if (analyzeBtn) analyzeBtn.disabled = false;
     }
   }
 
@@ -164,6 +170,10 @@ const App = (() => {
     cancelCurrentOperation();
     currentAbortController = new AbortController();
     const signal = currentAbortController.signal;
+
+    // ボタン無効化（連続クリック防止）
+    const generateBtnEl = document.getElementById('generateBtn');
+    if (generateBtnEl) generateBtnEl.disabled = true;
 
     // 生成前の画像を保持（Before/After比較用）
     const imageBeforeGeneration = { ...state.currentImage };
@@ -231,6 +241,7 @@ const App = (() => {
       }
     } finally {
       currentAbortController = null;
+      if (generateBtnEl) generateBtnEl.disabled = false;
     }
   }
 
@@ -238,6 +249,10 @@ const App = (() => {
   function goToHistory(index) {
     const entry = EditHistory.goTo(index);
     if (!entry) return;
+
+    // 選択要素をクリア
+    state.selectedElements = [];
+    UI.clearSelectedElements();
 
     // 状態を復元
     state.currentImage = entry.image;
@@ -249,6 +264,11 @@ const App = (() => {
 
     // text-to-image履歴の場合は要素一覧・JSON表示をスキップ
     if (entry.json && entry.json.mode === 'text-to-image') {
+      // 編集・要素セクションを非表示
+      const editSection = document.getElementById('editSection');
+      const elementsSection = document.getElementById('elementsSection');
+      if (editSection) editSection.classList.add('hidden');
+      if (elementsSection) elementsSection.classList.add('hidden');
       return;
     }
 
@@ -264,16 +284,25 @@ const App = (() => {
     }
   }
 
+  // MIMEタイプから拡張子を取得
+  function getExtFromMime(mime) {
+    if (mime === 'image/png') return '.png';
+    if (mime === 'image/webp') return '.webp';
+    return '.jpg';
+  }
+
   // 現在の画像をダウンロード
   function downloadCurrent() {
     const current = EditHistory.getCurrent();
     if (current) {
-      EditHistory.downloadImage(current, `ai_edit_v${current.id}.jpg`);
+      const ext = getExtFromMime(current.image && current.image.mimeType);
+      EditHistory.downloadImage(current, `ai_edit_v${current.id}${ext}`);
     } else if (state.currentImage) {
       // 履歴がない場合は現在の画像をダウンロード
+      const ext = getExtFromMime(state.currentImage.mimeType);
       const link = document.createElement('a');
       link.href = `data:${state.currentImage.mimeType};base64,${state.currentImage.base64}`;
-      link.download = 'ai_edit.jpg';
+      link.download = `ai_edit${ext}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
