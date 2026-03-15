@@ -4,6 +4,9 @@ const UI = (() => {
   // DOM要素のキャッシュ
   let elements = {};
 
+  // 複数選択中の要素リスト
+  let selectedElements = []; // [{ id, type, name, data }]
+
   // 初期化
   function init() {
     cacheElements();
@@ -37,8 +40,7 @@ const UI = (() => {
 
       // 編集パネル
       editSection: document.getElementById('editSection'),
-      selectedElementName: document.getElementById('selectedElementName'),
-      editInstruction: document.getElementById('editInstruction'),
+      editInstructionsList: document.getElementById('editInstructionsList'),
       referenceUploadArea: document.getElementById('referenceUploadArea'),
       referenceFileInput: document.getElementById('referenceFileInput'),
       referencePreview: document.getElementById('referencePreview'),
@@ -549,26 +551,93 @@ const UI = (() => {
   }
 
   function selectElement({ id, type, name, data }) {
-    // カード選択状態の更新
-    elements.elementsList.querySelectorAll('.element-card').forEach(card => {
-      card.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
-      card.classList.add('border-gray-200');
-    });
-    const selectedCard = elements.elementsList.querySelector(`[data-element-id="${id}"]`);
-    if (selectedCard) {
-      selectedCard.classList.remove('border-gray-200');
-      selectedCard.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
+    const existingIndex = selectedElements.findIndex(el => el.id === id);
+
+    if (existingIndex >= 0) {
+      // 既に選択されている場合 → 選択解除
+      selectedElements.splice(existingIndex, 1);
+      const card = elements.elementsList.querySelector(`[data-element-id="${id}"]`);
+      if (card) {
+        card.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
+        card.classList.add('border-gray-200');
+      }
+    } else {
+      // 新たに選択
+      selectedElements.push({ id, type, name, data });
+      const card = elements.elementsList.querySelector(`[data-element-id="${id}"]`);
+      if (card) {
+        card.classList.remove('border-gray-200');
+        card.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
+      }
     }
 
-    // 編集パネル表示
-    elements.editSection.classList.remove('hidden');
-    elements.selectedElementName.textContent = name;
-    elements.editInstruction.value = '';
-    elements.editInstruction.placeholder = getPlaceholder(type);
-    elements.editInstruction.focus();
+    // 編集パネルの表示更新
+    if (selectedElements.length > 0) {
+      elements.editSection.classList.remove('hidden');
+      renderEditInstructions();
+    } else {
+      elements.editSection.classList.add('hidden');
+    }
 
     // Appに通知
-    if (typeof App !== 'undefined') App.onElementSelected({ id, type, name, data });
+    if (typeof App !== 'undefined') App.onElementsSelected([...selectedElements]);
+  }
+
+  // 選択中の各要素の指示入力欄を描画
+  function renderEditInstructions() {
+    const container = elements.editInstructionsList;
+    // 既存の入力値を保存
+    const savedValues = {};
+    container.querySelectorAll('[data-instruction-for]').forEach(row => {
+      const textarea = row.querySelector('textarea');
+      if (textarea) savedValues[row.dataset.instructionFor] = textarea.value;
+    });
+
+    container.innerHTML = '';
+
+    selectedElements.forEach((el, i) => {
+      const row = document.createElement('div');
+      row.className = 'edit-instruction-row border border-gray-200 rounded-lg p-3 space-y-2';
+      row.dataset.instructionFor = el.id;
+
+      const header = document.createElement('div');
+      header.className = 'flex items-center justify-between';
+      header.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold">${i + 1}</span>
+          <span class="font-medium text-sm text-blue-600">${escapeHtml(el.name)}</span>
+        </div>
+        <button class="remove-instruction text-gray-400 hover:text-red-500 text-lg leading-none" data-remove-id="${el.id}">&times;</button>
+      `;
+
+      const textarea = document.createElement('textarea');
+      textarea.rows = 2;
+      textarea.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none';
+      textarea.placeholder = getPlaceholder(el.type);
+      textarea.dataset.elementId = el.id;
+      // 保存していた値を復元
+      if (savedValues[el.id]) textarea.value = savedValues[el.id];
+
+      row.appendChild(header);
+      row.appendChild(textarea);
+      container.appendChild(row);
+
+      // 削除ボタン
+      header.querySelector('.remove-instruction').addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectElement({ id: el.id, type: el.type, name: el.name, data: el.data });
+      });
+
+      // 最後に追加された要素にフォーカス
+      if (i === selectedElements.length - 1 && !savedValues[el.id]) {
+        setTimeout(() => textarea.focus(), 50);
+      }
+    });
+  }
+
+  // 全選択をクリア（画像削除時等）
+  function clearSelectedElements() {
+    selectedElements = [];
   }
 
   function getPlaceholder(type) {
@@ -698,8 +767,24 @@ const UI = (() => {
     return div.innerHTML;
   }
 
-  function getEditInstruction() {
-    return elements.editInstruction.value.trim();
+  // 複数要素の指示を取得: [{ elementName, instruction }]
+  function getEditInstructions() {
+    const instructions = [];
+    const container = elements.editInstructionsList;
+    if (!container) return instructions;
+
+    container.querySelectorAll('[data-instruction-for]').forEach(row => {
+      const textarea = row.querySelector('textarea');
+      const elementId = row.dataset.instructionFor;
+      const el = selectedElements.find(e => e.id === elementId);
+      if (el && textarea && textarea.value.trim()) {
+        instructions.push({
+          elementName: el.name,
+          instruction: textarea.value.trim(),
+        });
+      }
+    });
+    return instructions;
   }
 
   // 画像プレビューを更新（履歴から復元時）
@@ -721,7 +806,8 @@ const UI = (() => {
     updateJsonDisplay,
     getSelectedFocusTags,
     getCustomInstruction,
-    getEditInstruction,
+    getEditInstructions,
+    clearSelectedElements,
     updateMainPreview,
   };
 })();

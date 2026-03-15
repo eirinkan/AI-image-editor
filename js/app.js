@@ -8,7 +8,7 @@ const App = (() => {
     referenceImage: null,    // { base64, mimeType } - 参照画像
     currentJson: null,       // 現在のJSON構造
     originalJson: null,      // 変更前のJSON（差分検出用）
-    selectedElement: null,   // 選択中の要素 { id, type, name, data }
+    selectedElements: [],    // 選択中の要素 [{ id, type, name, data }]
   };
 
   // 初期化
@@ -33,7 +33,8 @@ const App = (() => {
     state.referenceImage = null;
     state.currentJson = null;
     state.originalJson = null;
-    state.selectedElement = null;
+    state.selectedElements = [];
+    UI.clearSelectedElements();
     EditHistory.clear();
   }
 
@@ -47,9 +48,9 @@ const App = (() => {
     state.referenceImage = null;
   }
 
-  // 要素が選択された
-  function onElementSelected(element) {
-    state.selectedElement = element;
+  // 要素の選択が更新された（複数対応）
+  function onElementsSelected(elements) {
+    state.selectedElements = elements;
   }
 
   // 分析を実行
@@ -89,7 +90,7 @@ const App = (() => {
     }
   }
 
-  // 画像を生成
+  // 画像を生成（複数指示対応）
   async function generate() {
     if (!state.currentImage) {
       UI.showError('先に画像をアップロードしてください。');
@@ -101,22 +102,16 @@ const App = (() => {
       return;
     }
 
-    const instruction = UI.getEditInstruction();
-    if (!instruction) {
-      UI.showError('変更内容を入力してください。');
-      return;
-    }
-
-    if (!state.selectedElement) {
-      UI.showError('変更する要素を選択してください。');
+    const editInstructions = UI.getEditInstructions();
+    if (editInstructions.length === 0) {
+      UI.showError('変更内容を入力してください。要素を選択して指示を書いてください。');
       return;
     }
 
     try {
-      // Step 1: JSONを更新
-      UI.showLoading('変更内容をJSONに反映中...');
-      const elementName = state.selectedElement.name;
-      const updatedJson = await GeminiAPI.updateJson(state.currentJson, elementName, instruction);
+      // Step 1: JSONを一括更新
+      UI.showLoading(`変更内容をJSONに反映中...（${editInstructions.length}件の指示）`);
+      const updatedJson = await GeminiAPI.updateJson(state.currentJson, editInstructions);
 
       // Step 2: 画像を生成
       UI.showLoading('画像を生成中...（20〜60秒かかります）');
@@ -138,12 +133,15 @@ const App = (() => {
       UI.updateJsonDisplay(updatedJson);
       UI.updateMainPreview(newImageData);
 
-      // 履歴に追加
+      // 履歴ラベルを作成（複数指示を結合）
+      const historyLabel = editInstructions
+        .map(item => `${item.elementName}: ${item.instruction}`)
+        .join(' / ');
       const currentEntry = EditHistory.getCurrent();
       EditHistory.createEntry(
         newImageData,
         updatedJson,
-        `${elementName}: ${instruction}`,
+        historyLabel,
         currentEntry ? currentEntry.id : 0
       );
 
@@ -201,7 +199,7 @@ const App = (() => {
     onImageRemoved,
     onReferenceUploaded,
     onReferenceRemoved,
-    onElementSelected,
+    onElementsSelected,
     analyze,
     generate,
     goToHistory,

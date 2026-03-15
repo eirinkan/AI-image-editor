@@ -47,10 +47,12 @@
           <p class="text-gray-600 font-medium">クリックまたはドラッグ&ドロップで画像をアップロード</p>
           <p class="text-sm text-gray-400 mt-1">JPG, PNG, WEBP対応</p>
         </div>
-        <div id="imagePreview" class="hidden relative">
-          <img id="previewImage" class="max-h-96 mx-auto rounded-lg shadow-md" alt="アップロード画像">
-          <div id="markerOverlay" class="absolute inset-0 pointer-events-none"></div>
-          <button id="removeImage" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-lg text-lg leading-none">&times;</button>
+        <div id="imagePreview" class="hidden relative flex justify-center">
+          <div id="imageWrapper" class="relative inline-block">
+            <img id="previewImage" class="max-h-96 rounded-lg shadow-md block" alt="アップロード画像">
+            <div id="markerOverlay" class="absolute inset-0 pointer-events-none rounded-lg overflow-hidden"></div>
+          </div>
+          <button id="removeImage" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-lg text-lg leading-none z-20">&times;</button>
         </div>
         <input type="file" id="fileInput" accept="image/*" class="hidden">
       </div>
@@ -91,15 +93,12 @@
 
     <!-- 編集パネル -->
     <section id="editSection" class="hidden">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 3: 変更内容を指示</h2>
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 3: 変更内容を指示（複数選択可）</h2>
       <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-500">選択中:</span>
-          <span id="selectedElementName" class="font-medium text-blue-600"></span>
+        <!-- 選択中の要素ごとの指示入力欄 -->
+        <div id="editInstructionsList" class="space-y-3">
+          <!-- 動的に挿入される -->
         </div>
-        <textarea id="editInstruction" rows="3"
-          class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none"
-          placeholder="変更内容を入力してください"></textarea>
 
         <div class="flex items-start gap-4">
           <!-- 参照画像 -->

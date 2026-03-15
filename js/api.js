@@ -163,17 +163,27 @@ Output ONLY the JSON, no other text.`;
     return prompt;
   }
 
-  // 変更指示に基づいてJSONを更新するプロンプト
-  function buildUpdatePrompt(currentJson, selectedElement, instruction) {
+  // 変更指示に基づいてJSONを更新するプロンプト（複数指示対応）
+  function buildUpdatePrompt(currentJson, editInstructions) {
+    let changesDescription = '';
+    if (Array.isArray(editInstructions)) {
+      changesDescription = editInstructions.map((item, i) =>
+        `${i + 1}. Element: "${item.elementName}" → Instruction: "${item.instruction}"`
+      ).join('\n');
+    } else {
+      // 後方互換（単一指示）
+      changesDescription = `1. Element: "${editInstructions.elementName}" → Instruction: "${editInstructions.instruction}"`;
+    }
+
     return `You have the following JSON description of an image:
 
 ${JSON.stringify(currentJson, null, 2)}
 
-The user wants to modify the element: "${selectedElement}"
-User's instruction: "${instruction}"
+The user wants to apply the following changes:
+${changesDescription}
 
-Update the JSON to reflect this change. Only modify the relevant parts.
-If the instruction implies adding new properties or changing the structure, do so.
+Update the JSON to reflect ALL of these changes simultaneously. Only modify the relevant parts for each change.
+If any instruction implies adding new properties or changing the structure, do so.
 Output ONLY the updated JSON, no other text.`;
   }
 
@@ -325,8 +335,9 @@ Generate the edited image.`;
   }
 
   // JSON更新（ユーザーの自然言語指示を反映）
-  async function updateJson(currentJson, selectedElement, instruction) {
-    const prompt = buildUpdatePrompt(currentJson, selectedElement, instruction);
+  // editInstructions: [{ elementName, instruction }] または単一オブジェクト
+  async function updateJson(currentJson, editInstructions) {
+    const prompt = buildUpdatePrompt(currentJson, editInstructions);
 
     const requestBody = {
       contents: [{
