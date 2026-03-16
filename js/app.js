@@ -191,6 +191,9 @@ const App = (() => {
       const updatedJson = await GeminiAPI.updateJson(state.currentJson, editInstructions, signal);
       state.pendingJson = updatedJson; // リカバリ用に保持
 
+      // 少し間を空けてから画像生成に入る
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       // Step 2: 画像を生成（枚数分ループ）
       UI.updateLoadingStep(2);
 
@@ -264,7 +267,7 @@ const App = (() => {
         UI.showSuccess('生成をキャンセルしました');
         state.pendingJson = null;
       } else if (state.pendingJson) {
-        UI.showError(`画像生成に失敗しました: ${err.message}\nJSON更新は完了しています。「画像を生成」ボタンで再試行できます。`);
+        UI.showError(`画像生成に失敗しました: ${err.message}\n編集内容の準備は完了しています。「画像を生成」ボタンで再試行できます。`);
         state.currentJson = state.pendingJson;
         state.originalJson = JSON.parse(JSON.stringify(state.pendingJson));
         state.pendingJson = null;

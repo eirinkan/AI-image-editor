@@ -268,19 +268,74 @@ Output ONLY the updated JSON, no other text.`;
     return diff;
   }
 
-  // 画像生成用のプロンプトを構築（差分ベース）
+  // 画像生成用のプロンプトを構築（差分ベース・自然言語）
   function buildGenerationPrompt(originalJson, updatedJson) {
     const diff = computeJsonDiff(originalJson, updatedJson);
     const hasDiff = Object.keys(diff).length > 0;
 
+    // 差分を自然言語の変更指示に変換
+    function diffToNaturalLanguage(diff) {
+      const lines = [];
+      for (const [key, value] of Object.entries(diff)) {
+        if (Array.isArray(value)) {
+          value.forEach(change => {
+            if (change.action === 'modified') {
+              lines.push(`- Change ${key}: "${JSON.stringify(change.from)}" → "${JSON.stringify(change.to)}"`);
+            } else if (change.action === 'added') {
+              lines.push(`- Add to ${key}: "${JSON.stringify(change.value)}"`);
+            } else if (change.action === 'removed') {
+              lines.push(`- Remove from ${key}: "${JSON.stringify(change.value)}"`);
+            }
+          });
+        } else if (value.from !== undefined && value.to !== undefined) {
+          lines.push(`- Change ${key}: "${JSON.stringify(value.from)}" → "${JSON.stringify(value.to)}"`);
+        }
+      }
+      return lines.join('\n');
+    }
+
+    // 更新後の状態を自然言語の説明に変換
+    function specToDescription(spec) {
+      const parts = [];
+      if (spec.objects) {
+        spec.objects.forEach(obj => {
+          let desc = obj.name || obj.description || '';
+          if (obj.color) desc += `, color: ${obj.color}`;
+          if (obj.material) desc += `, material: ${obj.material}`;
+          if (obj.description) desc += ` (${obj.description})`;
+          parts.push(desc);
+        });
+      }
+      if (spec.atmosphere) {
+        const atm = spec.atmosphere;
+        if (atm.lighting) parts.push(`Lighting: ${atm.lighting}`);
+        if (atm.weather) parts.push(`Weather: ${atm.weather}`);
+        if (atm.time_of_day) parts.push(`Time: ${atm.time_of_day}`);
+        if (atm.mood) parts.push(`Mood: ${atm.mood}`);
+      }
+      if (spec.text_elements) {
+        spec.text_elements.forEach(te => {
+          parts.push(`Text: "${te.content || te.text || ''}" (${te.font || ''} ${te.color || ''})`);
+        });
+      }
+      if (spec.camera) {
+        const cam = spec.camera;
+        if (cam.angle) parts.push(`Camera angle: ${cam.angle}`);
+        if (cam.shot_type) parts.push(`Shot type: ${cam.shot_type}`);
+      }
+      return parts.join('\n');
+    }
+
     if (hasDiff) {
+      const changeDesc = diffToNaturalLanguage(diff);
+      const fullDesc = specToDescription(updatedJson);
       return `Modify this image based on the following changes.
 
 Changes to apply:
-${JSON.stringify(diff, null, 2)}
+${changeDesc}
 
-Full updated specification for reference:
-${JSON.stringify(updatedJson, null, 2)}
+Full updated description for reference:
+${fullDesc}
 
 Apply ONLY the specified changes.
 Keep everything else identical to the original image - same composition, same perspective, same objects that weren't changed.
@@ -288,10 +343,11 @@ Generate the edited image.`;
     }
 
     // 差分が取れない場合はフォールバック
-    return `Modify this image based on the following JSON specification.
+    const fullDesc = specToDescription(updatedJson);
+    return `Modify this image based on the following description.
 
-Updated specification (apply these changes):
-${JSON.stringify(updatedJson, null, 2)}
+Updated description (apply these changes):
+${fullDesc}
 
 Keep everything else identical to the original image - same composition, same perspective, same objects that weren't changed.
 Generate the edited image.`;
