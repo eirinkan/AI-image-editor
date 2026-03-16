@@ -2,10 +2,47 @@
 
 const GeminiAPI = (() => {
   const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-  // 画像生成対応モデル（Nano Banana 2）
-  const IMAGE_MODEL = 'gemini-3.1-flash-image-preview';
-  // テキスト分析モデル（JSON分析・更新用）
-  const TEXT_MODEL = 'gemini-3.1-pro-preview';
+
+  // 選択可能モデル定義
+  const TEXT_MODELS = [
+    { id: 'gemini-2.0-flash-lite', name: '2.0 Flash Lite', cost: '最安', note: '高速・低コスト。シンプルな指示向き' },
+    { id: 'gemini-2.0-flash', name: '2.0 Flash', cost: '標準', note: 'バランス型。ほとんどの用途に推奨' },
+    { id: 'gemini-2.5-pro-preview-06-05', name: '2.5 Pro', cost: '高い', note: '高精度。複雑な分析・指示に強い' },
+    { id: 'gemini-3.1-pro-preview', name: '3.1 Pro', cost: '最高', note: '最新・最高精度。コスト高' },
+  ];
+
+  const IMAGE_MODELS = [
+    { id: 'gemini-3.1-flash-image-preview', name: '3.1 Flash（Nano Banana 2）', cost: '標準', note: '高速・低コスト。品質は十分実用的' },
+    { id: 'gemini-3.1-pro-image-preview', name: '3.1 Pro（Nano Banana Pro）', cost: '高い', note: '高品質。ディテールや構図の忠実度が上がる' },
+  ];
+
+  // デフォルトモデル
+  const DEFAULT_TEXT_MODEL = 'gemini-2.0-flash';
+  const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-image-preview';
+
+  // 動的モデル取得
+  function getTextModel() {
+    return localStorage.getItem('gemini_text_model') || DEFAULT_TEXT_MODEL;
+  }
+  function getImageModel() {
+    return localStorage.getItem('gemini_image_model') || DEFAULT_IMAGE_MODEL;
+  }
+  function setTextModel(id) {
+    localStorage.setItem('gemini_text_model', id);
+  }
+  function setImageModel(id) {
+    localStorage.setItem('gemini_image_model', id);
+  }
+
+  // 現在のモデルID（各API呼び出しで参照）
+  let TEXT_MODEL = getTextModel();
+  let IMAGE_MODEL = getImageModel();
+
+  // モデル再読み込み（設定変更時に呼ぶ）
+  function reloadModels() {
+    TEXT_MODEL = getTextModel();
+    IMAGE_MODEL = getImageModel();
+  }
 
   function getApiKey() {
     return localStorage.getItem('gemini_api_key') || '';
@@ -613,6 +650,13 @@ Generate the edited image.`;
   return {
     getApiKey,
     setApiKey,
+    getTextModel,
+    setTextModel,
+    getImageModel,
+    setImageModel,
+    reloadModels,
+    TEXT_MODELS,
+    IMAGE_MODELS,
     fileToBase64,
     resizeImage,
     analyzeImage,

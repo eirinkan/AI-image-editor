@@ -35,6 +35,7 @@ const UI = (() => {
     cacheElements();
     setupEventListeners();
     restoreApiKey();
+    initModelSelectors();
   }
 
   function cacheElements() {
@@ -42,7 +43,7 @@ const UI = (() => {
       // ヘッダー
       apiKeyInput: document.getElementById('apiKeyInput'),
       apiKeyToggle: document.getElementById('apiKeyToggle'),
-      apiKeySave: document.getElementById('apiKeySave'),
+      apiKeyStatus: document.getElementById('apiKeyStatus'),
 
       // 画像アップロード
       uploadArea: document.getElementById('uploadArea'),
@@ -114,6 +115,13 @@ const UI = (() => {
       customElementRegisterBtn: document.getElementById('customElementRegisterBtn'),
       customElementRegisteredList: document.getElementById('customElementRegisteredList'),
 
+      // モデル選択
+      textModelSelect: document.getElementById('textModelSelect'),
+      textModelNote: document.getElementById('textModelNote'),
+      imageModelSelect: document.getElementById('imageModelSelect'),
+      imageModelNote: document.getElementById('imageModelNote'),
+      costTableContainer: document.getElementById('costTableContainer'),
+
       // 設定・ヘルプモーダル
       settingsBtn: document.getElementById('settingsBtn'),
       settingsModal: document.getElementById('settingsModal'),
@@ -143,12 +151,9 @@ const UI = (() => {
     elements.helpClose.addEventListener('click', () => elements.helpModal.classList.add('hidden'));
     elements.helpModal.addEventListener('click', (e) => { if (e.target === elements.helpModal) elements.helpModal.classList.add('hidden'); });
 
-    // APIキー
+    // APIキー（自動保存）
     elements.apiKeyToggle.addEventListener('click', toggleApiKeyVisibility);
-    elements.apiKeySave.addEventListener('click', saveApiKey);
-    elements.apiKeyInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') saveApiKey();
-    });
+    elements.apiKeyInput.addEventListener('input', autoSaveApiKey);
 
     // 画像アップロード（ドラッグ&ドロップ）
     elements.uploadArea.addEventListener('dragover', handleDragOver);
@@ -222,30 +227,147 @@ const UI = (() => {
     renderRegisteredCustomElements();
   }
 
-  // --- APIキー ---
+  // --- APIキー（自動保存） ---
+  let apiKeySaveTimer = null;
+
   function restoreApiKey() {
     const key = GeminiAPI.getApiKey();
     if (key) {
       elements.apiKeyInput.value = key;
       elements.apiKeyInput.type = 'password';
+      elements.apiKeyStatus.textContent = '保存済み';
+      elements.apiKeyStatus.className = 'text-xs text-green-500';
     } else {
-      // APIキー未設定時は分析ボタンを無効化し、トーストで通知
       elements.analyzeBtn.disabled = true;
-      showError('APIキーが未設定です。ヘッダーの「設定」からAPIキーを保存してください。');
+      elements.apiKeyStatus.textContent = 'APIキーを入力してください';
+      elements.apiKeyStatus.className = 'text-xs text-gray-400';
+      showError('APIキーが未設定です。ヘッダーの「設定」からAPIキーを入力してください。');
     }
   }
 
-  function saveApiKey() {
+  function autoSaveApiKey() {
+    clearTimeout(apiKeySaveTimer);
     const key = elements.apiKeyInput.value.trim();
     if (!key) {
-      showError('APIキーを入力してください');
-      elements.apiKeyInput.focus();
+      elements.analyzeBtn.disabled = true;
+      elements.apiKeyStatus.textContent = 'APIキーを入力してください';
+      elements.apiKeyStatus.className = 'text-xs text-gray-400';
       return;
     }
-    GeminiAPI.setApiKey(key);
-    // 保存成功後に分析ボタンを有効化
-    elements.analyzeBtn.disabled = false;
-    showSuccess('APIキーを保存しました');
+    // 入力中のちらつき防止: 500ms後に保存
+    elements.apiKeyStatus.textContent = '入力中...';
+    elements.apiKeyStatus.className = 'text-xs text-gray-400';
+    apiKeySaveTimer = setTimeout(() => {
+      GeminiAPI.setApiKey(key);
+      elements.analyzeBtn.disabled = false;
+      elements.apiKeyStatus.textContent = '自動保存しました';
+      elements.apiKeyStatus.className = 'text-xs text-green-500';
+    }, 500);
+  }
+
+  // --- モデル選択 ---
+  // コスト定義
+  // テキスト処理: 中央値（概算 ¥/回）
+  const TEXT_COST_MAP = {
+    'gemini-2.0-flash-lite':        { analysis: '¥0.2', edit: '¥0.2', prompt: '¥0.2' },
+    'gemini-2.0-flash':             { analysis: '¥1',   edit: '¥0.5', prompt: '¥0.5' },
+    'gemini-2.5-pro-preview-06-05': { analysis: '¥3',   edit: '¥2',   prompt: '¥2' },
+    'gemini-3.1-pro-preview':       { analysis: '¥5',   edit: '¥3',   prompt: '¥3' },
+  };
+  // 画像生成: サイズ別（概算 ¥/回）
+  const IMAGE_COST_MAP = {
+    'gemini-3.1-flash-image-preview': { '1K': '¥3',  '2K': '¥5' },
+    'gemini-3.1-pro-image-preview':   { '1K': '¥5',  '2K': '¥10' },
+  };
+
+  function initModelSelectors() {
+    // テキストモデルセレクトボックスを構築
+    const currentText = GeminiAPI.getTextModel();
+    GeminiAPI.TEXT_MODELS.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `${m.name}（${m.cost}）`;
+      if (m.id === currentText) opt.selected = true;
+      elements.textModelSelect.appendChild(opt);
+    });
+
+    // 画像モデルセレクトボックスを構築
+    const currentImage = GeminiAPI.getImageModel();
+    GeminiAPI.IMAGE_MODELS.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `${m.name}（${m.cost}）`;
+      if (m.id === currentImage) opt.selected = true;
+      elements.imageModelSelect.appendChild(opt);
+    });
+
+    // イベントリスナー
+    elements.textModelSelect.addEventListener('change', () => {
+      GeminiAPI.setTextModel(elements.textModelSelect.value);
+      GeminiAPI.reloadModels();
+      updateModelNotes();
+    });
+    elements.imageModelSelect.addEventListener('change', () => {
+      GeminiAPI.setImageModel(elements.imageModelSelect.value);
+      GeminiAPI.reloadModels();
+      updateModelNotes();
+    });
+
+    // 初期表示
+    updateModelNotes();
+    updateCostTable();
+  }
+
+  function updateModelNotes() {
+    const textModel = GeminiAPI.TEXT_MODELS.find(m => m.id === elements.textModelSelect.value);
+    const imageModel = GeminiAPI.IMAGE_MODELS.find(m => m.id === elements.imageModelSelect.value);
+    elements.textModelNote.textContent = textModel ? textModel.note : '';
+    elements.imageModelNote.textContent = imageModel ? imageModel.note : '';
+  }
+
+  function updateCostTable() {
+    const textModels = GeminiAPI.TEXT_MODELS;
+    const imageModels = GeminiAPI.IMAGE_MODELS;
+    const processes = [
+      { label: '画像分析', key: 'analysis' },
+      { label: '編集指示', key: 'edit' },
+      { label: 'プロンプト', key: 'prompt' },
+    ];
+    const imageSizes = ['1K', '2K'];
+    const thCls = 'py-1.5 px-2 text-gray-500 font-normal whitespace-nowrap border border-gray-200';
+    const tdCls = 'py-1.5 px-2 border border-gray-200';
+
+    // テキスト処理コスト表（モデル × 処理）
+    let textHtml = `<p class="text-gray-500 font-medium mb-1">テキスト処理（中央値/回）</p>`;
+    textHtml += `<table class="w-full border-collapse"><thead><tr><th class="${thCls} text-left"></th>`;
+    textModels.forEach(m => { textHtml += `<th class="${thCls} text-right">${m.name}</th>`; });
+    textHtml += `</tr></thead><tbody>`;
+    processes.forEach(p => {
+      textHtml += `<tr><td class="${tdCls} text-gray-600">${p.label}</td>`;
+      textModels.forEach(m => {
+        const cost = TEXT_COST_MAP[m.id] ? TEXT_COST_MAP[m.id][p.key] : '-';
+        textHtml += `<td class="${tdCls} text-right text-gray-800">${cost}</td>`;
+      });
+      textHtml += `</tr>`;
+    });
+    textHtml += `</tbody></table>`;
+
+    // 画像生成コスト表（モデル × サイズ）
+    let imageHtml = `<p class="text-gray-500 font-medium mb-1 mt-3">画像生成（概算/回）</p>`;
+    imageHtml += `<table class="w-full border-collapse"><thead><tr><th class="${thCls} text-left">サイズ</th>`;
+    imageModels.forEach(m => { imageHtml += `<th class="${thCls} text-right">${m.name}</th>`; });
+    imageHtml += `</tr></thead><tbody>`;
+    imageSizes.forEach(size => {
+      imageHtml += `<tr><td class="${tdCls} text-gray-600">${size}</td>`;
+      imageModels.forEach(m => {
+        const cost = IMAGE_COST_MAP[m.id] ? IMAGE_COST_MAP[m.id][size] : '-';
+        imageHtml += `<td class="${tdCls} text-right text-gray-800">${cost}</td>`;
+      });
+      imageHtml += `</tr>`;
+    });
+    imageHtml += `</tbody></table>`;
+
+    elements.costTableContainer.innerHTML = textHtml + imageHtml;
   }
 
   function toggleApiKeyVisibility() {
