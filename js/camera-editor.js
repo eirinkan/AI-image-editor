@@ -141,8 +141,8 @@ const CameraEditor = (() => {
   const PERSON_PATH = 'M20,8 a4,4 0 1,0 0.01,0 M16,14 h8 q4,0 4,4 v8 h-4 v10 h-3 v-10 h-2 v10 h-3 v-10 h-4 v-8 q0,-4 4,-4';
 
   // 「今までと同じ」カードのSVG（↻アイコン）
-  function createKeepSvg() {
-    const svg = svgEl('svg', { width: '24', height: '24', viewBox: '0 0 24 24', fill: 'none', stroke: '#9ca3af', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+  function createKeepSvg(width = 48, height = 40) {
+    const svg = svgEl('svg', { width: String(width), height: String(height), viewBox: '0 0 24 24', fill: 'none', stroke: '#9ca3af', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
     svg.appendChild(svgEl('path', { d: 'M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8' }));
     svg.appendChild(svgEl('path', { d: 'M3 3v5h5' }));
     return svg;
@@ -606,7 +606,7 @@ const CameraEditor = (() => {
     // 「今までと同じ」ボタン
     const keepBtn = document.createElement('button');
     keepBtn.className = `comp-visual-btn${keepFlags[key] ? ' selected' : ''}`;
-    keepBtn.appendChild(createKeepSvg());
+    keepBtn.appendChild(createKeepSvg(48, 48));
     const keepLbl = document.createElement('span');
     keepLbl.className = 'card-label';
     keepLbl.textContent = '同じ';

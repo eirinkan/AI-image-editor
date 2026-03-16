@@ -247,8 +247,11 @@ const App = (() => {
         state.originalJson = JSON.parse(JSON.stringify(updatedJson));
         state.pendingJson = null;
 
-        // 複数枚グリッド表示
-        UI.showMultiResult(results, imageBeforeGeneration);
+        // 複数枚グリッド表示（履歴ラベル用に指示内容を渡す）
+        const historyLabel = editInstructions
+          .map(item => `${item.elementName}: ${item.instruction}`)
+          .join(' / ');
+        UI.showMultiResult(results, imageBeforeGeneration, historyLabel);
         UI.updateJsonDisplay(updatedJson);
 
         UI.hideLoading();
@@ -275,16 +278,16 @@ const App = (() => {
   }
 
   // 複数枚生成から画像を採用
-  function onImageAdopted(imageData) {
+  function onImageAdopted(imageData, historyLabel) {
     state.currentImage = imageData;
     UI.updateMainPreview(imageData);
 
-    const historyLabel = '画像を採用';
+    const label = historyLabel || '画像を採用';
     const currentEntry = EditHistory.getCurrent();
     EditHistory.createEntry(
       imageData,
       state.currentJson,
-      historyLabel,
+      label,
       currentEntry ? currentEntry.id : 0
     );
   }

@@ -532,11 +532,8 @@ const UI = (() => {
       });
     }
 
-    // 環境カテゴリ（雰囲気・カメラ・シーン）
-    const hasEnv = json.atmosphere || json.camera || json.scene;
-    if (hasEnv) {
-      elements.elementsList.appendChild(createCategoryHeader(ICONS.globe, '環境・設定'));
-    }
+    // 環境・設定カテゴリ（常に表示）
+    elements.elementsList.appendChild(createCategoryHeader(ICONS.globe, '環境・設定'));
 
     // 雰囲気・照明（常に表示・マーカーなし）
     if (json.atmosphere) {
@@ -564,7 +561,20 @@ const UI = (() => {
       elements.elementsList.appendChild(card);
     }
 
-    // シーン全体は「画像全体への指示」に統合されたため削除
+    // 画像全体への指示ボタン（環境・設定カテゴリ内）
+    const globalBtn = document.createElement('button');
+    globalBtn.className = 'element-card border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-purple-400 hover:bg-purple-50 transition-colors cursor-pointer min-h-[100px]';
+    globalBtn.innerHTML = `
+      <span class="text-gray-400">${ICONS.globe}</span>
+      <span class="text-sm text-gray-500">画像全体への指示</span>
+    `;
+    globalBtn.addEventListener('click', () => selectElement({
+      id: 'global',
+      type: 'global',
+      name: '画像全体',
+      data: json,
+    }));
+    elements.elementsList.appendChild(globalBtn);
 
     // 画像上にマーカーを描画 & マーカーカラム表示
     renderMarkers(json);
@@ -586,24 +596,6 @@ const UI = (() => {
         elements.elementsList.appendChild(card);
       });
     }
-
-    // アクションボタンカテゴリ
-    elements.elementsList.appendChild(createCategoryHeader(ICONS.bolt, 'アクション'));
-
-    // 画像全体への指示ボタン
-    const globalBtn = document.createElement('button');
-    globalBtn.className = 'element-card border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-purple-400 hover:bg-purple-50 transition-colors cursor-pointer min-h-[100px]';
-    globalBtn.innerHTML = `
-      <span class="text-gray-400">${ICONS.globe}</span>
-      <span class="text-sm text-gray-500">画像全体への指示</span>
-    `;
-    globalBtn.addEventListener('click', () => selectElement({
-      id: 'global',
-      type: 'global',
-      name: '画像全体',
-      data: json,
-    }));
-    elements.elementsList.appendChild(globalBtn);
   }
 
   function createElementCard({ id, type, name, subtitle, data, markerIndex }) {
@@ -1082,7 +1074,7 @@ const UI = (() => {
     entries.forEach((entry, i) => {
       const item = document.createElement('div');
       const isCurrent = i === currentIndex;
-      item.className = `flex flex-col items-center gap-1 p-2 rounded-lg transition-all cursor-pointer ${isCurrent ? 'bg-blue-100 ring-2 ring-blue-400' : 'bg-gray-50 hover:bg-gray-100'}`;
+      item.className = `group flex flex-col items-center gap-1 p-2 rounded-lg transition-all cursor-pointer ${isCurrent ? 'bg-blue-100 ring-2 ring-blue-400' : 'bg-gray-50 hover:bg-gray-100'}`;
 
       const thumbUrl = EditHistory.getThumbnailUrl(entry);
       item.innerHTML = `
@@ -1090,8 +1082,7 @@ const UI = (() => {
           ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>'}
         </div>
         <span class="text-[10px] font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-600'} text-center leading-tight line-clamp-2 w-full history-thumb">${escapeHtml(entry.label)}</span>
-        <div class="flex items-center gap-1">
-          <span class="text-[10px] text-gray-400">v${i}</span>
+        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button class="history-dl-btn text-gray-400 hover:text-blue-500 transition-colors p-0.5" title="ダウンロード">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
           </button>
@@ -1292,7 +1283,7 @@ const UI = (() => {
   }
 
   // --- 複数枚結果表示 ---
-  function showMultiResult(results, originalImageData) {
+  function showMultiResult(results, originalImageData, historyLabel) {
     elements.resultSection.classList.remove('hidden');
     elements.compareContainer.classList.add('hidden');
     elements.resultGrid.classList.remove('hidden');
@@ -1313,19 +1304,50 @@ const UI = (() => {
       img.alt = `生成結果 ${i + 1}`;
       card.appendChild(img);
 
+      // チェックマークオーバーレイ（採用時に表示）
+      const checkMark = document.createElement('div');
+      checkMark.className = 'absolute top-2 right-2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg hidden';
+      checkMark.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+      card.appendChild(checkMark);
+
       // 「この画像を採用」ボタン
       const adoptBtn = document.createElement('button');
       adoptBtn.className = 'absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1.5 text-xs bg-blue-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg cursor-pointer whitespace-nowrap';
       adoptBtn.textContent = 'この画像を採用';
       adoptBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        // 採用: この画像をメインのBefore/Afterスライダーに表示
-        elements.resultGrid.classList.add('hidden');
+
+        // グリッド内の全カードのチェック・ボーダーをリセット
+        elements.resultGrid.querySelectorAll('.relative').forEach(c => {
+          c.classList.remove('border-blue-500');
+          c.classList.add('border-gray-200');
+          const cm = c.querySelector('.absolute.top-2');
+          if (cm) cm.classList.add('hidden');
+        });
+
+        // この画像にチェックマーク+青ボーダー
+        card.classList.remove('border-gray-200');
+        card.classList.add('border-blue-500');
+        checkMark.classList.remove('hidden');
+
+        // Before/Afterコンテナも表示（グリッドは残す）
+        beforeImageData = originalImageData;
+        hasBeforeImage = true;
+        elements.compareBeforeImg.src = `data:${originalImageData.mimeType};base64,${originalImageData.base64}`;
+        elements.resultImage.src = `data:${imgData.mimeType};base64,${imgData.base64}`;
         elements.compareContainer.classList.remove('hidden');
-        showResult(imgData, originalImageData);
+        elements.compareContainer.classList.remove('compare-active');
+        updateSliderPosition(0);
+
+        // Before/Afterのスライダー存在アニメーション
+        setTimeout(() => {
+          activateCompare();
+          setTimeout(() => deactivateCompare(), 1000);
+        }, 300);
+
         // Appに通知
         if (typeof App !== 'undefined' && App.onImageAdopted) {
-          App.onImageAdopted(imgData);
+          App.onImageAdopted(imgData, historyLabel);
         }
       });
       card.appendChild(adoptBtn);
