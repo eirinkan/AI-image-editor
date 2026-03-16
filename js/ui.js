@@ -1,6 +1,19 @@
 // UI描画・イベント処理モジュール
 
 const UI = (() => {
+  // SVGアイコン定数（Heroicons outline 24x24）
+  const ICONS = {
+    cube: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"></path></svg>',
+    text: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>',
+    user: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>',
+    sun: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"></path></svg>',
+    camera: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"></path></svg>',
+    home: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"></path></svg>',
+    globe: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"></path></svg>',
+    bolt: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path></svg>',
+    plus: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15"></path></svg>',
+  };
+
   // DOM要素のキャッシュ
   let elements = {};
 
@@ -408,7 +421,7 @@ const UI = (() => {
   function createCategoryHeader(icon, label) {
     const header = document.createElement('div');
     header.className = 'category-header';
-    header.innerHTML = `<span>${icon}</span> ${escapeHtml(label)}`;
+    header.innerHTML = `<span class="text-gray-500">${icon}</span> ${escapeHtml(label)}`;
     return header;
   }
 
@@ -422,14 +435,14 @@ const UI = (() => {
 
     // オブジェクト
     if (json.objects && json.objects.length > 0) {
-      elements.elementsList.appendChild(createCategoryHeader('🪑', `オブジェクト (${json.objects.length})`));
+      elements.elementsList.appendChild(createCategoryHeader(ICONS.cube, `オブジェクト (${json.objects.length})`));
       json.objects.forEach((obj, i) => {
         const card = createElementCard({
           id: obj.id || `obj_${i}`,
           type: 'object',
           name: obj.name || obj.name_en,
           subtitle: [obj.color, obj.material].filter(Boolean).join('・'),
-          icon: '🪑',
+          icon: ICONS.cube,
           data: obj,
           markerIndex: markerIndex,
         });
@@ -440,14 +453,14 @@ const UI = (() => {
 
     // テキスト要素
     if (json.text_elements && json.text_elements.length > 0) {
-      elements.elementsList.appendChild(createCategoryHeader('📝', `テキスト (${json.text_elements.length})`));
+      elements.elementsList.appendChild(createCategoryHeader(ICONS.text, `テキスト (${json.text_elements.length})`));
       json.text_elements.forEach((te, i) => {
         const card = createElementCard({
           id: te.id || `text_${i}`,
           type: 'text',
           name: te.content,
           subtitle: te.style || '',
-          icon: '📝',
+          icon: ICONS.text,
           data: te,
           markerIndex: markerIndex,
         });
@@ -458,14 +471,14 @@ const UI = (() => {
 
     // 人物
     if (json.people && json.people.length > 0) {
-      elements.elementsList.appendChild(createCategoryHeader('👤', `人物 (${json.people.length})`));
+      elements.elementsList.appendChild(createCategoryHeader(ICONS.user, `人物 (${json.people.length})`));
       json.people.forEach((p, i) => {
         const card = createElementCard({
           id: p.id || `person_${i}`,
           type: 'person',
           name: p.description || `人物 ${i + 1}`,
           subtitle: p.clothing || '',
-          icon: '👤',
+          icon: ICONS.user,
           data: p,
           markerIndex: markerIndex,
         });
@@ -477,7 +490,7 @@ const UI = (() => {
     // 環境カテゴリ（雰囲気・カメラ・シーン）
     const hasEnv = json.atmosphere || json.camera || json.scene;
     if (hasEnv) {
-      elements.elementsList.appendChild(createCategoryHeader('🌐', '環境・設定'));
+      elements.elementsList.appendChild(createCategoryHeader(ICONS.globe, '環境・設定'));
     }
 
     // 雰囲気・照明（常に表示・マーカーなし）
@@ -488,7 +501,7 @@ const UI = (() => {
         type: 'atmosphere',
         name: '雰囲気・照明',
         subtitle: [atm.time_of_day, atm.weather, atm.mood].filter(Boolean).join('・'),
-        icon: '🌤️',
+        icon: ICONS.sun,
         data: atm,
       });
       elements.elementsList.appendChild(card);
@@ -502,7 +515,7 @@ const UI = (() => {
         type: 'camera',
         name: 'カメラ・構図',
         subtitle: [cam.angle, cam.perspective].filter(Boolean).join('・'),
-        icon: '📷',
+        icon: ICONS.camera,
         data: cam,
       });
       elements.elementsList.appendChild(card);
@@ -515,7 +528,7 @@ const UI = (() => {
         type: 'scene',
         name: 'シーン全体',
         subtitle: [json.scene.style, json.scene.type].filter(Boolean).join('・'),
-        icon: '🏠',
+        icon: ICONS.home,
         data: json.scene,
       });
       elements.elementsList.appendChild(card);
@@ -525,13 +538,13 @@ const UI = (() => {
     renderMarkers(json);
 
     // アクションボタンカテゴリ
-    elements.elementsList.appendChild(createCategoryHeader('⚡', 'アクション'));
+    elements.elementsList.appendChild(createCategoryHeader(ICONS.bolt, 'アクション'));
 
     // カスタム要素追加ボタン
     const addBtn = document.createElement('button');
     addBtn.className = 'element-card border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer min-h-[100px]';
     addBtn.innerHTML = `
-      <span class="text-2xl text-gray-400">＋</span>
+      <span class="text-gray-400">${ICONS.plus}</span>
       <span class="text-sm text-gray-500">カスタム要素</span>
     `;
     addBtn.addEventListener('click', showCustomElementDialog);
@@ -541,7 +554,7 @@ const UI = (() => {
     const globalBtn = document.createElement('button');
     globalBtn.className = 'element-card border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-purple-400 hover:bg-purple-50 transition-colors cursor-pointer min-h-[100px]';
     globalBtn.innerHTML = `
-      <span class="text-2xl text-gray-400">🌐</span>
+      <span class="text-gray-400">${ICONS.globe}</span>
       <span class="text-sm text-gray-500">画像全体への指示</span>
     `;
     globalBtn.addEventListener('click', () => selectElement({
@@ -566,7 +579,7 @@ const UI = (() => {
 
     card.innerHTML = `
       ${badgeHtml}
-      <span class="text-2xl">${icon}</span>
+      <span class="text-gray-400">${icon}</span>
       <span class="font-medium text-gray-800 text-sm leading-tight">${escapeHtml(name)}</span>
       <span class="text-xs text-gray-500 leading-tight">${escapeHtml(subtitle)}</span>
     `;

@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data: blob:; connect-src 'self' https://generativelanguage.googleapis.com; font-src 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; img-src 'self' data: blob:; connect-src 'self' https://generativelanguage.googleapis.com; font-src 'self' https://fonts.gstatic.com;">
   <title>AI画像エディタ - JSON画像変更</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -29,7 +32,7 @@
             </svg>
           </button>
         </div>
-        <button id="apiKeySave" class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex-shrink-0">
+        <button id="apiKeySave" class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex-shrink-0 cursor-pointer">
           保存
         </button>
       </div>
@@ -45,15 +48,23 @@
 
       <!-- サブタブ -->
       <div class="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit mb-4">
-        <button id="subTabUpload" class="sub-tab active px-5 py-2 rounded-lg text-sm font-medium transition-all">📁 アップロード</button>
-        <button id="subTabGenerate" class="sub-tab px-5 py-2 rounded-lg text-sm font-medium transition-all text-gray-500 hover:text-gray-700">✨ AI生成</button>
+        <button id="subTabUpload" class="sub-tab active px-5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer">
+          <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path></svg>
+          アップロード
+        </button>
+        <button id="subTabGenerate" class="sub-tab px-5 py-2 rounded-lg text-sm font-medium transition-all text-gray-500 hover:text-gray-700 cursor-pointer">
+          <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"></path></svg>
+          AI生成
+        </button>
       </div>
 
       <!-- アップロードパネル -->
       <div id="uploadPanel">
         <div id="uploadArea" class="upload-area border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all relative">
           <div class="upload-prompt">
-            <div class="text-4xl mb-3">📸</div>
+            <div class="mb-3 text-gray-400">
+              <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path></svg>
+            </div>
             <p class="text-gray-600 font-medium">クリックまたはドラッグ&ドロップで画像をアップロード</p>
             <p class="text-sm text-gray-500 mt-1">JPG, PNG, WEBP対応</p>
           </div>
@@ -91,8 +102,9 @@
               placeholder="例: 白い背景にZitA SQUAREのゴミ箱を置いた商品写真。清潔感のあるスタジオ照明で、正面やや上からのアングル。"></textarea>
 
             <div class="flex justify-end">
-              <button id="craftPromptBtn" class="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm shadow-lg flex items-center gap-2">
-                ✨ プロンプトを作成
+              <button id="craftPromptBtn" class="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm shadow-lg flex items-center gap-2 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"></path></svg>
+                プロンプトを作成
               </button>
             </div>
           </div>
@@ -144,11 +156,12 @@
 
             <!-- ボタン -->
             <div class="flex gap-3 justify-end">
-              <button id="promptBackBtn" class="px-5 py-2.5 text-sm text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">
+              <button id="promptBackBtn" class="px-5 py-2.5 text-sm text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer">
                 ← 戻って修正
               </button>
-              <button id="promptApproveBtn" class="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm shadow-lg flex items-center gap-2">
-                ✨ 承認して生成
+              <button id="promptApproveBtn" class="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm shadow-lg flex items-center gap-2 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"></path></svg>
+                承認して生成
               </button>
             </div>
           </div>
@@ -160,14 +173,17 @@
           <div class="bg-white rounded-2xl border border-gray-200 p-5">
             <img id="generateResultImage" class="max-h-[500px] mx-auto rounded-lg shadow-md block" alt="生成結果">
             <div class="flex justify-center gap-3 mt-4">
-              <button id="editGeneratedBtn" class="px-5 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1.5">
-                ✏️ この画像を編集
+              <button id="editGeneratedBtn" class="px-5 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"></path></svg>
+                この画像を編集
               </button>
-              <button id="regenerateBtn" class="px-5 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-1.5">
-                🔄 再生成
+              <button id="regenerateBtn" class="px-5 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path></svg>
+                再生成
               </button>
-              <button id="downloadGeneratedBtn" class="px-5 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1.5">
-                💾 ダウンロード
+              <button id="downloadGeneratedBtn" class="px-5 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path></svg>
+                ダウンロード
               </button>
             </div>
           </div>
@@ -181,19 +197,19 @@
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 2: 分析フォーカスを選択</h2>
       <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
         <div id="focusTags" class="flex flex-wrap gap-2">
-          <button data-focus="all" class="px-4 py-2 rounded-full text-sm font-medium bg-blue-500 text-white transition-colors">全体</button>
-          <button data-focus="furniture" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">家具・物</button>
-          <button data-focus="color_material" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">色・素材</button>
-          <button data-focus="lighting" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">照明・天候</button>
-          <button data-focus="text_logo" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">テキスト・ロゴ</button>
-          <button data-focus="camera" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">カメラ</button>
-          <button data-focus="people" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors">人物</button>
+          <button data-focus="all" class="px-4 py-2 rounded-full text-sm font-medium bg-blue-500 text-white transition-colors cursor-pointer">全体</button>
+          <button data-focus="furniture" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors cursor-pointer">家具・物</button>
+          <button data-focus="color_material" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors cursor-pointer">色・素材</button>
+          <button data-focus="lighting" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors cursor-pointer">照明・天候</button>
+          <button data-focus="text_logo" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors cursor-pointer">テキスト・ロゴ</button>
+          <button data-focus="camera" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors cursor-pointer">カメラ</button>
+          <button data-focus="people" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors cursor-pointer">人物</button>
         </div>
         <div class="flex gap-3">
           <input type="text" id="customInstruction"
             class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent"
             placeholder="追加の指示（例: 小物を細かく検出して）">
-          <button id="analyzeBtn" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm flex items-center gap-2 flex-shrink-0">
+          <button id="analyzeBtn" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm flex items-center gap-2 flex-shrink-0 cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             分析する
           </button>
@@ -247,7 +263,7 @@
 
           <!-- 生成ボタン -->
           <div class="flex flex-col items-end gap-2 pt-6">
-            <button id="generateBtn" class="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all font-medium text-sm shadow-lg hover:shadow-xl flex items-center gap-2">
+            <button id="generateBtn" class="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all font-medium text-sm shadow-lg hover:shadow-xl flex items-center gap-2 cursor-pointer">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
               画像を生成
             </button>
@@ -261,7 +277,7 @@
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">生成結果</h2>
         <div class="flex items-center gap-2">
-          <button id="downloadBtn" class="px-4 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1">
+          <button id="downloadBtn" class="px-4 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1 cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             ダウンロード
           </button>
@@ -347,11 +363,11 @@
   </div>
 
   <!-- スクリプト -->
-  <script src="js/api.js?v=8"></script>
-  <script src="js/history.js?v=8"></script>
+  <script src="js/api.js?v=9"></script>
+  <script src="js/history.js?v=9"></script>
   <script src="js/camera-editor.js?v=1"></script>
-  <script src="js/ui.js?v=8"></script>
-  <script src="js/generate.js?v=8"></script>
-  <script src="js/app.js?v=8"></script>
+  <script src="js/ui.js?v=9"></script>
+  <script src="js/generate.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
 </body>
 </html>
