@@ -406,8 +406,10 @@ button {
   margin-top: 0;
 }
 
-/* カスタム要素モーダル */
-#customElementModal {
+/* モーダル共通 */
+#customElementModal,
+#settingsModal,
+#helpModal {
   backdrop-filter: blur(4px);
 }
 
@@ -510,6 +512,127 @@ button {
 
 .camera-prompt-preview {
   font-size: 11px;
+}
+
+/* ビジュアルカード（アングル・距離） */
+.cam-visual-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  min-width: 72px;
+  min-height: 44px;
+  background: white;
+}
+
+.cam-visual-card:hover {
+  border-color: #c4b5fd;
+  background: #faf5ff;
+}
+
+.cam-visual-card.selected {
+  border-color: #8b5cf6 !important;
+  background-color: #f5f3ff;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.cam-visual-card .card-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.cam-visual-card.selected .card-label {
+  color: #6d28d9;
+  font-weight: 600;
+}
+
+/* 構図ビジュアルボタン */
+.comp-visual-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  width: 72px;
+  background: white;
+}
+
+.comp-visual-btn:hover {
+  border-color: #c4b5fd;
+  background: #faf5ff;
+}
+
+.comp-visual-btn.selected {
+  border-color: #8b5cf6 !important;
+  background-color: #f5f3ff;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.comp-visual-btn .card-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.comp-visual-btn.selected .card-label {
+  color: #6d28d9;
+  font-weight: 600;
+}
+
+/* ボケ感プレビュー */
+.dof-preview-container {
+  position: relative;
+  width: 100%;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 50%, #8FBC8F 50%, #8FBC8F 100%);
+  margin-top: 6px;
+}
+
+.dof-layer {
+  position: absolute;
+  bottom: 0;
+  transition: filter 0.3s ease;
+}
+
+.dof-layer.background {
+  width: 100%;
+  height: 100%;
+}
+
+.dof-layer.subject {
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  z-index: 2;
+}
+
+.dof-layer.foreground {
+  width: 100%;
+  bottom: 0;
+  z-index: 3;
+}
+
+/* 画角SVGコンテナ */
+.focal-svg-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
 }
 
 /* タップターゲット拡大（44px以上） */

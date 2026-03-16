@@ -15,29 +15,101 @@
 
   <!-- ヘッダー -->
   <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <h1 class="text-lg font-bold text-gray-800 flex-shrink-0">
         <span class="text-blue-500">AI</span> 画像エディタ
       </h1>
-      <div class="flex items-center gap-2 flex-1 max-w-md">
-        <label for="apiKeyInput" class="text-sm text-gray-500 flex-shrink-0">APIキー:</label>
-        <div class="relative flex-1">
+      <div class="flex items-center gap-3">
+        <button id="settingsBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          設定
+        </button>
+        <button id="helpBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"></path></svg>
+          ヘルプ
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 設定モーダル -->
+  <div id="settingsModal" class="hidden fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+    <div role="dialog" aria-modal="true" class="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-md mx-4">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-gray-800">設定</h3>
+        <button id="settingsClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 text-2xl leading-none cursor-pointer">&times;</button>
+      </div>
+
+      <!-- APIキー -->
+      <div class="space-y-3 mb-6">
+        <label for="apiKeyInput" class="block text-sm font-medium text-gray-700">Gemini APIキー</label>
+        <div class="relative">
           <input type="password" id="apiKeyInput" autocomplete="off"
-            class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent pr-10"
+            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent pr-10"
             placeholder="Gemini APIキーを入力">
-          <button id="apiKeyToggle" aria-label="APIキーの表示/非表示" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+          <button id="apiKeyToggle" aria-label="APIキーの表示/非表示" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
             </svg>
           </button>
         </div>
-        <button id="apiKeySave" class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex-shrink-0 cursor-pointer">
+        <button id="apiKeySave" class="w-full px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer">
           保存
         </button>
       </div>
+
+      <!-- コスト情報 -->
+      <div class="border-t border-gray-200 pt-4">
+        <h4 class="text-sm font-medium text-gray-700 mb-3">Gemini API 概算コスト</h4>
+        <table class="w-full text-sm">
+          <tbody class="divide-y divide-gray-100">
+            <tr><td class="py-1.5 text-gray-600">画像分析（テキストモデル）</td><td class="py-1.5 text-right text-gray-800 font-medium">約 ¥0.5〜2 / 回</td></tr>
+            <tr><td class="py-1.5 text-gray-600">画像生成（画像モデル）</td><td class="py-1.5 text-right text-gray-800 font-medium">約 ¥3〜10 / 回</td></tr>
+            <tr><td class="py-1.5 text-gray-600">プロンプト作成</td><td class="py-1.5 text-right text-gray-800 font-medium">約 ¥0.5〜2 / 回</td></tr>
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-400 mt-2">※概算です。画像サイズ・解像度により変動します。<br>詳細は<a href="https://ai.google.dev/pricing" target="_blank" rel="noopener" class="text-blue-500 hover:underline">Googleの料金表</a>をご確認ください。</p>
+      </div>
     </div>
-  </header>
+  </div>
+
+  <!-- ヘルプモーダル -->
+  <div id="helpModal" class="hidden fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+    <div role="dialog" aria-modal="true" class="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-md mx-4">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-gray-800">使い方</h3>
+        <button id="helpClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 text-2xl leading-none cursor-pointer">&times;</button>
+      </div>
+      <div class="space-y-4 text-sm text-gray-700">
+        <div class="flex gap-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</span>
+          <p><strong>画像を用意</strong> — 画像をアップロードするか、AIで生成します。</p>
+        </div>
+        <div class="flex gap-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</span>
+          <p><strong>分析する</strong> — フォーカスを選んで「分析する」をクリック。画像内の要素が検出されます。</p>
+        </div>
+        <div class="flex gap-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</span>
+          <p><strong>要素を選択</strong> — 変更したい要素をクリックして、変更内容を入力します。</p>
+        </div>
+        <div class="flex gap-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">4</span>
+          <p><strong>画像を生成</strong> — 「画像を生成」をクリックすると、AIが変更を適用した画像を生成します。</p>
+        </div>
+        <div class="border-t border-gray-200 pt-3">
+          <p class="text-xs text-gray-500"><strong>各機能:</strong></p>
+          <ul class="text-xs text-gray-500 mt-1 space-y-1 ml-4 list-disc">
+            <li>参照画像 — オブジェクトの入替やロゴ変更時に使用</li>
+            <li>プリセット — よく使う変更パターンをワンクリックで適用</li>
+            <li>カスタム要素 — 検出されなかった要素を手動で追加</li>
+            <li>Before/After比較 — 生成結果をスライダーで比較</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- メインコンテンツ -->
   <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
@@ -69,14 +141,15 @@
             <p class="text-sm text-gray-500 mt-1">JPG, PNG, WEBP対応</p>
           </div>
           <div id="imagePreview" class="hidden relative">
+            <button id="removeImage" aria-label="画像を削除" class="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-9 h-9 flex items-center justify-center hover:bg-red-600 shadow-lg text-lg leading-none z-20 cursor-pointer">&times;</button>
             <div class="flex gap-4 justify-center items-start">
               <!-- 元画像（マーカーなし） -->
-              <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
-                <p class="text-xs text-gray-500">元画像</p>
+              <div id="cleanColumn" class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                <p id="cleanColumnLabel" class="text-xs text-gray-500 hidden">元画像</p>
                 <img id="previewImageClean" class="max-h-80 rounded-lg shadow-md block w-full object-contain" alt="元画像">
               </div>
-              <!-- マーカー付き画像 -->
-              <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+              <!-- マーカー付き画像（分析後に表示） -->
+              <div id="markerColumn" class="flex flex-col items-center gap-1 flex-1 min-w-0 hidden">
                 <p class="text-xs text-gray-500">要素マーカー</p>
                 <div id="imageWrapper" class="relative inline-block w-full">
                   <img id="previewImage" class="max-h-80 rounded-lg shadow-md block w-full object-contain" alt="マーカー付き">
@@ -84,7 +157,6 @@
                 </div>
               </div>
             </div>
-            <button id="removeImage" aria-label="画像を削除" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-lg text-lg leading-none z-20">&times;</button>
           </div>
           <input type="file" id="fileInput" accept="image/*" class="hidden">
         </div>
@@ -366,7 +438,7 @@
   <script src="js/api.js?v=9"></script>
   <script src="js/history.js?v=9"></script>
   <script src="js/camera-editor.js?v=1"></script>
-  <script src="js/ui.js?v=9"></script>
+  <script src="js/ui.js?v=10"></script>
   <script src="js/generate.js?v=9"></script>
   <script src="js/app.js?v=9"></script>
 </body>

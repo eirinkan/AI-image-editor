@@ -107,6 +107,19 @@ const UI = (() => {
       customElementConfirm: document.getElementById('customElementConfirm'),
       customElementCancel: document.getElementById('customElementCancel'),
 
+      // 設定・ヘルプモーダル
+      settingsBtn: document.getElementById('settingsBtn'),
+      settingsModal: document.getElementById('settingsModal'),
+      settingsClose: document.getElementById('settingsClose'),
+      helpBtn: document.getElementById('helpBtn'),
+      helpModal: document.getElementById('helpModal'),
+      helpClose: document.getElementById('helpClose'),
+
+      // プレビューカラム
+      cleanColumn: document.getElementById('cleanColumn'),
+      cleanColumnLabel: document.getElementById('cleanColumnLabel'),
+      markerColumn: document.getElementById('markerColumn'),
+
       // エラー
       errorToast: document.getElementById('errorToast'),
       errorMessage: document.getElementById('errorMessage'),
@@ -115,6 +128,14 @@ const UI = (() => {
   }
 
   function setupEventListeners() {
+    // 設定・ヘルプモーダル
+    elements.settingsBtn.addEventListener('click', () => elements.settingsModal.classList.remove('hidden'));
+    elements.settingsClose.addEventListener('click', () => elements.settingsModal.classList.add('hidden'));
+    elements.settingsModal.addEventListener('click', (e) => { if (e.target === elements.settingsModal) elements.settingsModal.classList.add('hidden'); });
+    elements.helpBtn.addEventListener('click', () => elements.helpModal.classList.remove('hidden'));
+    elements.helpClose.addEventListener('click', () => elements.helpModal.classList.add('hidden'));
+    elements.helpModal.addEventListener('click', (e) => { if (e.target === elements.helpModal) elements.helpModal.classList.add('hidden'); });
+
     // APIキー
     elements.apiKeyToggle.addEventListener('click', toggleApiKeyVisibility);
     elements.apiKeySave.addEventListener('click', saveApiKey);
@@ -192,13 +213,9 @@ const UI = (() => {
       elements.apiKeyInput.value = key;
       elements.apiKeyInput.type = 'password';
     } else {
-      // APIキー未設定時は分析ボタンを無効化し、注意文を表示
+      // APIキー未設定時は分析ボタンを無効化し、トーストで通知
       elements.analyzeBtn.disabled = true;
-      const notice = document.createElement('p');
-      notice.id = 'apiKeyNotice';
-      notice.className = 'text-xs text-amber-600 mt-1';
-      notice.textContent = 'APIキーを設定してからご利用ください';
-      elements.apiKeyInput.parentNode.insertBefore(notice, elements.apiKeyInput.nextSibling);
+      showError('APIキーが未設定です。ヘッダーの「設定」からAPIキーを保存してください。');
     }
   }
 
@@ -210,10 +227,8 @@ const UI = (() => {
       return;
     }
     GeminiAPI.setApiKey(key);
-    // 保存成功後に分析ボタンを有効化し、注意文を削除
+    // 保存成功後に分析ボタンを有効化
     elements.analyzeBtn.disabled = false;
-    const notice = document.getElementById('apiKeyNotice');
-    if (notice) notice.remove();
     showSuccess('APIキーを保存しました');
   }
 
@@ -284,12 +299,15 @@ const UI = (() => {
       showLoading('画像を読み込み中...');
       const imageData = await GeminiAPI.resizeImage(file);
 
-      // プレビュー表示（元画像 + マーカー付き両方）
+      // プレビュー表示（元画像のみ、マーカーは分析後に表示）
       const dataUrl = `data:${imageData.mimeType};base64,${imageData.base64}`;
       elements.previewImage.src = dataUrl;
       if (elements.previewImageClean) elements.previewImageClean.src = dataUrl;
       elements.imagePreview.classList.remove('hidden');
       elements.uploadArea.querySelector('.upload-prompt').classList.add('hidden');
+      // マーカーカラムは非表示、ラベルも非表示（1枚だけなので不要）
+      if (elements.markerColumn) elements.markerColumn.classList.add('hidden');
+      if (elements.cleanColumnLabel) elements.cleanColumnLabel.classList.add('hidden');
 
       // 分析セクション表示
       elements.analysisSection.classList.remove('hidden');
@@ -315,6 +333,9 @@ const UI = (() => {
     elements.editSection.classList.add('hidden');
     elements.resultSection.classList.add('hidden');
     elements.fileInput.value = '';
+    // マーカーカラムを再度非表示にする
+    if (elements.markerColumn) elements.markerColumn.classList.add('hidden');
+    if (elements.cleanColumnLabel) elements.cleanColumnLabel.classList.add('hidden');
 
     if (typeof App !== 'undefined') App.onImageRemoved();
   }
@@ -442,7 +463,6 @@ const UI = (() => {
           type: 'object',
           name: obj.name || obj.name_en,
           subtitle: [obj.color, obj.material].filter(Boolean).join('・'),
-          icon: ICONS.cube,
           data: obj,
           markerIndex: markerIndex,
         });
@@ -460,7 +480,6 @@ const UI = (() => {
           type: 'text',
           name: te.content,
           subtitle: te.style || '',
-          icon: ICONS.text,
           data: te,
           markerIndex: markerIndex,
         });
@@ -478,7 +497,6 @@ const UI = (() => {
           type: 'person',
           name: p.description || `人物 ${i + 1}`,
           subtitle: p.clothing || '',
-          icon: ICONS.user,
           data: p,
           markerIndex: markerIndex,
         });
@@ -501,7 +519,6 @@ const UI = (() => {
         type: 'atmosphere',
         name: '雰囲気・照明',
         subtitle: [atm.time_of_day, atm.weather, atm.mood].filter(Boolean).join('・'),
-        icon: ICONS.sun,
         data: atm,
       });
       elements.elementsList.appendChild(card);
@@ -515,7 +532,6 @@ const UI = (() => {
         type: 'camera',
         name: 'カメラ・構図',
         subtitle: [cam.angle, cam.perspective].filter(Boolean).join('・'),
-        icon: ICONS.camera,
         data: cam,
       });
       elements.elementsList.appendChild(card);
@@ -528,14 +544,15 @@ const UI = (() => {
         type: 'scene',
         name: 'シーン全体',
         subtitle: [json.scene.style, json.scene.type].filter(Boolean).join('・'),
-        icon: ICONS.home,
         data: json.scene,
       });
       elements.elementsList.appendChild(card);
     }
 
-    // 画像上にマーカーを描画
+    // 画像上にマーカーを描画 & マーカーカラム表示
     renderMarkers(json);
+    if (elements.markerColumn) elements.markerColumn.classList.remove('hidden');
+    if (elements.cleanColumnLabel) elements.cleanColumnLabel.classList.remove('hidden');
 
     // アクションボタンカテゴリ
     elements.elementsList.appendChild(createCategoryHeader(ICONS.bolt, 'アクション'));
@@ -566,7 +583,7 @@ const UI = (() => {
     elements.elementsList.appendChild(globalBtn);
   }
 
-  function createElementCard({ id, type, name, subtitle, icon, data, markerIndex }) {
+  function createElementCard({ id, type, name, subtitle, data, markerIndex }) {
     const card = document.createElement('button');
     card.className = 'element-card relative bg-white border-2 border-gray-200 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
     card.dataset.elementId = id;
@@ -579,7 +596,6 @@ const UI = (() => {
 
     card.innerHTML = `
       ${badgeHtml}
-      <span class="text-gray-400">${icon}</span>
       <span class="font-medium text-gray-800 text-sm leading-tight">${escapeHtml(name)}</span>
       <span class="text-xs text-gray-500 leading-tight">${escapeHtml(subtitle)}</span>
     `;
