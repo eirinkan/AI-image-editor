@@ -75,7 +75,6 @@ const UI = (() => {
       resultSection: document.getElementById('resultSection'),
       resultImage: document.getElementById('resultImage'),
       resultGrid: document.getElementById('resultGrid'),
-      downloadBtn: document.getElementById('downloadBtn'),
 
       // 生成枚数
       generateCount: document.getElementById('generateCount'),
@@ -192,11 +191,6 @@ const UI = (() => {
       } else {
         elements.generateCountCustom.classList.add('hidden');
       }
-    });
-
-    // ダウンロード
-    elements.downloadBtn.addEventListener('click', () => {
-      if (typeof App !== 'undefined') App.downloadCurrent();
     });
 
     // エラー閉じる
@@ -977,6 +971,37 @@ const UI = (() => {
     }
   }
 
+  // 履歴復元用の結果表示（グリッド・選択状態に触れない）
+  function showResultFromHistory(imageData, beforeImage) {
+    elements.resultSection.classList.remove('hidden');
+    // グリッドには触れない（選択状態を維持）
+
+    // compareContainerのAfter画像を更新
+    elements.resultImage.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+
+    // Before/After比較用データ設定
+    if (beforeImage) {
+      beforeImageData = beforeImage;
+      hasBeforeImage = true;
+      elements.compareBeforeImg.src = `data:${beforeImage.mimeType};base64,${beforeImage.base64}`;
+      elements.compareContainer.classList.remove('hidden');
+    } else {
+      hasBeforeImage = false;
+    }
+
+    // スライダーを初期状態にリセット
+    elements.compareContainer.classList.remove('compare-active');
+    updateSliderPosition(0);
+
+    // Before画像がある場合、スライダーの存在をアニメーションで示唆
+    if (hasBeforeImage) {
+      setTimeout(() => {
+        activateCompare();
+        setTimeout(() => deactivateCompare(), 1000);
+      }, 500);
+    }
+  }
+
   // --- Before/After比較（ホバー式スライダー） ---
   function syncCompareImages() {
     // Before/After両方ともobject-fit: containで親要素に合わせるため、
@@ -1069,7 +1094,7 @@ const UI = (() => {
     entries.forEach((entry, i) => {
       const item = document.createElement('div');
       const isCurrent = i === currentIndex;
-      item.className = `group flex flex-col items-center gap-1 p-2 rounded-lg transition-all cursor-pointer ${isCurrent ? 'bg-blue-100 ring-2 ring-blue-400' : 'bg-gray-50 hover:bg-gray-100'}`;
+      item.className = `group flex flex-col items-center gap-1 p-2 rounded-lg transition-all cursor-pointer ${isCurrent ? 'bg-blue-50' : 'bg-gray-50 hover:bg-gray-100'}`;
 
       const thumbUrl = EditHistory.getThumbnailUrl(entry);
       item.innerHTML = `
@@ -1435,6 +1460,7 @@ const UI = (() => {
     renderMarkers,
     renderHistory,
     showResult,
+    showResultFromHistory,
     showMultiResult,
     showLoading,
     showLoadingWithSteps,

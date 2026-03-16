@@ -313,12 +313,19 @@ const App = (() => {
     state.currentJson = entry.json;
     state.originalJson = entry.json && !entry.json.mode ? JSON.parse(JSON.stringify(entry.json)) : null;
 
-    // UI更新
-    UI.showResult(entry.image);
+    // Before画像を親エントリから復元してUI更新（グリッドには触れない）
+    let beforeImage = null;
+    if (entry.parentId != null && entry.parentId >= 0) {
+      const allEntries = EditHistory.getAll();
+      const parentEntry = allEntries.find(e => e.id === entry.parentId);
+      if (parentEntry && parentEntry.image) {
+        beforeImage = parentEntry.image;
+      }
+    }
+    UI.showResultFromHistory(entry.image, beforeImage);
 
-    // text-to-image履歴の場合は要素一覧・JSON表示をスキップ
+    // text-to-image履歴の場合は要素一覧をスキップ
     if (entry.json && entry.json.mode === 'text-to-image') {
-      // 編集・要素セクションを非表示
       const editSection = document.getElementById('editSection');
       const elementsSection = document.getElementById('elementsSection');
       if (editSection) editSection.classList.add('hidden');
