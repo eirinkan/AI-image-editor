@@ -344,9 +344,8 @@ button {
 .compare-before {
   position: absolute;
   inset: 0;
-  overflow: hidden;
-  width: 0%;
-  transition: width 0.3s ease;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.3s ease;
 }
 
 .compare-before-img {
@@ -379,7 +378,7 @@ button {
 
 /* ホバー時: スライダーとラベル表示 */
 .compare-container.compare-active .compare-before {
-  transition: none;
+  transition: none !important;
 }
 
 .compare-container.compare-active .compare-slider {

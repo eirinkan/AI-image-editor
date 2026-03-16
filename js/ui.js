@@ -1011,7 +1011,7 @@ const UI = (() => {
 
   function updateSliderPosition(ratio) {
     const pct = Math.max(0, Math.min(1, ratio)) * 100;
-    elements.compareBefore.style.width = pct + '%';
+    elements.compareBefore.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
     elements.compareSlider.style.left = pct + '%';
   }
 
