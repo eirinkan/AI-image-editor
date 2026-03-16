@@ -15,7 +15,7 @@
 
   <!-- ヘッダー -->
   <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
       <h1 class="text-lg font-bold text-gray-800 flex-shrink-0">
         <span class="text-blue-500">AI</span> 画像エディタ
       </h1>
@@ -57,6 +57,21 @@
         <button id="apiKeySave" class="w-full px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer">
           保存
         </button>
+      </div>
+
+      <!-- カスタム要素の登録 -->
+      <div class="border-t border-gray-200 pt-4 mb-4">
+        <h4 class="text-sm font-medium text-gray-700 mb-3">カスタム要素の登録</h4>
+        <p class="text-xs text-gray-500 mb-2">よく使うカスタム要素を登録しておくと、分析後に自動でカードに表示されます。</p>
+        <div class="flex gap-2 mb-3">
+          <input type="text" id="customElementRegisterInput"
+            class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+            placeholder="要素名（例: 窓の外の景色）">
+          <button id="customElementRegisterBtn" class="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer flex-shrink-0">追加</button>
+        </div>
+        <div id="customElementRegisteredList" class="space-y-1">
+          <!-- 登録済み要素がここに表示 -->
+        </div>
       </div>
 
       <!-- コスト情報 -->
@@ -111,8 +126,21 @@
     </div>
   </div>
 
+  <!-- 2カラムラッパー -->
+  <div class="app-layout max-w-6xl mx-auto px-4 py-6 flex gap-6">
+
+  <!-- 左サイドバー: 履歴 -->
+  <aside id="historySidebar" class="history-sidebar hidden">
+    <div class="sticky top-20">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">編集履歴</h2>
+      <div id="historyTimeline" class="history-timeline-vertical">
+        <!-- 縦型タイムラインがここに動的挿入 -->
+      </div>
+    </div>
+  </aside>
+
   <!-- メインコンテンツ -->
-  <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+  <main class="flex-1 min-w-0 space-y-6">
 
     <!-- Step 1: 画像を用意 -->
     <section>
@@ -333,12 +361,24 @@
             </div>
           </div>
 
-          <!-- 生成ボタン -->
+          <!-- 生成ボタン + 枚数セレクター -->
           <div class="flex flex-col items-end gap-2 pt-6">
-            <button id="generateBtn" class="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all font-medium text-sm shadow-lg hover:shadow-xl flex items-center gap-2 cursor-pointer">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
-              画像を生成
-            </button>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
+                <label for="generateCount" class="text-xs text-gray-500 whitespace-nowrap">枚数</label>
+                <select id="generateCount" class="px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent cursor-pointer">
+                  <option value="1">1枚</option>
+                  <option value="2">2枚</option>
+                  <option value="4">4枚</option>
+                  <option value="custom">指定...</option>
+                </select>
+                <input type="number" id="generateCountCustom" min="1" max="8" value="3" class="hidden w-14 px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+              </div>
+              <button id="generateBtn" class="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all font-medium text-sm shadow-lg hover:shadow-xl flex items-center gap-2 cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                画像を生成
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -356,6 +396,11 @@
         </div>
       </div>
       <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <!-- 複数枚グリッド表示 -->
+        <div id="resultGrid" class="hidden">
+          <!-- 複数枚の結果がグリッドで表示される -->
+        </div>
+        <!-- 単一枚のBefore/After比較 -->
         <div id="compareContainer" class="compare-container relative rounded-lg overflow-hidden select-none">
           <!-- After画像（常に表示） -->
           <img id="resultImage" class="compare-after w-full block rounded-lg" alt="生成結果">
@@ -375,16 +420,6 @@
       </div>
     </section>
 
-    <!-- 編集履歴 -->
-    <section id="historySection" class="hidden">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">編集履歴</h2>
-      <div class="bg-white rounded-2xl border border-gray-200 p-4">
-        <div id="historyTimeline">
-          <!-- 履歴エントリがここに動的に挿入される -->
-        </div>
-      </div>
-    </section>
-
     <!-- JSON表示（上級者向けトグル） -->
     <section class="pb-8">
       <button id="jsonToggle" class="text-xs text-gray-400 hover:text-gray-600 transition-colors">JSONを表示 ▼</button>
@@ -394,6 +429,7 @@
     </section>
 
   </main>
+  </div><!-- /app-layout -->
 
   <!-- ローディングオーバーレイ（ステップ別プログレス + キャンセル） -->
   <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
@@ -435,11 +471,11 @@
   </div>
 
   <!-- スクリプト -->
-  <script src="js/api.js?v=9"></script>
-  <script src="js/history.js?v=9"></script>
-  <script src="js/camera-editor.js?v=1"></script>
-  <script src="js/ui.js?v=10"></script>
-  <script src="js/generate.js?v=9"></script>
-  <script src="js/app.js?v=9"></script>
+  <script src="js/api.js?v=10"></script>
+  <script src="js/history.js?v=10"></script>
+  <script src="js/camera-editor.js?v=2"></script>
+  <script src="js/ui.js?v=11"></script>
+  <script src="js/generate.js?v=10"></script>
+  <script src="js/app.js?v=10"></script>
 </body>
 </html>

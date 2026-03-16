@@ -148,7 +148,7 @@ const App = (() => {
     }
   }
 
-  // 画像を生成（複数指示対応）
+  // 画像を生成（複数指示対応 + 複数枚対応）
   async function generate() {
     if (!state.currentImage) {
       UI.showError('先に画像をアップロードしてください。');
@@ -165,6 +165,8 @@ const App = (() => {
       UI.showError('変更内容を入力してください。要素を選択して指示を書いてください。');
       return;
     }
+
+    const generateCount = UI.getGenerateCount();
 
     // AbortController設定
     cancelCurrentOperation();
@@ -187,51 +189,78 @@ const App = (() => {
       const updatedJson = await GeminiAPI.updateJson(state.currentJson, editInstructions, signal);
       state.pendingJson = updatedJson; // リカバリ用に保持
 
-      // Step 2: 画像を生成
+      // Step 2: 画像を生成（枚数分ループ）
       UI.updateLoadingStep(2);
-      const result = await GeminiAPI.generateImage(
-        state.currentImage,
-        state.currentJson,
-        updatedJson,
-        state.referenceImage,
-        signal
-      );
 
-      // 状態更新
-      const newImageData = { base64: result.base64, mimeType: result.mimeType };
-      state.currentImage = newImageData;
-      state.currentJson = updatedJson;
-      state.originalJson = JSON.parse(JSON.stringify(updatedJson));
-      state.pendingJson = null;
+      if (generateCount === 1) {
+        // 1枚の場合: 従来通り
+        const result = await GeminiAPI.generateImage(
+          state.currentImage,
+          state.currentJson,
+          updatedJson,
+          state.referenceImage,
+          signal
+        );
 
-      // 結果表示（元画像も渡してBefore/After比較を有効化）
-      UI.showResult(newImageData, imageBeforeGeneration);
-      UI.updateJsonDisplay(updatedJson);
-      UI.updateMainPreview(newImageData);
+        const newImageData = { base64: result.base64, mimeType: result.mimeType };
+        state.currentImage = newImageData;
+        state.currentJson = updatedJson;
+        state.originalJson = JSON.parse(JSON.stringify(updatedJson));
+        state.pendingJson = null;
 
-      // 履歴ラベルを作成（複数指示を結合）
-      const historyLabel = editInstructions
-        .map(item => `${item.elementName}: ${item.instruction}`)
-        .join(' / ');
-      const currentEntry = EditHistory.getCurrent();
-      EditHistory.createEntry(
-        newImageData,
-        updatedJson,
-        historyLabel,
-        currentEntry ? currentEntry.id : 0
-      );
+        UI.showResult(newImageData, imageBeforeGeneration);
+        UI.updateJsonDisplay(updatedJson);
+        UI.updateMainPreview(newImageData);
 
-      UI.hideLoading();
-      UI.showSuccess('画像の生成が完了しました');
+        const historyLabel = editInstructions
+          .map(item => `${item.elementName}: ${item.instruction}`)
+          .join(' / ');
+        const currentEntry = EditHistory.getCurrent();
+        EditHistory.createEntry(
+          newImageData,
+          updatedJson,
+          historyLabel,
+          currentEntry ? currentEntry.id : 0
+        );
+
+        UI.hideLoading();
+        UI.showSuccess('画像の生成が完了しました');
+      } else {
+        // 複数枚の場合: ループ生成
+        const results = [];
+        for (let i = 0; i < generateCount; i++) {
+          if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+          const loadingText = document.getElementById('loadingText');
+          if (loadingText) loadingText.textContent = `画像を生成中... (${i + 1}/${generateCount}枚)`;
+
+          const result = await GeminiAPI.generateImage(
+            state.currentImage,
+            state.currentJson,
+            updatedJson,
+            state.referenceImage,
+            signal
+          );
+          results.push({ base64: result.base64, mimeType: result.mimeType });
+        }
+
+        state.currentJson = updatedJson;
+        state.originalJson = JSON.parse(JSON.stringify(updatedJson));
+        state.pendingJson = null;
+
+        // 複数枚グリッド表示
+        UI.showMultiResult(results, imageBeforeGeneration);
+        UI.updateJsonDisplay(updatedJson);
+
+        UI.hideLoading();
+        UI.showSuccess(`${generateCount}枚の画像を生成しました。画像をクリックして採用してください。`);
+      }
     } catch (err) {
       UI.hideLoading();
       if (err.name === 'AbortError') {
         UI.showSuccess('生成をキャンセルしました');
         state.pendingJson = null;
       } else if (state.pendingJson) {
-        // JSON更新は成功したが画像生成に失敗した場合
         UI.showError(`画像生成に失敗しました: ${err.message}\nJSON更新は完了しています。「画像を生成」ボタンで再試行できます。`);
-        // JSONは更新済みの状態を維持
         state.currentJson = state.pendingJson;
         state.originalJson = JSON.parse(JSON.stringify(state.pendingJson));
         UI.updateJsonDisplay(state.pendingJson);
@@ -243,6 +272,21 @@ const App = (() => {
       currentAbortController = null;
       if (generateBtnEl) generateBtnEl.disabled = false;
     }
+  }
+
+  // 複数枚生成から画像を採用
+  function onImageAdopted(imageData) {
+    state.currentImage = imageData;
+    UI.updateMainPreview(imageData);
+
+    const historyLabel = '画像を採用';
+    const currentEntry = EditHistory.getCurrent();
+    EditHistory.createEntry(
+      imageData,
+      state.currentJson,
+      historyLabel,
+      currentEntry ? currentEntry.id : 0
+    );
   }
 
   // 履歴の特定の時点に戻る
@@ -317,6 +361,7 @@ const App = (() => {
     onReferenceRemoved,
     onElementsSelected,
     onGeneratedImageEdit,
+    onImageAdopted,
     analyze,
     generate,
     goToHistory,

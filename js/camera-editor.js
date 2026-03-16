@@ -59,43 +59,72 @@ const CameraEditor = (() => {
 
   // 現在の値
   let currentValues = {};
+  let keepFlags = {}; // 「今までと同じ」フラグ
   let onChangeCallback = null;
 
   // JSON値から初期状態を推測
   function inferFromJson(cameraJson) {
     const values = {};
-    if (!cameraJson) return values;
+    const keeps = {};
+    if (!cameraJson) {
+      // JSONにカメラ情報がない場合、全て「今までと同じ」
+      keeps.angle = true;
+      keeps.shotType = true;
+      keeps.focalLength = true;
+      keeps.depthOfField = true;
+      keeps.composition = true;
+      keepFlags = keeps;
+      return values;
+    }
 
     // angle
     const angle = (cameraJson.angle || '').toLowerCase();
-    if (angle.includes('low')) values.angle = 'low';
+    if (!angle) {
+      keeps.angle = true;
+    } else if (angle.includes('low')) values.angle = 'low';
     else if (angle.includes('high')) values.angle = 'high';
     else if (angle.includes('bird')) values.angle = 'birds-eye';
     else if (angle.includes('worm')) values.angle = 'worms-eye';
     else values.angle = 'eye-level';
 
+    // shotType — JSONにshot_typeがない場合は「今までと同じ」
+    if (!cameraJson.shot_type) {
+      keeps.shotType = true;
+    }
+
     // focal_length
     const fl = cameraJson.focal_length || '';
-    const flMatch = fl.match(/(\d+)\s*mm/i);
-    if (flMatch) values.focalLength = parseInt(flMatch[1]);
-    else if (fl.includes('wide')) values.focalLength = 24;
-    else if (fl.includes('telephoto')) values.focalLength = 135;
-    else values.focalLength = 50;
+    if (!fl) {
+      keeps.focalLength = true;
+    } else {
+      const flMatch = fl.match(/(\d+)\s*mm/i);
+      if (flMatch) values.focalLength = parseInt(flMatch[1]);
+      else if (fl.includes('wide')) values.focalLength = 24;
+      else if (fl.includes('telephoto')) values.focalLength = 135;
+      else values.focalLength = 50;
+    }
 
     // depth_of_field
     const dof = (cameraJson.depth_of_field || '').toLowerCase();
-    if (dof.includes('shallow')) values.depthOfField = 2.0;
+    if (!dof) {
+      keeps.depthOfField = true;
+    } else if (dof.includes('shallow')) values.depthOfField = 2.0;
     else if (dof.includes('deep')) values.depthOfField = 11;
     else values.depthOfField = 5.6;
 
     // composition
     values.composition = [];
     const comp = (cameraJson.composition || '').toLowerCase();
-    if (comp.includes('third')) values.composition.push('rule-of-thirds');
-    if (comp.includes('symmetr')) values.composition.push('symmetry');
-    if (comp.includes('leading')) values.composition.push('leading-lines');
-    if (comp.includes('center')) values.composition.push('center');
+    if (!comp) {
+      keeps.composition = true;
+    } else {
+      if (comp.includes('third')) values.composition.push('rule-of-thirds');
+      if (comp.includes('symmetr')) values.composition.push('symmetry');
+      if (comp.includes('leading')) values.composition.push('leading-lines');
+      if (comp.includes('center')) values.composition.push('center');
+    }
 
+    keepFlags = keeps;
     return values;
   }
 
@@ -110,6 +139,14 @@ const CameraEditor = (() => {
 
   // 人物シルエットパス（共通）
   const PERSON_PATH = 'M20,8 a4,4 0 1,0 0.01,0 M16,14 h8 q4,0 4,4 v8 h-4 v10 h-3 v-10 h-2 v10 h-3 v-10 h-4 v-8 q0,-4 4,-4';
+
+  // 「今までと同じ」カードのSVG（↻アイコン）
+  function createKeepSvg() {
+    const svg = svgEl('svg', { width: '24', height: '24', viewBox: '0 0 24 24', fill: 'none', stroke: '#9ca3af', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+    svg.appendChild(svgEl('path', { d: 'M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8' }));
+    svg.appendChild(svgEl('path', { d: 'M3 3v5h5' }));
+    return svg;
+  }
 
   // コンテナにビジュアルコントロールを描画
   function render(container, cameraJson) {
@@ -151,6 +188,23 @@ const CameraEditor = (() => {
     const wrap = document.createElement('div');
     wrap.className = 'flex flex-wrap gap-2';
 
+    // 「今までと同じ」カード
+    const keepCard = document.createElement('button');
+    keepCard.className = `cam-visual-card${keepFlags[key] ? ' selected' : ''}`;
+    keepCard.appendChild(createKeepSvg());
+    const keepLbl = document.createElement('span');
+    keepLbl.className = 'card-label';
+    keepLbl.textContent = '同じ';
+    keepCard.appendChild(keepLbl);
+    keepCard.addEventListener('click', () => {
+      keepFlags[key] = true;
+      delete currentValues[key];
+      wrap.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
+      keepCard.classList.add('selected');
+      updatePreview();
+    });
+    wrap.appendChild(keepCard);
+
     // 各アングルのカメラ位置・角度定義
     const angleDefs = {
       'worms-eye':  { camY: 42, camX: 8,  arrowAngle: -70, label: '地面から' },
@@ -162,7 +216,7 @@ const CameraEditor = (() => {
 
     ctrl.options.forEach(opt => {
       const card = document.createElement('button');
-      const isSelected = currentValues[key] === opt.value;
+      const isSelected = !keepFlags[key] && currentValues[key] === opt.value;
       card.className = `cam-visual-card${isSelected ? ' selected' : ''}`;
 
       const def = angleDefs[opt.value];
@@ -193,6 +247,7 @@ const CameraEditor = (() => {
       card.appendChild(lbl);
 
       card.addEventListener('click', () => {
+        keepFlags[key] = false;
         currentValues[key] = opt.value;
         wrap.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
@@ -210,6 +265,23 @@ const CameraEditor = (() => {
     const wrap = document.createElement('div');
     wrap.className = 'flex flex-wrap gap-2';
 
+    // 「今までと同じ」カード
+    const keepCard = document.createElement('button');
+    keepCard.className = `cam-visual-card${keepFlags[key] ? ' selected' : ''}`;
+    keepCard.appendChild(createKeepSvg());
+    const keepLbl = document.createElement('span');
+    keepLbl.className = 'card-label';
+    keepLbl.textContent = '同じ';
+    keepCard.appendChild(keepLbl);
+    keepCard.addEventListener('click', () => {
+      keepFlags[key] = true;
+      delete currentValues[key];
+      wrap.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
+      keepCard.classList.add('selected');
+      updatePreview();
+    });
+    wrap.appendChild(keepCard);
+
     // 各ショットタイプのクリップ範囲（人物の見える範囲をyで制御）
     const shotDefs = {
       'extreme-close': { clipY: 4, clipH: 14, label: '超接写' },
@@ -221,7 +293,7 @@ const CameraEditor = (() => {
 
     ctrl.options.forEach(opt => {
       const card = document.createElement('button');
-      const isSelected = currentValues[key] === opt.value;
+      const isSelected = !keepFlags[key] && currentValues[key] === opt.value;
       card.className = `cam-visual-card${isSelected ? ' selected' : ''}`;
 
       const def = shotDefs[opt.value];
@@ -261,6 +333,7 @@ const CameraEditor = (() => {
       card.appendChild(lbl);
 
       card.addEventListener('click', () => {
+        keepFlags[key] = false;
         currentValues[key] = opt.value;
         wrap.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
@@ -279,7 +352,18 @@ const CameraEditor = (() => {
     wrap.className = 'space-y-1';
 
     const val = currentValues[key] ?? ctrl.default;
-    currentValues[key] = val;
+    if (!keepFlags[key]) currentValues[key] = val;
+
+    // 「今までと同じ」チェックボックス
+    const keepRow = document.createElement('label');
+    keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500';
+    const keepCheck = document.createElement('input');
+    keepCheck.type = 'checkbox';
+    keepCheck.checked = !!keepFlags[key];
+    keepCheck.className = 'rounded border-gray-300';
+    keepRow.appendChild(keepCheck);
+    keepRow.appendChild(document.createTextNode('今までと同じ'));
+    wrap.appendChild(keepRow);
 
     // スライダー行
     const sliderRow = document.createElement('div');
@@ -318,9 +402,27 @@ const CameraEditor = (() => {
     svgContainer.appendChild(fovSvg);
     wrap.appendChild(svgContainer);
 
+    // keepチェック時にスライダーをdisabledにする
+    function applyKeepState(isKeep) {
+      keepFlags[key] = isKeep;
+      input.disabled = isKeep;
+      sliderRow.style.opacity = isKeep ? '0.4' : '1';
+      svgContainer.style.opacity = isKeep ? '0.4' : '1';
+      updatePreview();
+    }
+    applyKeepState(!!keepFlags[key]);
+
+    keepCheck.addEventListener('change', () => {
+      applyKeepState(keepCheck.checked);
+    });
+
     input.addEventListener('input', () => {
       const v = parseFloat(input.value);
       currentValues[key] = v;
+      keepFlags[key] = false;
+      keepCheck.checked = false;
+      sliderRow.style.opacity = '1';
+      svgContainer.style.opacity = '1';
       valueDisplay.textContent = `${v}${ctrl.unit || ''}`;
       // 画角SVG更新
       svgContainer.innerHTML = '';
@@ -368,7 +470,18 @@ const CameraEditor = (() => {
     wrap.className = 'space-y-1';
 
     const val = currentValues[key] ?? ctrl.default;
-    currentValues[key] = val;
+    if (!keepFlags[key]) currentValues[key] = val;
+
+    // 「今までと同じ」チェックボックス
+    const keepRow = document.createElement('label');
+    keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500';
+    const keepCheck = document.createElement('input');
+    keepCheck.type = 'checkbox';
+    keepCheck.checked = !!keepFlags[key];
+    keepCheck.className = 'rounded border-gray-300';
+    keepRow.appendChild(keepCheck);
+    keepRow.appendChild(document.createTextNode('今までと同じ'));
+    wrap.appendChild(keepRow);
 
     // スライダー行
     const sliderRow = document.createElement('div');
@@ -454,9 +567,27 @@ const CameraEditor = (() => {
     }
     updateDofBlur(val);
 
+    // keepチェック時にスライダーをdisabledにする
+    function applyKeepState(isKeep) {
+      keepFlags[key] = isKeep;
+      input.disabled = isKeep;
+      sliderRow.style.opacity = isKeep ? '0.4' : '1';
+      previewContainer.style.opacity = isKeep ? '0.4' : '1';
+      updatePreview();
+    }
+    applyKeepState(!!keepFlags[key]);
+
+    keepCheck.addEventListener('change', () => {
+      applyKeepState(keepCheck.checked);
+    });
+
     input.addEventListener('input', () => {
       const v = parseFloat(input.value);
       currentValues[key] = v;
+      keepFlags[key] = false;
+      keepCheck.checked = false;
+      sliderRow.style.opacity = '1';
+      previewContainer.style.opacity = '1';
       valueDisplay.textContent = `f/${v.toFixed(1)}`;
       updateDofBlur(v);
       updatePreview();
@@ -471,6 +602,37 @@ const CameraEditor = (() => {
     wrap.className = 'flex flex-wrap gap-2';
 
     if (!currentValues[key]) currentValues[key] = [];
+
+    // 「今までと同じ」ボタン
+    const keepBtn = document.createElement('button');
+    keepBtn.className = `comp-visual-btn${keepFlags[key] ? ' selected' : ''}`;
+    keepBtn.appendChild(createKeepSvg());
+    const keepLbl = document.createElement('span');
+    keepLbl.className = 'card-label';
+    keepLbl.textContent = '同じ';
+    keepBtn.appendChild(keepLbl);
+    keepBtn.addEventListener('click', () => {
+      keepFlags[key] = !keepFlags[key];
+      if (keepFlags[key]) {
+        currentValues[key] = [];
+        // 他の構図選択を全解除
+        wrap.querySelectorAll('.comp-visual-btn').forEach(b => b.classList.remove('selected'));
+        keepBtn.classList.add('selected');
+        // 他のボタンをdisabledに
+        wrap.querySelectorAll('.comp-visual-btn:not(:first-child)').forEach(b => {
+          b.style.opacity = '0.4';
+          b.style.pointerEvents = 'none';
+        });
+      } else {
+        wrap.querySelectorAll('.comp-visual-btn:not(:first-child)').forEach(b => {
+          b.style.opacity = '1';
+          b.style.pointerEvents = '';
+        });
+        keepBtn.classList.remove('selected');
+      }
+      updatePreview();
+    });
+    wrap.appendChild(keepBtn);
 
     // 各構図のSVGパターン定義
     const compDefs = {
@@ -523,8 +685,13 @@ const CameraEditor = (() => {
 
     ctrl.options.forEach(opt => {
       const btn = document.createElement('button');
-      const isSelected = currentValues[key].includes(opt.value);
+      const isSelected = !keepFlags[key] && currentValues[key].includes(opt.value);
       btn.className = `comp-visual-btn${isSelected ? ' selected' : ''}`;
+      // keepモード中は他のボタンをdisabledに
+      if (keepFlags[key]) {
+        btn.style.opacity = '0.4';
+        btn.style.pointerEvents = 'none';
+      }
 
       const svg = svgEl('svg', { width: '48', height: '48', viewBox: '0 0 48 48' });
       // 枠線
@@ -539,6 +706,7 @@ const CameraEditor = (() => {
       btn.appendChild(lbl);
 
       btn.addEventListener('click', () => {
+        if (keepFlags[key]) return; // keepモード中は操作不可
         const idx = currentValues[key].indexOf(opt.value);
         if (idx >= 0) {
           currentValues[key].splice(idx, 1);
@@ -560,30 +728,30 @@ const CameraEditor = (() => {
   function getPromptText() {
     const parts = [];
 
-    // angle
-    if (currentValues.angle) {
+    // angle（keepなら除外）
+    if (!keepFlags.angle && currentValues.angle) {
       const opt = CONTROLS.angle.options.find(o => o.value === currentValues.angle);
       if (opt) parts.push(opt.prompt);
     }
 
-    // shotType
-    if (currentValues.shotType) {
+    // shotType（keepなら除外）
+    if (!keepFlags.shotType && currentValues.shotType) {
       const opt = CONTROLS.shotType.options.find(o => o.value === currentValues.shotType);
       if (opt) parts.push(opt.prompt);
     }
 
-    // focalLength
-    if (currentValues.focalLength) {
+    // focalLength（keepなら除外）
+    if (!keepFlags.focalLength && currentValues.focalLength) {
       parts.push(CONTROLS.focalLength.toPrompt(currentValues.focalLength));
     }
 
-    // depthOfField
-    if (currentValues.depthOfField) {
+    // depthOfField（keepなら除外）
+    if (!keepFlags.depthOfField && currentValues.depthOfField) {
       parts.push(CONTROLS.depthOfField.toPrompt(currentValues.depthOfField));
     }
 
-    // composition
-    if (currentValues.composition && currentValues.composition.length > 0) {
+    // composition（keepなら除外）
+    if (!keepFlags.composition && currentValues.composition && currentValues.composition.length > 0) {
       currentValues.composition.forEach(v => {
         const opt = CONTROLS.composition.options.find(o => o.value === v);
         if (opt) parts.push(opt.prompt);
@@ -596,7 +764,8 @@ const CameraEditor = (() => {
   // プレビュー更新
   function updatePreview() {
     const el = document.getElementById('cameraPromptPreview');
-    if (el) el.textContent = getPromptText() || '(コントロールを操作してください)';
+    const text = getPromptText();
+    if (el) el.textContent = text || '(カメラ設定は変更しません)';
     if (onChangeCallback) onChangeCallback();
   }
 

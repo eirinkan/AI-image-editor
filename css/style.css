@@ -98,27 +98,55 @@ button {
   gap: 12px;
 }
 
-/* 履歴タイムラインのスクロール */
-#historyTimeline {
-  display: flex;
-  overflow-x: auto;
-  gap: 8px;
-  padding: 8px 0;
+/* 履歴サイドバー */
+.history-sidebar {
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.history-sidebar .sticky {
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
   scrollbar-width: thin;
 }
 
-#historyTimeline::-webkit-scrollbar {
-  height: 6px;
+.history-sidebar .sticky::-webkit-scrollbar {
+  width: 4px;
 }
 
-#historyTimeline::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+.history-sidebar .sticky::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-#historyTimeline::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+.history-sidebar .sticky::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+/* 縦型タイムライン */
+.history-timeline-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* モバイル: サイドバー非表示、フォールバック横スクロール */
+@media (max-width: 768px) {
+  .history-sidebar {
+    display: none !important;
+  }
+  .history-mobile {
+    display: block !important;
+  }
+  .history-mobile #historyTimelineMobile {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 8px 0;
+    scrollbar-width: thin;
+  }
 }
 
 /* ローディングスピナー */
@@ -347,10 +375,10 @@ button {
 }
 
 .compare-before-img {
-  width: auto;
+  width: 100%;
   height: 100%;
-  max-width: none;
-  object-fit: cover;
+  object-fit: contain;
+  max-height: 600px;
 }
 
 /* スライダー・ラベルは初期非表示、ホバーでフェードイン */

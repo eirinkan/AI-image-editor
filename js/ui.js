@@ -74,10 +74,15 @@ const UI = (() => {
       // 結果表示
       resultSection: document.getElementById('resultSection'),
       resultImage: document.getElementById('resultImage'),
+      resultGrid: document.getElementById('resultGrid'),
       downloadBtn: document.getElementById('downloadBtn'),
 
-      // 履歴
-      historySection: document.getElementById('historySection'),
+      // 生成枚数
+      generateCount: document.getElementById('generateCount'),
+      generateCountCustom: document.getElementById('generateCountCustom'),
+
+      // 履歴（サイドバー）
+      historySidebar: document.getElementById('historySidebar'),
       historyTimeline: document.getElementById('historyTimeline'),
 
       // JSON表示トグル
@@ -106,6 +111,11 @@ const UI = (() => {
       customElementInput: document.getElementById('customElementInput'),
       customElementConfirm: document.getElementById('customElementConfirm'),
       customElementCancel: document.getElementById('customElementCancel'),
+
+      // カスタム要素登録（設定モーダル内）
+      customElementRegisterInput: document.getElementById('customElementRegisterInput'),
+      customElementRegisterBtn: document.getElementById('customElementRegisterBtn'),
+      customElementRegisteredList: document.getElementById('customElementRegisteredList'),
 
       // 設定・ヘルプモーダル
       settingsBtn: document.getElementById('settingsBtn'),
@@ -176,6 +186,16 @@ const UI = (() => {
       if (typeof App !== 'undefined') App.generate();
     });
 
+    // 生成枚数セレクター
+    elements.generateCount.addEventListener('change', () => {
+      if (elements.generateCount.value === 'custom') {
+        elements.generateCountCustom.classList.remove('hidden');
+        elements.generateCountCustom.focus();
+      } else {
+        elements.generateCountCustom.classList.add('hidden');
+      }
+    });
+
     // ダウンロード
     elements.downloadBtn.addEventListener('click', () => {
       if (typeof App !== 'undefined') App.downloadCurrent();
@@ -204,6 +224,13 @@ const UI = (() => {
 
     // プリセットテンプレート
     elements.presetList.addEventListener('click', handlePresetClick);
+
+    // カスタム要素登録（設定モーダル内）
+    elements.customElementRegisterBtn.addEventListener('click', registerCustomElement);
+    elements.customElementRegisterInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') registerCustomElement();
+    });
+    renderRegisteredCustomElements();
   }
 
   // --- APIキー ---
@@ -537,35 +564,31 @@ const UI = (() => {
       elements.elementsList.appendChild(card);
     }
 
-    // シーン全体（マーカーなし）
-    if (json.scene) {
-      const card = createElementCard({
-        id: 'scene',
-        type: 'scene',
-        name: 'シーン全体',
-        subtitle: [json.scene.style, json.scene.type].filter(Boolean).join('・'),
-        data: json.scene,
-      });
-      elements.elementsList.appendChild(card);
-    }
+    // シーン全体は「画像全体への指示」に統合されたため削除
 
     // 画像上にマーカーを描画 & マーカーカラム表示
     renderMarkers(json);
     if (elements.markerColumn) elements.markerColumn.classList.remove('hidden');
     if (elements.cleanColumnLabel) elements.cleanColumnLabel.classList.remove('hidden');
 
+    // 登録済みカスタム要素をカードとして表示
+    const customElements = getRegisteredCustomElements();
+    if (customElements.length > 0) {
+      elements.elementsList.appendChild(createCategoryHeader(ICONS.plus, 'カスタム要素'));
+      customElements.forEach(name => {
+        const card = createElementCard({
+          id: 'custom_reg_' + name,
+          type: 'object',
+          name: name,
+          subtitle: 'カスタム',
+          data: { name, custom: true },
+        });
+        elements.elementsList.appendChild(card);
+      });
+    }
+
     // アクションボタンカテゴリ
     elements.elementsList.appendChild(createCategoryHeader(ICONS.bolt, 'アクション'));
-
-    // カスタム要素追加ボタン
-    const addBtn = document.createElement('button');
-    addBtn.className = 'element-card border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer min-h-[100px]';
-    addBtn.innerHTML = `
-      <span class="text-gray-400">${ICONS.plus}</span>
-      <span class="text-sm text-gray-500">カスタム要素</span>
-    `;
-    addBtn.addEventListener('click', showCustomElementDialog);
-    elements.elementsList.appendChild(addBtn);
 
     // 画像全体への指示ボタン
     const globalBtn = document.createElement('button');
@@ -880,9 +903,64 @@ const UI = (() => {
     elements.customElementModal.classList.add('hidden');
   }
 
+  // --- カスタム要素の永続管理（設定モーダル内） ---
+  function getRegisteredCustomElements() {
+    try {
+      return JSON.parse(localStorage.getItem('custom_elements') || '[]');
+    } catch { return []; }
+  }
+
+  function saveRegisteredCustomElements(list) {
+    localStorage.setItem('custom_elements', JSON.stringify(list));
+  }
+
+  function registerCustomElement() {
+    const name = elements.customElementRegisterInput.value.trim();
+    if (!name) return;
+    const list = getRegisteredCustomElements();
+    if (list.includes(name)) {
+      showError('この要素は既に登録されています');
+      return;
+    }
+    list.push(name);
+    saveRegisteredCustomElements(list);
+    elements.customElementRegisterInput.value = '';
+    renderRegisteredCustomElements();
+    showSuccess(`「${name}」を登録しました`);
+  }
+
+  function unregisterCustomElement(name) {
+    const list = getRegisteredCustomElements().filter(n => n !== name);
+    saveRegisteredCustomElements(list);
+    renderRegisteredCustomElements();
+  }
+
+  function renderRegisteredCustomElements() {
+    const container = elements.customElementRegisteredList;
+    if (!container) return;
+    const list = getRegisteredCustomElements();
+    container.innerHTML = '';
+    if (list.length === 0) {
+      container.innerHTML = '<p class="text-xs text-gray-400">登録済み要素はありません</p>';
+      return;
+    }
+    list.forEach(name => {
+      const row = document.createElement('div');
+      row.className = 'flex items-center justify-between bg-gray-50 rounded-lg px-3 py-1.5';
+      row.innerHTML = `
+        <span class="text-sm text-gray-700">${escapeHtml(name)}</span>
+        <button class="text-gray-400 hover:text-red-500 text-lg leading-none cursor-pointer" title="削除">&times;</button>
+      `;
+      row.querySelector('button').addEventListener('click', () => unregisterCustomElement(name));
+      container.appendChild(row);
+    });
+  }
+
   // --- 結果表示 ---
   function showResult(imageData, originalImageData = null) {
     elements.resultSection.classList.remove('hidden');
+    elements.resultGrid.classList.add('hidden');
+    elements.compareContainer.classList.remove('hidden');
     elements.resultImage.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
 
     // Before/After比較用データ設定
@@ -914,17 +992,9 @@ const UI = (() => {
 
   // --- Before/After比較（ホバー式スライダー） ---
   function syncCompareImages() {
-    // After画像（resultImage）のサイズにBefore画像を合わせる
-    const afterImg = elements.resultImage;
-    const setSize = () => {
-      elements.compareBeforeImg.style.width = afterImg.offsetWidth + 'px';
-      elements.compareBeforeImg.style.height = afterImg.offsetHeight + 'px';
-    };
-    if (afterImg.complete) {
-      setSize();
-    } else {
-      afterImg.onload = setSize;
-    }
+    // Before/After両方ともobject-fit: containで親要素に合わせるため、
+    // Before画像は親(.compare-before)のサイズに自動追従する
+    // 追加のサイズ指定は不要
   }
 
   function updateSliderPosition(ratio) {
@@ -1004,30 +1074,29 @@ const UI = (() => {
     elements.compareContainer.addEventListener('touchstart', onStart, { passive: false });
   }
 
-  // --- 履歴タイムライン ---
+  // --- 履歴タイムライン（縦型サイドバー） ---
   function renderHistory(entries, currentIndex) {
-    elements.historySection.classList.remove('hidden');
+    elements.historySidebar.classList.remove('hidden');
     elements.historyTimeline.innerHTML = '';
 
     entries.forEach((entry, i) => {
       const item = document.createElement('div');
       const isCurrent = i === currentIndex;
-      item.className = `history-item flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${isCurrent ? 'bg-blue-100 ring-2 ring-blue-400' : 'bg-gray-100 hover:bg-gray-200'}`;
-      item.style.width = '100px';
+      item.className = `flex flex-col items-center gap-1 p-2 rounded-lg transition-all cursor-pointer ${isCurrent ? 'bg-blue-100 ring-2 ring-blue-400' : 'bg-gray-50 hover:bg-gray-100'}`;
 
       const thumbUrl = EditHistory.getThumbnailUrl(entry);
       item.innerHTML = `
-        <div class="w-16 h-16 rounded-md overflow-hidden bg-gray-200 flex-shrink-0 cursor-pointer history-thumb">
+        <div class="w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 history-thumb">
           ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>'}
         </div>
-        <span class="text-xs font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-600'} text-center leading-tight line-clamp-2 cursor-pointer history-thumb">${escapeHtml(entry.label)}</span>
-        <span class="text-xs text-gray-500">v${i}</span>
-        <div class="flex gap-1 mt-0.5">
-          <button class="history-dl-btn text-gray-400 hover:text-blue-500 transition-colors" title="ダウンロード">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        <span class="text-[10px] font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-600'} text-center leading-tight line-clamp-2 w-full history-thumb">${escapeHtml(entry.label)}</span>
+        <div class="flex items-center gap-1">
+          <span class="text-[10px] text-gray-400">v${i}</span>
+          <button class="history-dl-btn text-gray-400 hover:text-blue-500 transition-colors p-0.5" title="ダウンロード">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
           </button>
-          ${i > 0 ? `<button class="history-del-btn text-gray-400 hover:text-red-500 transition-colors" title="削除">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          ${i > 0 ? `<button class="history-del-btn text-gray-400 hover:text-red-500 transition-colors p-0.5" title="削除">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
           </button>` : ''}
         </div>
       `;
@@ -1056,17 +1125,14 @@ const UI = (() => {
 
       elements.historyTimeline.appendChild(item);
 
-      // 矢印（最後以外）
+      // 縦矢印（最後以外）
       if (i < entries.length - 1) {
         const arrow = document.createElement('div');
-        arrow.className = 'flex-shrink-0 flex items-center text-gray-300 text-lg self-center';
-        arrow.textContent = '→';
+        arrow.className = 'flex items-center justify-center text-gray-300 text-sm py-0.5';
+        arrow.textContent = '↓';
         elements.historyTimeline.appendChild(arrow);
       }
     });
-
-    // 最新にスクロール
-    elements.historyTimeline.scrollLeft = elements.historyTimeline.scrollWidth;
   }
 
   // --- ローディング ---
@@ -1215,6 +1281,63 @@ const UI = (() => {
     }
   }
 
+  // --- 生成枚数取得 ---
+  function getGenerateCount() {
+    const sel = elements.generateCount;
+    if (sel.value === 'custom') {
+      const v = parseInt(elements.generateCountCustom.value);
+      return Math.max(1, Math.min(8, v || 1));
+    }
+    return parseInt(sel.value) || 1;
+  }
+
+  // --- 複数枚結果表示 ---
+  function showMultiResult(results, originalImageData) {
+    elements.resultSection.classList.remove('hidden');
+    elements.compareContainer.classList.add('hidden');
+    elements.resultGrid.classList.remove('hidden');
+    elements.resultGrid.innerHTML = '';
+
+    // グリッドレイアウト: 2枚=2列, 4枚=2x2
+    const cols = results.length <= 2 ? results.length : 2;
+    elements.resultGrid.className = `grid gap-4`;
+    elements.resultGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+    results.forEach((imgData, i) => {
+      const card = document.createElement('div');
+      card.className = 'relative rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-400 transition-colors cursor-pointer group';
+
+      const img = document.createElement('img');
+      img.src = `data:${imgData.mimeType};base64,${imgData.base64}`;
+      img.className = 'w-full block';
+      img.alt = `生成結果 ${i + 1}`;
+      card.appendChild(img);
+
+      // 「この画像を採用」ボタン
+      const adoptBtn = document.createElement('button');
+      adoptBtn.className = 'absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1.5 text-xs bg-blue-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg cursor-pointer whitespace-nowrap';
+      adoptBtn.textContent = 'この画像を採用';
+      adoptBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // 採用: この画像をメインのBefore/Afterスライダーに表示
+        elements.resultGrid.classList.add('hidden');
+        elements.compareContainer.classList.remove('hidden');
+        showResult(imgData, originalImageData);
+        // Appに通知
+        if (typeof App !== 'undefined' && App.onImageAdopted) {
+          App.onImageAdopted(imgData);
+        }
+      });
+      card.appendChild(adoptBtn);
+
+      elements.resultGrid.appendChild(card);
+    });
+
+    requestAnimationFrame(() => {
+      elements.resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+
   // --- ユーティリティ ---
   function escapeHtml(text) {
     if (!text) return '';
@@ -1270,6 +1393,7 @@ const UI = (() => {
     renderMarkers,
     renderHistory,
     showResult,
+    showMultiResult,
     showLoading,
     showLoadingWithSteps,
     updateLoadingStep,
@@ -1280,6 +1404,7 @@ const UI = (() => {
     getSelectedFocusTags,
     getCustomInstruction,
     getEditInstructions,
+    getGenerateCount,
     clearSelectedElements,
     updateMainPreview,
   };
