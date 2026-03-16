@@ -8,20 +8,11 @@ const GeminiAPI = (() => {
   const TEXT_MODEL = 'gemini-3.1-pro-preview';
 
   function getApiKey() {
-    // sessionStorage優先、localStorage にある場合はマイグレーション
-    let key = sessionStorage.getItem('gemini_api_key') || '';
-    if (!key) {
-      key = localStorage.getItem('gemini_api_key') || '';
-      if (key) {
-        sessionStorage.setItem('gemini_api_key', key);
-        localStorage.removeItem('gemini_api_key');
-      }
-    }
-    return key;
+    return localStorage.getItem('gemini_api_key') || '';
   }
 
   function setApiKey(key) {
-    sessionStorage.setItem('gemini_api_key', key);
+    localStorage.setItem('gemini_api_key', key);
   }
 
   // フォーカスタグに応じた分析プロンプトを構築
