@@ -385,6 +385,7 @@ const App = (() => {
     generate,
     goToHistory,
     downloadCurrent,
+    getState: () => state,
   };
 })();
 

@@ -720,10 +720,14 @@ const UI = (() => {
       badgeHtml = `<span class="element-badge">${markerIndex}</span>`;
     }
 
+    // 編集可能な要素タイプか判定（atmosphere, camera, global以外）
+    const isEditable = ['object', 'text', 'person'].includes(type);
+
     card.innerHTML = `
       ${badgeHtml}
-      <span class="font-medium text-gray-800 text-sm leading-tight">${escapeHtml(name)}</span>
+      <span class="element-name font-medium text-gray-800 text-sm leading-tight">${escapeHtml(name)}</span>
       <span class="text-xs text-gray-500 leading-tight">${escapeHtml(subtitle)}</span>
+      ${isEditable ? '<span class="text-[10px] text-gray-400 mt-0.5">ダブルクリックで名前変更</span>' : ''}
     `;
 
     // ホバー時に画像上のマーカーと連動
@@ -736,8 +740,87 @@ const UI = (() => {
       if (marker) marker.classList.remove('active');
     });
 
-    card.addEventListener('click', () => selectElement({ id, type, name, data }));
+    // シングルクリック（選択）とダブルクリック（名前編集）を区別
+    if (isEditable) {
+      let clickTimer = null;
+      card.addEventListener('click', (e) => {
+        if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; }
+        clickTimer = setTimeout(() => {
+          clickTimer = null;
+          selectElement({ id, type, name, data });
+        }, 250);
+      });
+      card.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
+        startNameEdit(card, id, type, name, data);
+      });
+    } else {
+      card.addEventListener('click', () => selectElement({ id, type, name, data }));
+    }
+
     return card;
+  }
+
+  // 要素名のインライン編集
+  function startNameEdit(card, id, type, currentName, data) {
+    const nameSpan = card.querySelector('.element-name');
+    if (!nameSpan || nameSpan.querySelector('input')) return; // 既に編集中
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentName;
+    input.className = 'w-full px-1 py-0.5 text-sm border border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-400';
+    input.style.minWidth = '60px';
+
+    const originalText = nameSpan.textContent;
+    nameSpan.textContent = '';
+    nameSpan.appendChild(input);
+    input.focus();
+    input.select();
+
+    const finishEdit = () => {
+      const newName = input.value.trim() || originalText;
+      nameSpan.textContent = newName;
+
+      // currentJsonの対応する要素名を更新
+      if (typeof App !== 'undefined' && App.getState) {
+        const state = App.getState();
+        if (state.currentJson) {
+          updateElementName(state.currentJson, id, type, newName);
+        }
+      }
+
+      // selectedElementsの名前も更新
+      const sel = selectedElements.find(el => el.id === id);
+      if (sel) {
+        sel.name = newName;
+        renderEditInstructions();
+      }
+    };
+
+    input.addEventListener('blur', finishEdit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      if (e.key === 'Escape') { input.value = originalText; input.blur(); }
+    });
+    // クリックイベントの伝播を防止
+    input.addEventListener('click', (e) => e.stopPropagation());
+  }
+
+  // JSON内の要素名を更新
+  function updateElementName(json, id, type, newName) {
+    if (type === 'object' && json.objects) {
+      const match = json.objects.find((obj, i) => (obj.id || `obj_${i}`) === id);
+      if (match) { match.name = newName; if (match.name_en) match.name_en = newName; }
+    } else if (type === 'text' && json.text_elements) {
+      const match = json.text_elements.find((te, i) => (te.id || `text_${i}`) === id);
+      if (match) match.content = newName;
+    } else if (type === 'person' && json.people) {
+      const match = json.people.find((p, i) => (p.id || `person_${i}`) === id);
+      if (match) match.description = newName;
+    }
   }
 
   // JSON内のオブジェクト・テキスト・人物を統一リストに展開
