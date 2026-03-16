@@ -276,8 +276,8 @@ const UI = (() => {
   };
   // 画像生成: サイズ別（概算 ¥/回）
   const IMAGE_COST_MAP = {
-    'gemini-3.1-flash-image-preview': { '1K': '¥3',  '2K': '¥5' },
-    'gemini-3.1-pro-image-preview':   { '1K': '¥5',  '2K': '¥10' },
+    'gemini-3.1-flash-image-preview': { '1K': '¥3',  '2K': '¥5',  '4K': '¥10' },
+    'gemini-3.1-pro-image-preview':   { '1K': '¥5',  '2K': '¥10', '4K': '¥20' },
   };
 
   function initModelSelectors() {
@@ -333,7 +333,7 @@ const UI = (() => {
       { label: '編集指示', key: 'edit' },
       { label: 'プロンプト', key: 'prompt' },
     ];
-    const imageSizes = ['1K', '2K'];
+    const imageSizes = ['1K', '2K', '4K'];
     const thCls = 'py-1.5 px-2 text-gray-500 font-normal whitespace-nowrap border border-gray-200';
     const tdCls = 'py-1.5 px-2 border border-gray-200';
 

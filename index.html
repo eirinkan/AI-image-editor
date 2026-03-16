@@ -34,7 +34,7 @@
 
   <!-- 設定モーダル -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
-    <div role="dialog" aria-modal="true" class="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+    <div role="dialog" aria-modal="true" class="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-5">
         <h3 class="text-lg font-bold text-gray-800">設定</h3>
         <button id="settingsClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 text-2xl leading-none cursor-pointer">&times;</button>
@@ -64,13 +64,13 @@
         <div class="space-y-3">
           <div>
             <label for="textModelSelect" class="block text-xs font-medium text-gray-600 mb-1">テキスト処理モデル<span class="text-gray-400">（画像分析・編集指示の理解・プロンプト作成）</span></label>
-            <select id="textModelSelect" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white"></select>
+            <select id="textModelSelect" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white cursor-pointer"></select>
             <p id="textModelNote" class="text-xs text-gray-400 mt-1"></p>
           </div>
 
           <div>
             <label for="imageModelSelect" class="block text-xs font-medium text-gray-600 mb-1">画像生成モデル<span class="text-gray-400">（画像編集・テキストから画像生成）</span></label>
-            <select id="imageModelSelect" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white"></select>
+            <select id="imageModelSelect" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white cursor-pointer"></select>
             <p id="imageModelNote" class="text-xs text-gray-400 mt-1"></p>
           </div>
         </div>
@@ -493,7 +493,7 @@
   <script src="js/api.js?v=12"></script>
   <script src="js/history.js?v=11"></script>
   <script src="js/camera-editor.js?v=3"></script>
-  <script src="js/ui.js?v=14"></script>
+  <script src="js/ui.js?v=15"></script>
   <script src="js/generate.js?v=11"></script>
   <script src="js/app.js?v=12"></script>
 </body>
