@@ -1148,7 +1148,8 @@ const UI = (() => {
         link.addEventListener('click', (e) => {
           e.preventDefault();
           hideError();
-          elements.apiKeyInput.focus();
+          elements.settingsModal.classList.remove('hidden');
+          setTimeout(() => elements.apiKeyInput.focus(), 100);
         });
       }
     } else {

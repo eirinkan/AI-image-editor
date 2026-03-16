@@ -350,6 +350,7 @@ button {
   width: auto;
   height: 100%;
   max-width: none;
+  object-fit: cover;
 }
 
 /* スライダー・ラベルは初期非表示、ホバーでフェードイン */
