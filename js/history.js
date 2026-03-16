@@ -56,6 +56,16 @@ const EditHistory = (() => {
     return entry;
   }
 
+  // 現在のエントリの画像を更新（再採用時に使用）
+  async function updateCurrentEntry(imageData) {
+    if (currentIndex < 0 || currentIndex >= entries.length) return;
+    const entry = entries[currentIndex];
+    entry.image = imageData;
+    entry.thumbnailUrl = await createThumbnail(imageData);
+    notifyListeners();
+    save();
+  }
+
   // 指定時点に戻る
   function goTo(id) {
     if (id < 0 || id >= entries.length) return null;
@@ -161,6 +171,7 @@ const EditHistory = (() => {
 
   return {
     createEntry,
+    updateCurrentEntry,
     goTo,
     getCurrent,
     getCurrentIndex,

@@ -85,10 +85,8 @@ const UI = (() => {
       historySidebar: document.getElementById('historySidebar'),
       historyTimeline: document.getElementById('historyTimeline'),
 
-      // JSON表示トグル
-      jsonToggle: document.getElementById('jsonToggle'),
-      jsonPanel: document.getElementById('jsonPanel'),
-      jsonContent: document.getElementById('jsonContent'),
+      // 採用画像ダウンロードボタン
+      adoptDownloadBtn: document.getElementById('adoptDownloadBtn'),
 
       // ローディング
       loadingOverlay: document.getElementById('loadingOverlay'),
@@ -200,9 +198,6 @@ const UI = (() => {
     elements.downloadBtn.addEventListener('click', () => {
       if (typeof App !== 'undefined') App.downloadCurrent();
     });
-
-    // JSONトグル
-    elements.jsonToggle.addEventListener('click', toggleJsonPanel);
 
     // エラー閉じる
     elements.errorClose.addEventListener('click', hideError);
@@ -1078,18 +1073,18 @@ const UI = (() => {
 
       const thumbUrl = EditHistory.getThumbnailUrl(entry);
       item.innerHTML = `
-        <div class="w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 history-thumb">
+        <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 history-thumb">
           ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>'}
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <button class="history-dl-btn text-white hover:text-blue-300 transition-colors p-1" title="ダウンロード">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            </button>
+            ${i > 0 ? `<button class="history-del-btn text-white hover:text-red-300 transition-colors p-1" title="削除">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>` : ''}
+          </div>
         </div>
         <span class="text-[10px] font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-600'} text-center leading-tight line-clamp-2 w-full history-thumb">${escapeHtml(entry.label)}</span>
-        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button class="history-dl-btn text-gray-400 hover:text-blue-500 transition-colors p-0.5" title="ダウンロード">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-          </button>
-          ${i > 0 ? `<button class="history-del-btn text-gray-400 hover:text-red-500 transition-colors p-0.5" title="削除">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-          </button>` : ''}
-        </div>
       `;
 
       // サムネイル・ラベルクリックで履歴切り替え
@@ -1231,17 +1226,6 @@ const UI = (() => {
     elements.errorToast.classList.add('hidden');
   }
 
-  // --- JSONパネル ---
-  function toggleJsonPanel() {
-    elements.jsonPanel.classList.toggle('hidden');
-    const isOpen = !elements.jsonPanel.classList.contains('hidden');
-    elements.jsonToggle.textContent = isOpen ? 'JSONを隠す ▲' : 'JSONを表示 ▼';
-  }
-
-  function updateJsonDisplay(json) {
-    elements.jsonContent.textContent = JSON.stringify(json, null, 2);
-  }
-
   // --- プリセットテンプレート ---
   const PRESETS = {
     golden_hour: '全体的にゴールデンアワーの暖かい照明に変更。夕日の柔らかいオレンジ色の光が差し込む雰囲気にする',
@@ -1252,6 +1236,22 @@ const UI = (() => {
     vintage: 'レトロ・ヴィンテージ風の色調に変更。セピアトーンとフィルム粒子感を加える',
     minimalist: 'ミニマリストデザインに変更。余計な要素を減らし、シンプルで洗練された印象にする',
     dramatic: 'ドラマチックな照明に変更。強いコントラストと印象的な影を加える',
+    summer: '季節を真夏に変更。強い日差し、青い空、鮮やかな緑の夏らしい雰囲気にする',
+    autumn: '季節を秋に変更。紅葉の赤やオレンジ、落ち葉のある秋の風景にする',
+    morning: '早朝の柔らかい光に変更。朝もやと淡い日差しの清々しい雰囲気にする',
+    sunset: '夕暮れ時の空に変更。紫とオレンジのグラデーションが美しい夕焼けにする',
+    watercolor: '水彩画風のスタイルに変換する。にじみと透明感のある柔らかいタッチで描く',
+    oil_painting: '油絵風のスタイルに変換する。厚塗りの筆跡と豊かな色彩で描く',
+    pencil_sketch: '鉛筆スケッチ風に変換する。モノクロの繊細な線画とハッチングで描く',
+    cyberpunk: 'サイバーパンク風に変更。ネオンライトと未来的な都市の雰囲気にする',
+    steampunk: 'スチームパンク風に変更。歯車や蒸気機関のレトロフューチャーな雰囲気にする',
+    pop_art: 'ポップアート風に変換する。鮮やかな原色とハーフトーンドットのスタイルにする',
+    horror: 'ホラー風の不気味な雰囲気に変更。暗い影と冷たい色調で恐怖感を演出する',
+    fantasy: 'ファンタジー風の幻想的な雰囲気に変更。魔法のような光と神秘的な色彩にする',
+    scifi: 'SF風の近未来的な雰囲気に変更。メタリックな質感とホログラフィックな光にする',
+    romantic: 'ロマンチックな雰囲気に変更。柔らかいピンクのトーンと夢のような光で演出する',
+    rain: '雨の日の雰囲気に変更。雨粒と濡れた路面の反射が美しいシーンにする',
+    fog: '霧の中の幻想的な雰囲気に変更。霧がかかり遠景がぼやけた神秘的なシーンにする',
   };
 
   function handlePresetClick(e) {
@@ -1289,10 +1289,13 @@ const UI = (() => {
     elements.resultGrid.classList.remove('hidden');
     elements.resultGrid.innerHTML = '';
 
-    // グリッドレイアウト: 2枚=2列, 4枚=2x2
+    // グリッドレイアウト: 2枚=2列, 4枚=2x2 + 下部余白
     const cols = results.length <= 2 ? results.length : 2;
-    elements.resultGrid.className = `grid gap-4`;
+    elements.resultGrid.className = `grid gap-4 mb-6`;
     elements.resultGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+    // 採用DLボタンを非表示にリセット
+    if (elements.adoptDownloadBtn) elements.adoptDownloadBtn.classList.add('hidden');
 
     results.forEach((imgData, i) => {
       const card = document.createElement('div');
@@ -1310,10 +1313,10 @@ const UI = (() => {
       checkMark.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
       card.appendChild(checkMark);
 
-      // 「この画像を採用」ボタン
-      const adoptBtn = document.createElement('button');
-      adoptBtn.className = 'absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1.5 text-xs bg-blue-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg cursor-pointer whitespace-nowrap';
-      adoptBtn.textContent = 'この画像を採用';
+      // 「この画像を採用」ボタン（画像中央に大きく表示）
+      const adoptBtn = document.createElement('div');
+      adoptBtn.className = 'absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer';
+      adoptBtn.innerHTML = '<span class="px-6 py-3 text-sm font-medium bg-blue-500 text-white rounded-xl shadow-lg hover:bg-blue-600 transition-colors">この画像を採用</span>';
       adoptBtn.addEventListener('click', (e) => {
         e.stopPropagation();
 
@@ -1344,6 +1347,23 @@ const UI = (() => {
           activateCompare();
           setTimeout(() => deactivateCompare(), 1000);
         }, 300);
+
+        // 採用画像直下にDLボタン表示
+        if (elements.adoptDownloadBtn) {
+          elements.adoptDownloadBtn.classList.remove('hidden');
+          // DLボタンのクリックイベントを再設定
+          const newDlBtn = elements.adoptDownloadBtn.cloneNode(true);
+          elements.adoptDownloadBtn.replaceWith(newDlBtn);
+          elements.adoptDownloadBtn = newDlBtn;
+          newDlBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.href = `data:${imgData.mimeType};base64,${imgData.base64}`;
+            link.download = `adopted_image.${imgData.mimeType === 'image/png' ? 'png' : 'jpg'}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          });
+        }
 
         // Appに通知
         if (typeof App !== 'undefined' && App.onImageAdopted) {
@@ -1422,7 +1442,6 @@ const UI = (() => {
     hideLoading,
     showError,
     showSuccess,
-    updateJsonDisplay,
     getSelectedFocusTags,
     getCustomInstruction,
     getEditInstructions,

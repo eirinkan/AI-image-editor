@@ -15,6 +15,9 @@ const App = (() => {
   // AbortController管理
   let currentAbortController = null;
 
+  // 複数枚グリッドからの再採用フラグ
+  let _multiAdoptEntryCreated = false;
+
   // 初期化
   function init() {
     UI.init();
@@ -126,7 +129,6 @@ const App = (() => {
       state.originalJson = JSON.parse(JSON.stringify(json)); // ディープコピー
 
       UI.renderElements(json);
-      UI.updateJsonDisplay(json);
 
       // 初回分析時にオリジナルとして履歴に追加
       if (EditHistory.getAll().length === 0) {
@@ -209,7 +211,6 @@ const App = (() => {
         state.pendingJson = null;
 
         UI.showResult(newImageData, imageBeforeGeneration);
-        UI.updateJsonDisplay(updatedJson);
         UI.updateMainPreview(newImageData);
 
         const historyLabel = editInstructions
@@ -251,8 +252,8 @@ const App = (() => {
         const historyLabel = editInstructions
           .map(item => `${item.elementName}: ${item.instruction}`)
           .join(' / ');
+        _multiAdoptEntryCreated = false; // 新しいグリッド表示時にリセット
         UI.showMultiResult(results, imageBeforeGeneration, historyLabel);
-        UI.updateJsonDisplay(updatedJson);
 
         UI.hideLoading();
         UI.showSuccess(`${generateCount}枚の画像を生成しました。画像をクリックして採用してください。`);
@@ -266,7 +267,6 @@ const App = (() => {
         UI.showError(`画像生成に失敗しました: ${err.message}\nJSON更新は完了しています。「画像を生成」ボタンで再試行できます。`);
         state.currentJson = state.pendingJson;
         state.originalJson = JSON.parse(JSON.stringify(state.pendingJson));
-        UI.updateJsonDisplay(state.pendingJson);
         state.pendingJson = null;
       } else {
         UI.showError(err.message);
@@ -282,14 +282,21 @@ const App = (() => {
     state.currentImage = imageData;
     UI.updateMainPreview(imageData);
 
-    const label = historyLabel || '画像を採用';
-    const currentEntry = EditHistory.getCurrent();
-    EditHistory.createEntry(
-      imageData,
-      state.currentJson,
-      label,
-      currentEntry ? currentEntry.id : 0
-    );
+    if (_multiAdoptEntryCreated) {
+      // 同じグリッドから再採用 → 現在のエントリを更新
+      EditHistory.updateCurrentEntry(imageData);
+    } else {
+      // 初回採用 → 新規エントリ作成
+      const label = historyLabel || '画像を採用';
+      const currentEntry = EditHistory.getCurrent();
+      EditHistory.createEntry(
+        imageData,
+        state.currentJson,
+        label,
+        currentEntry ? currentEntry.id : 0
+      );
+      _multiAdoptEntryCreated = true;
+    }
   }
 
   // 履歴の特定の時点に戻る
@@ -321,7 +328,6 @@ const App = (() => {
 
     UI.updateMainPreview(entry.image);
     UI.renderElements(entry.json);
-    UI.updateJsonDisplay(entry.json);
   }
 
   // 履歴変更時のコールバック

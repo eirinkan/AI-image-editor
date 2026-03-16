@@ -140,12 +140,20 @@ const CameraEditor = (() => {
   // 人物シルエットパス（共通）
   const PERSON_PATH = 'M20,8 a4,4 0 1,0 0.01,0 M16,14 h8 q4,0 4,4 v8 h-4 v10 h-3 v-10 h-2 v10 h-3 v-10 h-4 v-8 q0,-4 4,-4';
 
-  // 「今までと同じ」カードのSVG（↻アイコン）
-  function createKeepSvg(width = 48, height = 40) {
-    const svg = svgEl('svg', { width: String(width), height: String(height), viewBox: '0 0 24 24', fill: 'none', stroke: '#9ca3af', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
-    svg.appendChild(svgEl('path', { d: 'M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8' }));
-    svg.appendChild(svgEl('path', { d: 'M3 3v5h5' }));
-    return svg;
+  // 「今までと同じ」チェックボックス行を作成するヘルパー
+  function createKeepCheckboxRow(key, onKeepChange) {
+    const keepRow = document.createElement('label');
+    keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500';
+    const keepCheck = document.createElement('input');
+    keepCheck.type = 'checkbox';
+    keepCheck.checked = !!keepFlags[key];
+    keepCheck.className = 'rounded border-gray-300';
+    keepRow.appendChild(keepCheck);
+    keepRow.appendChild(document.createTextNode('今までと同じ'));
+    keepCheck.addEventListener('change', () => {
+      onKeepChange(keepCheck.checked);
+    });
+    return { keepRow, keepCheck };
   }
 
   // コンテナにビジュアルコントロールを描画
@@ -186,24 +194,33 @@ const CameraEditor = (() => {
   // 1. アングル — カメラ位置ダイアグラムSVGカード
   function renderAngleVisual(key, ctrl) {
     const wrap = document.createElement('div');
-    wrap.className = 'flex flex-wrap gap-2';
+    wrap.className = 'space-y-2';
 
-    // 「今までと同じ」カード
-    const keepCard = document.createElement('button');
-    keepCard.className = `cam-visual-card${keepFlags[key] ? ' selected' : ''}`;
-    keepCard.appendChild(createKeepSvg());
-    const keepLbl = document.createElement('span');
-    keepLbl.className = 'card-label';
-    keepLbl.textContent = '同じ';
-    keepCard.appendChild(keepLbl);
-    keepCard.addEventListener('click', () => {
-      keepFlags[key] = true;
-      delete currentValues[key];
-      wrap.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
-      keepCard.classList.add('selected');
+    // カード群のコンテナ
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'flex flex-wrap gap-2';
+
+    // 「今までと同じ」チェックボックス
+    const { keepRow, keepCheck } = createKeepCheckboxRow(key, (isKeep) => {
+      keepFlags[key] = isKeep;
+      if (isKeep) {
+        delete currentValues[key];
+        cardsContainer.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
+        cardsContainer.style.opacity = '0.4';
+        cardsContainer.style.pointerEvents = 'none';
+      } else {
+        cardsContainer.style.opacity = '1';
+        cardsContainer.style.pointerEvents = '';
+      }
       updatePreview();
     });
-    wrap.appendChild(keepCard);
+    wrap.appendChild(keepRow);
+
+    // 初期状態反映
+    if (keepFlags[key]) {
+      cardsContainer.style.opacity = '0.4';
+      cardsContainer.style.pointerEvents = 'none';
+    }
 
     // 各アングルのカメラ位置・角度定義
     const angleDefs = {
@@ -248,39 +265,52 @@ const CameraEditor = (() => {
 
       card.addEventListener('click', () => {
         keepFlags[key] = false;
+        keepCheck.checked = false;
         currentValues[key] = opt.value;
-        wrap.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
+        cardsContainer.style.opacity = '1';
+        cardsContainer.style.pointerEvents = '';
+        cardsContainer.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         updatePreview();
       });
 
-      wrap.appendChild(card);
+      cardsContainer.appendChild(card);
     });
 
+    wrap.appendChild(cardsContainer);
     return wrap;
   }
 
   // 2. 距離（ショットタイプ）— フレーム枠SVGカード
   function renderShotTypeVisual(key, ctrl) {
     const wrap = document.createElement('div');
-    wrap.className = 'flex flex-wrap gap-2';
+    wrap.className = 'space-y-2';
 
-    // 「今までと同じ」カード
-    const keepCard = document.createElement('button');
-    keepCard.className = `cam-visual-card${keepFlags[key] ? ' selected' : ''}`;
-    keepCard.appendChild(createKeepSvg());
-    const keepLbl = document.createElement('span');
-    keepLbl.className = 'card-label';
-    keepLbl.textContent = '同じ';
-    keepCard.appendChild(keepLbl);
-    keepCard.addEventListener('click', () => {
-      keepFlags[key] = true;
-      delete currentValues[key];
-      wrap.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
-      keepCard.classList.add('selected');
+    // カード群のコンテナ
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'flex flex-wrap gap-2';
+
+    // 「今までと同じ」チェックボックス
+    const { keepRow, keepCheck } = createKeepCheckboxRow(key, (isKeep) => {
+      keepFlags[key] = isKeep;
+      if (isKeep) {
+        delete currentValues[key];
+        cardsContainer.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
+        cardsContainer.style.opacity = '0.4';
+        cardsContainer.style.pointerEvents = 'none';
+      } else {
+        cardsContainer.style.opacity = '1';
+        cardsContainer.style.pointerEvents = '';
+      }
       updatePreview();
     });
-    wrap.appendChild(keepCard);
+    wrap.appendChild(keepRow);
+
+    // 初期状態反映
+    if (keepFlags[key]) {
+      cardsContainer.style.opacity = '0.4';
+      cardsContainer.style.pointerEvents = 'none';
+    }
 
     // 各ショットタイプのクリップ範囲（人物の見える範囲をyで制御）
     const shotDefs = {
@@ -334,15 +364,19 @@ const CameraEditor = (() => {
 
       card.addEventListener('click', () => {
         keepFlags[key] = false;
+        keepCheck.checked = false;
         currentValues[key] = opt.value;
-        wrap.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
+        cardsContainer.style.opacity = '1';
+        cardsContainer.style.pointerEvents = '';
+        cardsContainer.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         updatePreview();
       });
 
-      wrap.appendChild(card);
+      cardsContainer.appendChild(card);
     });
 
+    wrap.appendChild(cardsContainer);
     return wrap;
   }
 
@@ -599,40 +633,35 @@ const CameraEditor = (() => {
   // 5. 構図 — ミニキャンバスSVGボタン
   function renderCompositionVisual(key, ctrl) {
     const wrap = document.createElement('div');
-    wrap.className = 'flex flex-wrap gap-2';
+    wrap.className = 'space-y-2';
 
     if (!currentValues[key]) currentValues[key] = [];
 
-    // 「今までと同じ」ボタン
-    const keepBtn = document.createElement('button');
-    keepBtn.className = `comp-visual-btn${keepFlags[key] ? ' selected' : ''}`;
-    keepBtn.appendChild(createKeepSvg(48, 48));
-    const keepLbl = document.createElement('span');
-    keepLbl.className = 'card-label';
-    keepLbl.textContent = '同じ';
-    keepBtn.appendChild(keepLbl);
-    keepBtn.addEventListener('click', () => {
-      keepFlags[key] = !keepFlags[key];
-      if (keepFlags[key]) {
+    // カード群のコンテナ
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'flex flex-wrap gap-2';
+
+    // 「今までと同じ」チェックボックス
+    const { keepRow, keepCheck } = createKeepCheckboxRow(key, (isKeep) => {
+      keepFlags[key] = isKeep;
+      if (isKeep) {
         currentValues[key] = [];
-        // 他の構図選択を全解除
-        wrap.querySelectorAll('.comp-visual-btn').forEach(b => b.classList.remove('selected'));
-        keepBtn.classList.add('selected');
-        // 他のボタンをdisabledに
-        wrap.querySelectorAll('.comp-visual-btn:not(:first-child)').forEach(b => {
-          b.style.opacity = '0.4';
-          b.style.pointerEvents = 'none';
-        });
+        cardsContainer.querySelectorAll('.comp-visual-btn').forEach(b => b.classList.remove('selected'));
+        cardsContainer.style.opacity = '0.4';
+        cardsContainer.style.pointerEvents = 'none';
       } else {
-        wrap.querySelectorAll('.comp-visual-btn:not(:first-child)').forEach(b => {
-          b.style.opacity = '1';
-          b.style.pointerEvents = '';
-        });
-        keepBtn.classList.remove('selected');
+        cardsContainer.style.opacity = '1';
+        cardsContainer.style.pointerEvents = '';
       }
       updatePreview();
     });
-    wrap.appendChild(keepBtn);
+    wrap.appendChild(keepRow);
+
+    // 初期状態反映
+    if (keepFlags[key]) {
+      cardsContainer.style.opacity = '0.4';
+      cardsContainer.style.pointerEvents = 'none';
+    }
 
     // 各構図のSVGパターン定義
     const compDefs = {
@@ -687,11 +716,6 @@ const CameraEditor = (() => {
       const btn = document.createElement('button');
       const isSelected = !keepFlags[key] && currentValues[key].includes(opt.value);
       btn.className = `comp-visual-btn${isSelected ? ' selected' : ''}`;
-      // keepモード中は他のボタンをdisabledに
-      if (keepFlags[key]) {
-        btn.style.opacity = '0.4';
-        btn.style.pointerEvents = 'none';
-      }
 
       const svg = svgEl('svg', { width: '48', height: '48', viewBox: '0 0 48 48' });
       // 枠線
@@ -706,7 +730,10 @@ const CameraEditor = (() => {
       btn.appendChild(lbl);
 
       btn.addEventListener('click', () => {
-        if (keepFlags[key]) return; // keepモード中は操作不可
+        keepFlags[key] = false;
+        keepCheck.checked = false;
+        cardsContainer.style.opacity = '1';
+        cardsContainer.style.pointerEvents = '';
         const idx = currentValues[key].indexOf(opt.value);
         if (idx >= 0) {
           currentValues[key].splice(idx, 1);
@@ -718,9 +745,10 @@ const CameraEditor = (() => {
         updatePreview();
       });
 
-      wrap.appendChild(btn);
+      cardsContainer.appendChild(btn);
     });
 
+    wrap.appendChild(cardsContainer);
     return wrap;
   }
 
