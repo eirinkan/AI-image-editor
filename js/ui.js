@@ -632,21 +632,36 @@ const UI = (() => {
     // マーカーインデックスカウンター（objects→text_elements→peopleの順）
     let markerIndex = 1;
 
-    // オブジェクト
-    if (json.objects && json.objects.length > 0) {
-      elements.elementsList.appendChild(createCategoryHeader(ICONS.cube, `オブジェクト (${json.objects.length})`));
-      json.objects.forEach((obj, i) => {
-        const card = createElementCard({
-          id: obj.id || `obj_${i}`,
-          type: 'object',
-          name: obj.name || obj.name_en,
-          subtitle: [obj.color, obj.material].filter(Boolean).join('・'),
-          data: obj,
-          markerIndex: markerIndex,
+    // オブジェクト・人物（統合表示）
+    const objectCount = (json.objects?.length || 0) + (json.people?.length || 0);
+    if (objectCount > 0) {
+      elements.elementsList.appendChild(createCategoryHeader(ICONS.cube, `オブジェクト (${objectCount})`));
+      if (json.objects) {
+        json.objects.forEach((obj, i) => {
+          const card = createElementCard({
+            id: obj.id || `obj_${i}`,
+            type: 'object',
+            name: obj.name || obj.name_en,
+            data: obj,
+            markerIndex: markerIndex,
+          });
+          elements.elementsList.appendChild(card);
+          markerIndex++;
         });
-        elements.elementsList.appendChild(card);
-        markerIndex++;
-      });
+      }
+      if (json.people) {
+        json.people.forEach((p, i) => {
+          const card = createElementCard({
+            id: p.id || `person_${i}`,
+            type: 'person',
+            name: p.description || `人物 ${i + 1}`,
+            data: p,
+            markerIndex: markerIndex,
+          });
+          elements.elementsList.appendChild(card);
+          markerIndex++;
+        });
+      }
     }
 
     // テキスト要素
@@ -657,25 +672,7 @@ const UI = (() => {
           id: te.id || `text_${i}`,
           type: 'text',
           name: te.content,
-          subtitle: te.style || '',
           data: te,
-          markerIndex: markerIndex,
-        });
-        elements.elementsList.appendChild(card);
-        markerIndex++;
-      });
-    }
-
-    // 人物
-    if (json.people && json.people.length > 0) {
-      elements.elementsList.appendChild(createCategoryHeader(ICONS.user, `人物 (${json.people.length})`));
-      json.people.forEach((p, i) => {
-        const card = createElementCard({
-          id: p.id || `person_${i}`,
-          type: 'person',
-          name: p.description || `人物 ${i + 1}`,
-          subtitle: p.clothing || '',
-          data: p,
           markerIndex: markerIndex,
         });
         elements.elementsList.appendChild(card);
@@ -690,12 +687,11 @@ const UI = (() => {
         elements.elementsList.appendChild(createCategoryHeader(ICONS.group, `グループ (${groups.length})`));
         groups.forEach((group, i) => {
           const card = document.createElement('button');
-          card.className = 'element-card group-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
+          card.className = 'element-card group-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
           card.dataset.elementId = `group_${i}`;
           card.innerHTML = `
             <span class="group-count-badge">${group.members.length}</span>
             <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(group.name)}（${group.members.length}個）</span>
-            <span class="text-xs text-gray-500 dark:text-gray-400 leading-tight">${escapeHtml(group.name_en)}</span>
           `;
           card.addEventListener('click', () => selectElement({
             id: `group_${i}`,
@@ -713,11 +709,10 @@ const UI = (() => {
       elements.elementsList.appendChild(createCategoryHeader(ICONS.region, `リージョン (${json.regions.length})`));
       json.regions.forEach((region, i) => {
         const card = document.createElement('button');
-        card.className = 'element-card region-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
+        card.className = 'element-card region-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
         card.dataset.elementId = region.id || `region_${i}`;
         card.innerHTML = `
           <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(region.name || region.name_en)}</span>
-          <span class="text-xs text-gray-500 dark:text-gray-400 leading-tight">${escapeHtml(region.type || '')} ${escapeHtml(region.description || '')}</span>
         `;
         card.addEventListener('click', () => selectElement({
           id: region.id || `region_${i}`,
@@ -739,7 +734,6 @@ const UI = (() => {
         id: 'atmosphere',
         type: 'atmosphere',
         name: '雰囲気・照明',
-        subtitle: [atm.time_of_day, atm.weather, atm.mood].filter(Boolean).join('・'),
         data: atm,
       });
       elements.elementsList.appendChild(card);
@@ -752,7 +746,6 @@ const UI = (() => {
         id: 'camera',
         type: 'camera',
         name: 'カメラ・構図',
-        subtitle: [cam.angle, cam.perspective].filter(Boolean).join('・'),
         data: cam,
       });
       elements.elementsList.appendChild(card);
@@ -760,7 +753,7 @@ const UI = (() => {
 
     // 画像全体への指示ボタン（環境・設定カテゴリ内）
     const globalBtn = document.createElement('button');
-    globalBtn.className = 'element-card border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer min-h-[100px]';
+    globalBtn.className = 'element-card border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer min-h-0';
     globalBtn.dataset.elementId = 'global';
     globalBtn.innerHTML = `
       <span class="text-gray-400 dark:text-gray-400">${ICONS.globe}</span>
@@ -782,7 +775,7 @@ const UI = (() => {
 
   function createElementCard({ id, type, name, subtitle, data, markerIndex }) {
     const card = document.createElement('button');
-    card.className = 'element-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
+    card.className = 'element-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
     card.dataset.elementId = id;
 
     // position_coords がある場合のみバッジを表示
@@ -794,10 +787,11 @@ const UI = (() => {
     // 編集可能な要素タイプか判定（atmosphere, camera, global以外）
     const isEditable = ['object', 'text', 'person'].includes(type);
 
+    const subtitleHtml = subtitle ? `<span class="text-xs text-gray-500 dark:text-gray-400 leading-tight">${escapeHtml(subtitle)}</span>` : '';
     card.innerHTML = `
       ${badgeHtml}
       <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(name)}</span>
-      <span class="text-xs text-gray-500 dark:text-gray-400 leading-tight">${escapeHtml(subtitle)}</span>
+      ${subtitleHtml}
     `;
 
     // ホバー時に画像上のマーカーと連動

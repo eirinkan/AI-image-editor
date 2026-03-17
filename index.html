@@ -55,7 +55,7 @@
   </header>
 
   <!-- 設定モーダル -->
-  <div id="settingsModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+  <div id="settingsModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-16">
     <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-5">
         <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">設定</h3>
@@ -128,7 +128,7 @@
   </div>
 
   <!-- ヘルプモーダル -->
-  <div id="helpModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+  <div id="helpModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-16 p-4">
     <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh]">
       <!-- モーダルヘッダー -->
       <div class="flex items-center justify-between px-6 pt-6 pb-4 flex-shrink-0">
@@ -158,35 +158,35 @@
               <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
               <div>
                 <p class="font-semibold text-gray-800 dark:text-gray-100">画像を用意</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">画像をアップロードするか、プロンプトを入力してAIで生成します。</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">画像をアップロード、またはAI生成タブで日本語入力からプロンプトを自動作成して生成。アスペクト比・解像度も選択可。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
               <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
               <div>
                 <p class="font-semibold text-gray-800 dark:text-gray-100">フォーカスを選んで分析</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">何を重点的に検出するか選択（全体 / 物体 / テキスト / 人物 / カメラ / 雰囲気）してから「分析する」をクリック。</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">検出対象を選択（全体 / 家具・物 / 色・素材 / 照明・天候 / テキスト・ロゴ / カメラ / 人物）して「分析する」をクリック。追加指示の入力欄で検出精度を調整可能。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
               <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
               <div>
                 <p class="font-semibold text-gray-800 dark:text-gray-100">要素を選択</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">変更したい要素カードをクリック（複数選択可）。画像全体への指示は「画像全体」を選択。</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">変更したい要素カードをクリック（複数選択可）。同種オブジェクトのグループや背景リージョンも自動検出。画像全体への指示は「画像全体」を選択。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
               <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">4</span>
               <div>
                 <p class="font-semibold text-gray-800 dark:text-gray-100">変更内容を入力</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">テキストで指示を書きます。プリセットテンプレートを使えば入力の手間が省けます。</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">テキストで指示を書きます。プリセットテンプレート（雰囲気・画像全体・リージョン選択時に表示）を使えば入力の手間が省けます。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
               <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">5</span>
               <div>
                 <p class="font-semibold text-gray-800 dark:text-gray-100">画像を生成</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">「画像を生成」をクリック。AIが指示を適用した新しい画像を生成します。</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">生成枚数（1〜8枚）を選んで「画像を生成」をクリック。複数枚生成時はグリッドから好きな画像を採用。処理中はキャンセル可能。</p>
               </div>
             </div>
           </div>
@@ -196,6 +196,34 @@
             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">便利機能</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">↔️</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">Before/After</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">結果画像にホバーでスライダー表示。履歴から任意の画像をBeforeに設定可能</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">📜</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">編集履歴</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">左サイドバーで履歴を管理。各画像のダウンロード・削除・Before設定が可能</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">💾</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">プロジェクト保存</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">作業途中でも保存可能。新規保存/上書き保存を選択。エクスポート/インポートにも対応</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">📷</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">カメラ設定</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">アングル・距離・レンズ・ボケ・構図を視覚的に調整。「今までと同じ」で部分変更も可能</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                 <span class="text-base leading-none mt-0.5">🖼️</span>
                 <div>
                   <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">参照画像</p>
@@ -203,38 +231,24 @@
                 </div>
               </div>
               <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <span class="text-base leading-none mt-0.5">⚡</span>
-                <div>
-                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">プリセット</p>
-                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">雰囲気・スタイルをワンクリックで指定</p>
-                </div>
-              </div>
-              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <span class="text-base leading-none mt-0.5">📷</span>
-                <div>
-                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">カメラ設定</p>
-                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">アングル・焦点距離・ボケ感を視覚的に調整</p>
-                </div>
-              </div>
-              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <span class="text-base leading-none mt-0.5">➕</span>
-                <div>
-                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">カスタム要素</p>
-                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">検出されなかった要素を手動で追加</p>
-                </div>
-              </div>
-              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <span class="text-base leading-none mt-0.5">↔️</span>
-                <div>
-                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">Before/After</p>
-                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">スライダーで生成前後を比較</p>
-                </div>
-              </div>
-              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                 <span class="text-base leading-none mt-0.5">✏️</span>
                 <div>
                   <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">要素名の変更</p>
                   <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">カード名をダブルクリックで編集（生成精度に影響）</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">⚡</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">プリセット</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">雰囲気・スタイルをワンクリックで指定（雰囲気/画像全体/リージョン選択時）</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">🌙</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">ダークモード</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">設定からライト/ダーク/システム連動の3段階で切り替え</p>
                 </div>
               </div>
             </div>
@@ -280,24 +294,28 @@
                 <p class="text-gray-500 dark:text-gray-400">とりあえず全部検出したい時（処理はやや遅い）</p>
               </div>
               <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">物体</span>
+                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">家具・物</span>
                 <p class="text-gray-500 dark:text-gray-400">家具、車、食べ物など物を差し替えたい時</p>
+              </div>
+              <div class="flex gap-2 items-start">
+                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">色・素材</span>
+                <p class="text-gray-500 dark:text-gray-400">素材感や配色を変えたい時</p>
+              </div>
+              <div class="flex gap-2 items-start">
+                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">照明・天候</span>
+                <p class="text-gray-500 dark:text-gray-400">季節、時間帯、天気を変えたい時</p>
               </div>
               <div class="flex gap-2 items-start">
                 <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">テキスト</span>
                 <p class="text-gray-500 dark:text-gray-400">看板や文字を書き換えたい時</p>
               </div>
               <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">人物</span>
-                <p class="text-gray-500 dark:text-gray-400">服装やポーズを変えたい時</p>
-              </div>
-              <div class="flex gap-2 items-start">
                 <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">カメラ</span>
                 <p class="text-gray-500 dark:text-gray-400">アングルや構図を変えたい時</p>
               </div>
               <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">雰囲気</span>
-                <p class="text-gray-500 dark:text-gray-400">季節、時間帯、天気を変えたい時</p>
+                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">人物</span>
+                <p class="text-gray-500 dark:text-gray-400">服装やポーズを変えたい時</p>
               </div>
             </div>
           </div>
@@ -310,6 +328,7 @@
               <span class="text-base">🤖</span>
               <p class="font-semibold text-gray-800 dark:text-gray-100">モデルの使い分け</p>
             </div>
+            <p class="text-gray-500 dark:text-gray-400 ml-6 mb-2">設定でテキスト処理モデルと画像生成モデルを別々に選択可能。詳細コストは設定画面の概算コスト表を参照。</p>
             <div class="space-y-2 ml-6">
               <div class="flex gap-3 items-start bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
                 <span class="flex-shrink-0 inline-block bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs px-2 py-0.5 rounded font-semibold mt-0.5">2.5 Pro</span>
@@ -348,7 +367,7 @@
             <ul class="space-y-1.5 ml-6 text-gray-500 dark:text-gray-400">
               <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>小さいサイズ（1K）でテスト → 満足したら大きいサイズで再生成</li>
               <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>テキスト処理モデルは 2.5 Pro で十分なケースが多い</li>
-              <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>プリセットを活用すると指示作成の手間が省ける</li>
+              <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>複数枚生成で比較してから採用すると手戻りが減る</li>
             </ul>
           </div>
 
@@ -705,7 +724,7 @@
 
   <!-- エラー/成功トースト -->
   <!-- 保存ダイアログ -->
-  <div id="saveProjectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+  <div id="saveProjectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-16">
     <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-sm mx-4">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">プロジェクトを保存</h3>
@@ -723,7 +742,7 @@
   </div>
 
   <!-- プロジェクト一覧モーダル -->
-  <div id="projectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+  <div id="projectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-16">
     <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">プロジェクト一覧</h3>
@@ -821,7 +840,7 @@
   <script src="js/storage.js?v=1"></script>
   <script src="js/history.js?v=13"></script>
   <script src="js/camera-editor.js?v=5"></script>
-  <script src="js/ui.js?v=26"></script>
+  <script src="js/ui.js?v=27"></script>
   <script src="js/generate.js?v=14"></script>
   <script src="js/app.js?v=16"></script>
 </body>
