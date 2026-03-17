@@ -12,6 +12,10 @@ const UI = (() => {
     globe: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"></path></svg>',
     bolt: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path></svg>',
     plus: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15"></path></svg>',
+    // グループ（Heroicons: squares-2x2）
+    group: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"></path></svg>',
+    // リージョン（Heroicons: map）
+    region: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"></path></svg>',
   };
 
   // DOM要素のキャッシュ
@@ -596,6 +600,18 @@ const UI = (() => {
     return header;
   }
 
+  // 同名オブジェクトを自動グループ化（name_en一致で2個以上）
+  function computeAutoGroups(objects) {
+    const nameMap = {};
+    objects.forEach(obj => {
+      const key = (obj.name_en || obj.name || '').toLowerCase().replace(/\s*[\d]+$/, '').trim();
+      if (!key) return;
+      if (!nameMap[key]) nameMap[key] = { name: obj.name, name_en: key, members: [] };
+      nameMap[key].members.push(obj);
+    });
+    return Object.values(nameMap).filter(g => g.members.length >= 2);
+  }
+
   // --- 要素カード表示 ---
   function renderElements(json) {
     elements.elementsSection.classList.remove('hidden');
@@ -652,6 +668,52 @@ const UI = (() => {
         });
         elements.elementsList.appendChild(card);
         markerIndex++;
+      });
+    }
+
+    // グループ（同種オブジェクトの自動グループ化）
+    if (json.objects && json.objects.length > 0) {
+      const groups = computeAutoGroups(json.objects);
+      if (groups.length > 0) {
+        elements.elementsList.appendChild(createCategoryHeader(ICONS.group, `グループ (${groups.length})`));
+        groups.forEach((group, i) => {
+          const card = document.createElement('button');
+          card.className = 'element-card group-card relative bg-white dark:bg-gray-800 border-2 border-amber-300 dark:border-amber-600 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-amber-500 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
+          card.dataset.elementId = `group_${i}`;
+          card.innerHTML = `
+            <span class="group-count-badge">${group.members.length}</span>
+            <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(group.name)}（${group.members.length}個）</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 leading-tight">${escapeHtml(group.name_en)}</span>
+          `;
+          card.addEventListener('click', () => selectElement({
+            id: `group_${i}`,
+            type: 'group',
+            name: `${group.name}（${group.members.length}個）`,
+            data: { ...group, members: group.members },
+          }));
+          elements.elementsList.appendChild(card);
+        });
+      }
+    }
+
+    // リージョン（面的・背景要素）
+    if (json.regions?.length > 0) {
+      elements.elementsList.appendChild(createCategoryHeader(ICONS.region, `リージョン (${json.regions.length})`));
+      json.regions.forEach((region, i) => {
+        const card = document.createElement('button');
+        card.className = 'element-card region-card relative bg-white dark:bg-gray-800 border-2 border-emerald-300 dark:border-emerald-600 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
+        card.dataset.elementId = region.id || `region_${i}`;
+        card.innerHTML = `
+          <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(region.name || region.name_en)}</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400 leading-tight">${escapeHtml(region.type || '')} ${escapeHtml(region.description || '')}</span>
+        `;
+        card.addEventListener('click', () => selectElement({
+          id: region.id || `region_${i}`,
+          type: 'region',
+          name: region.name || region.name_en,
+          data: region,
+        }));
+        elements.elementsList.appendChild(card);
       });
     }
 
@@ -898,18 +960,26 @@ const UI = (() => {
 
     if (existingIndex >= 0) {
       // 既に選択されている場合 → 選択解除
+      const removedEl = selectedElements[existingIndex];
       selectedElements.splice(existingIndex, 1);
       const card = elements.elementsList.querySelector(`[data-element-id="${id}"]`);
       if (card) {
         card.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
-        card.classList.add('border-gray-200', 'dark:border-gray-700');
+        // グループ/リージョンは元のボーダー色に戻す
+        if (removedEl.type === 'group') {
+          card.classList.add('border-amber-300', 'dark:border-amber-600');
+        } else if (removedEl.type === 'region') {
+          card.classList.add('border-emerald-300', 'dark:border-emerald-600');
+        } else {
+          card.classList.add('border-gray-200', 'dark:border-gray-700');
+        }
       }
     } else {
       // 新たに選択
       selectedElements.push({ id, type, name, data });
       const card = elements.elementsList.querySelector(`[data-element-id="${id}"]`);
       if (card) {
-        card.classList.remove('border-gray-200', 'dark:border-gray-700', 'border-gray-300');
+        card.classList.remove('border-gray-200', 'dark:border-gray-700', 'border-gray-300', 'border-amber-300', 'dark:border-amber-600', 'border-emerald-300', 'dark:border-emerald-600');
         card.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
       }
     }
@@ -921,7 +991,7 @@ const UI = (() => {
     if (selectedElements.length > 0) {
       elements.editSection.classList.remove('hidden');
       // 「画像全体」または「雰囲気・照明」が選択されている場合プリセットを表示
-      const hasGlobal = selectedElements.some(el => el.type === 'global' || el.type === 'atmosphere');
+      const hasGlobal = selectedElements.some(el => el.type === 'global' || el.type === 'atmosphere' || el.type === 'region');
       if (hasGlobal) {
         elements.presetTemplates.classList.remove('hidden');
       } else {
@@ -1031,6 +1101,8 @@ const UI = (() => {
       camera: '例: 魚眼レンズで撮影したように / もっと引きの構図に',
       scene: '例: ミニマリストスタイルに / 北欧風のインテリアに',
       global: '例: 全体的にもっと暖かい色調に / 季節を冬に変更 / アニメ風にする',
+      group: '例: 全ての雲を消す / すべて白い雲に変更',
+      region: '例: 青空をオレンジの夕焼けに / 地面を雪景色に',
     };
     return placeholders[type] || '変更内容を入力してください';
   }
@@ -1586,10 +1658,16 @@ const UI = (() => {
       // 通常: textareaから取得
       const textarea = row.querySelector('textarea');
       if (textarea && textarea.value.trim()) {
-        instructions.push({
+        const entry = {
           elementName: el.name,
           instruction: textarea.value.trim(),
-        });
+        };
+        // グループの場合: メンバー数を付与
+        if (el.type === 'group' && el.data?.members) {
+          entry.isGroup = true;
+          entry.memberCount = el.data.members.length;
+        }
+        instructions.push(entry);
       }
     });
     return instructions;

@@ -205,8 +205,20 @@ IMPORTANT: All people descriptions (description, clothing, pose, position fields
       "position": "position description in Japanese",
       "position_coords": { "x": 0.5, "y": 0.3 }
     }
+  ],
+  "regions": [
+    {
+      "id": "region_sky",
+      "name": "青空",
+      "name_en": "blue sky",
+      "type": "background|surface|structure",
+      "description": "広域の面的要素の説明",
+      "position_coords": { "x": 0.5, "y": 0.15 }
+    }
   ]
 }
+
+Also identify large-area or background regions (sky, ground, walls, water, floor, ceiling, etc.) in the "regions" array. These are elements too large or diffuse to list as individual objects. Identify 2-8 regions. If none, use empty array.
 
 IMPORTANT: Detect as many elements as possible. It is far better to include too many elements than too few — the user needs a rich inventory to choose from. If no text/people/etc are found, use empty arrays.
 For each element in objects, text_elements, and people, position_coords must be the approximate center of the object as a fraction of image width (x) and height (y), ranging from 0.0 to 1.0. For example, an object in the top-left quarter would have {"x": 0.25, "y": 0.25}.
@@ -219,9 +231,10 @@ Output ONLY the JSON, no other text.`;
   function buildUpdatePrompt(currentJson, editInstructions) {
     let changesDescription = '';
     if (Array.isArray(editInstructions)) {
-      changesDescription = editInstructions.map((item, i) =>
-        `${i + 1}. Element: "${item.elementName}" → Instruction: <user_input>${item.instruction.slice(0, 500)}</user_input>`
-      ).join('\n');
+      changesDescription = editInstructions.map((item, i) => {
+        const groupNote = item.isGroup ? ` (${item.memberCount} instances, apply to ALL)` : '';
+        return `${i + 1}. Element: "${item.elementName}"${groupNote} → Instruction: <user_input>${item.instruction.slice(0, 500)}</user_input>`;
+      }).join('\n');
     } else {
       // 後方互換（単一指示）
       changesDescription = `1. Element: "${editInstructions.elementName}" → Instruction: "${editInstructions.instruction}"`;
@@ -308,6 +321,14 @@ Output ONLY the updated JSON, no other text.`;
           if (obj.color) desc += `, color: ${obj.color}`;
           if (obj.material) desc += `, material: ${obj.material}`;
           if (obj.description) desc += ` (${obj.description})`;
+          parts.push(desc);
+        });
+      }
+      if (spec.regions) {
+        spec.regions.forEach(region => {
+          let desc = region.name || region.name_en || '';
+          if (region.type) desc += `, type: ${region.type}`;
+          if (region.description) desc += ` (${region.description})`;
           parts.push(desc);
         });
       }
