@@ -18,11 +18,16 @@ const App = (() => {
   // 複数枚グリッドからの再採用フラグ
   let _multiAdoptEntryCreated = false;
 
+  // 現在のプロジェクトID（保存済みの場合）
+  let currentProjectId = null;
+
   // 初期化
-  function init() {
+  async function init() {
     UI.init();
     TextToImage.init();
     EditHistory.onChange(onHistoryChange);
+    // IndexedDB初期化
+    try { await ProjectStorage.init(); } catch (e) { console.warn('IndexedDB初期化失敗:', e); }
   }
 
   // AI生成した画像を編集モードで使用する
@@ -372,6 +377,226 @@ const App = (() => {
     }
   }
 
+  // --- プロジェクト保存・読み込み ---
+
+  // 現在のセッションをIndexedDBに保存
+  async function saveProject(name) {
+    const entries = EditHistory.toSerializable();
+    if (entries.length === 0) {
+      UI.showError('保存する編集履歴がありません。画像をアップロードして分析を行ってください。');
+      return;
+    }
+
+    // 最終エントリのサムネイルをプロジェクトサムネイルに使用
+    const lastEntry = entries[entries.length - 1];
+    const thumbnail = lastEntry.thumbnailUrl || '';
+
+    try {
+      const projectData = {
+        id: currentProjectId || undefined,
+        name: name || `プロジェクト ${new Date().toLocaleString('ja-JP')}`,
+        createdAt: currentProjectId ? undefined : undefined,
+        thumbnail: thumbnail,
+        originalImage: state.originalImage,
+        entries: entries,
+      };
+
+      const saved = await ProjectStorage.saveProject(projectData);
+      currentProjectId = saved.id;
+      UI.showSuccess('プロジェクトを保存しました');
+    } catch (err) {
+      UI.showError('保存に失敗しました: ' + err.message);
+    }
+  }
+
+  // プロジェクトを読み込んで復元
+  async function loadProject(id) {
+    try {
+      const project = await ProjectStorage.loadProject(id);
+      if (!project.entries || project.entries.length === 0) {
+        UI.showError('プロジェクトに履歴データがありません');
+        return;
+      }
+
+      // 状態をリセット
+      cancelCurrentOperation();
+      state.selectedElements = [];
+      UI.clearSelectedElements();
+      EditHistory.clear();
+
+      // 元画像を復元
+      state.originalImage = project.originalImage || project.entries[0].image;
+      state.currentImage = project.entries[project.entries.length - 1].image;
+      state.currentJson = project.entries[project.entries.length - 1].json;
+      state.originalJson = state.currentJson ? JSON.parse(JSON.stringify(state.currentJson)) : null;
+
+      // 履歴を復元
+      EditHistory.fromSerializable(project.entries);
+      currentProjectId = project.id;
+
+      // UIを復元
+      const lastEntry = project.entries[project.entries.length - 1];
+      if (lastEntry.image) {
+        UI.updateMainPreview(lastEntry.image);
+        // プレビューエリアを表示
+        const imagePreview = document.getElementById('imagePreview');
+        const uploadPrompt = document.querySelector('#uploadArea .upload-prompt');
+        const analysisSection = document.getElementById('analysisSection');
+        if (imagePreview) imagePreview.classList.remove('hidden');
+        if (uploadPrompt) uploadPrompt.classList.add('hidden');
+        if (analysisSection) analysisSection.classList.remove('hidden');
+      }
+
+      // JSONがあれば要素一覧を表示
+      if (state.currentJson && state.currentJson.scene) {
+        UI.renderElements(state.currentJson);
+      }
+
+      // Before画像を復元して結果表示
+      if (project.entries.length > 1) {
+        let beforeImage = null;
+        if (lastEntry.parentId != null && lastEntry.parentId >= 0) {
+          const parent = project.entries.find(e => e.id === lastEntry.parentId);
+          if (parent) beforeImage = parent.image;
+        }
+        UI.showResultFromHistory(lastEntry.image, beforeImage);
+      }
+
+      UI.hideProjectModal();
+      UI.showSuccess(`「${project.name}」を読み込みました`);
+    } catch (err) {
+      UI.showError('読み込みに失敗しました: ' + err.message);
+    }
+  }
+
+  // エクスポート
+  async function exportProject(id) {
+    try {
+      await ProjectStorage.exportProject(id);
+      UI.showSuccess('プロジェクトをエクスポートしました');
+    } catch (err) {
+      UI.showError('エクスポートに失敗しました: ' + err.message);
+    }
+  }
+
+  // インポート
+  async function importProject(file) {
+    const saved = await ProjectStorage.importProject(file);
+    UI.showSuccess(`「${saved.name}」をインポートしました`);
+    return saved;
+  }
+
+  // プロジェクト削除
+  async function deleteProject(id) {
+    if (!confirm('このプロジェクトを削除しますか？')) return;
+    try {
+      await ProjectStorage.deleteProject(id);
+      if (currentProjectId === id) currentProjectId = null;
+      await UI.renderProjectList();
+      UI.showSuccess('プロジェクトを削除しました');
+    } catch (err) {
+      UI.showError('削除に失敗しました: ' + err.message);
+    }
+  }
+
+  // テンプレート適用: 過去の編集設定を現在の画像に適用
+  async function applyTemplate(projectId) {
+    if (!state.currentJson) {
+      UI.showError('先に画像をアップロードして分析を行ってください。テンプレートは分析済みの画像に対して適用できます。');
+      return;
+    }
+
+    try {
+      const project = await ProjectStorage.loadProject(projectId);
+      if (!project.entries || project.entries.length < 2) {
+        UI.showError('このプロジェクトには適用可能な編集指示がありません');
+        return;
+      }
+
+      // 最終エントリから編集指示を取得
+      const lastEntry = project.entries[project.entries.length - 1];
+      const instructions = lastEntry.editInstructions || [];
+
+      // 指示テキストがない場合、instruction（ラベル）から復元を試みる
+      let applicableInstructions = [];
+      if (instructions.length > 0) {
+        applicableInstructions = instructions;
+      } else if (lastEntry.instruction) {
+        // "要素名: 指示 / 要素名: 指示" 形式から復元
+        const parts = lastEntry.instruction.split(' / ');
+        applicableInstructions = parts.map(p => {
+          const colonIdx = p.indexOf(': ');
+          if (colonIdx >= 0) {
+            return { elementName: p.substring(0, colonIdx), instruction: p.substring(colonIdx + 2) };
+          }
+          return { elementName: '画像全体', instruction: p };
+        });
+      }
+
+      if (applicableInstructions.length === 0) {
+        UI.showError('適用可能な編集指示が見つかりませんでした');
+        return;
+      }
+
+      // 現在の分析結果の要素名と照合
+      const currentElements = [];
+      if (state.currentJson.objects) {
+        state.currentJson.objects.forEach(obj => currentElements.push(obj.name));
+      }
+      if (state.currentJson.scene) currentElements.push(state.currentJson.scene.description || 'シーン');
+
+      // マッチング: 完全一致 → 部分一致
+      const matched = [];
+      const unmatched = [];
+      applicableInstructions.forEach(inst => {
+        const exactMatch = currentElements.find(name => name === inst.elementName);
+        if (exactMatch) {
+          matched.push(inst);
+        } else {
+          const partialMatch = currentElements.find(name =>
+            name.includes(inst.elementName) || inst.elementName.includes(name)
+          );
+          if (partialMatch) {
+            matched.push({ elementName: partialMatch, instruction: inst.instruction });
+          } else {
+            unmatched.push(inst);
+          }
+        }
+      });
+
+      // 編集指示欄にテンプレートの指示を反映
+      const editInstructionsList = document.getElementById('editInstructionsList');
+      if (editInstructionsList) {
+        const textareas = editInstructionsList.querySelectorAll('textarea');
+        textareas.forEach(ta => {
+          const row = ta.closest('[data-element-name]');
+          if (!row) return;
+          const elName = row.dataset.elementName;
+          const matchedInst = matched.find(m => m.elementName === elName);
+          if (matchedInst) {
+            ta.value = matchedInst.instruction;
+          }
+        });
+      }
+
+      // マッチしない指示はカスタム指示欄に追加
+      if (unmatched.length > 0) {
+        const customInstruction = document.getElementById('customInstruction');
+        if (customInstruction) {
+          const unmatchedText = unmatched.map(u => `${u.elementName}: ${u.instruction}`).join('\n');
+          customInstruction.value = (customInstruction.value ? customInstruction.value + '\n' : '') + unmatchedText;
+        }
+      }
+
+      UI.hideProjectModal();
+      const matchInfo = matched.length > 0 ? `${matched.length}件の指示を適用` : '';
+      const unmatchInfo = unmatched.length > 0 ? `${unmatched.length}件は指示欄に追加` : '';
+      UI.showSuccess(`テンプレートを適用しました。${[matchInfo, unmatchInfo].filter(Boolean).join('、')}`);
+    } catch (err) {
+      UI.showError('テンプレート適用に失敗しました: ' + err.message);
+    }
+  }
+
   return {
     init,
     onImageUploaded,
@@ -386,6 +611,12 @@ const App = (() => {
     goToHistory,
     downloadCurrent,
     getState: () => state,
+    saveProject,
+    loadProject,
+    exportProject,
+    importProject,
+    deleteProject,
+    applyTemplate,
   };
 })();
 

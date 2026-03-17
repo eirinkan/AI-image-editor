@@ -135,6 +135,19 @@ const UI = (() => {
       cleanColumnLabel: document.getElementById('cleanColumnLabel'),
       markerColumn: document.getElementById('markerColumn'),
 
+      // プロジェクト保存・一覧
+      saveProjectBtn: document.getElementById('saveProjectBtn'),
+      saveProjectModal: document.getElementById('saveProjectModal'),
+      saveProjectClose: document.getElementById('saveProjectClose'),
+      saveProjectName: document.getElementById('saveProjectName'),
+      saveProjectCancel: document.getElementById('saveProjectCancel'),
+      saveProjectConfirm: document.getElementById('saveProjectConfirm'),
+      projectListBtn: document.getElementById('projectListBtn'),
+      projectModal: document.getElementById('projectModal'),
+      projectModalClose: document.getElementById('projectModalClose'),
+      projectList: document.getElementById('projectList'),
+      importProjectInput: document.getElementById('importProjectInput'),
+
       // エラー
       errorToast: document.getElementById('errorToast'),
       errorMessage: document.getElementById('errorMessage'),
@@ -143,6 +156,35 @@ const UI = (() => {
   }
 
   function setupEventListeners() {
+    // プロジェクト保存・一覧モーダル
+    elements.saveProjectBtn.addEventListener('click', () => showSaveDialog());
+    elements.saveProjectClose.addEventListener('click', () => hideSaveDialog());
+    elements.saveProjectCancel.addEventListener('click', () => hideSaveDialog());
+    elements.saveProjectModal.addEventListener('click', (e) => { if (e.target === elements.saveProjectModal) hideSaveDialog(); });
+    elements.saveProjectConfirm.addEventListener('click', () => {
+      const name = elements.saveProjectName.value.trim();
+      hideSaveDialog();
+      App.saveProject(name || null);
+    });
+    elements.saveProjectName.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); elements.saveProjectConfirm.click(); }
+    });
+
+    elements.projectListBtn.addEventListener('click', () => showProjectModal());
+    elements.projectModalClose.addEventListener('click', () => hideProjectModal());
+    elements.projectModal.addEventListener('click', (e) => { if (e.target === elements.projectModal) hideProjectModal(); });
+    elements.importProjectInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        await App.importProject(file);
+        await renderProjectList();
+      } catch (err) {
+        showError(err.message);
+      }
+      e.target.value = '';
+    });
+
     // 設定・ヘルプモーダル
     elements.settingsBtn.addEventListener('click', () => elements.settingsModal.classList.remove('hidden'));
     elements.settingsClose.addEventListener('click', () => elements.settingsModal.classList.add('hidden'));
@@ -1660,6 +1702,74 @@ const UI = (() => {
     elements.imagePreview.classList.remove('hidden');
   }
 
+  // --- プロジェクト保存・一覧 ---
+
+  function showSaveDialog() {
+    elements.saveProjectName.value = '';
+    elements.saveProjectModal.classList.remove('hidden');
+    setTimeout(() => elements.saveProjectName.focus(), 100);
+  }
+
+  function hideSaveDialog() {
+    elements.saveProjectModal.classList.add('hidden');
+  }
+
+  async function showProjectModal() {
+    elements.projectModal.classList.remove('hidden');
+    await renderProjectList();
+  }
+
+  function hideProjectModal() {
+    elements.projectModal.classList.add('hidden');
+  }
+
+  // 日時フォーマット
+  function formatDate(isoStr) {
+    const d = new Date(isoStr);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  async function renderProjectList() {
+    try {
+      await ProjectStorage.init();
+      const projects = await ProjectStorage.listProjects();
+      const container = elements.projectList;
+
+      if (projects.length === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">保存されたプロジェクトはありません</p>';
+        return;
+      }
+
+      container.innerHTML = projects.map(p => `
+        <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50" data-project-id="${p.id}">
+          <div class="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+            ${p.thumbnail
+              ? `<img src="${p.thumbnail}" alt="" class="w-full h-full object-cover">`
+              : '<svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>'
+            }
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-800 truncate">${p.name}</p>
+            <p class="text-xs text-gray-400">${formatDate(p.updatedAt)} ・ ${p.entryCount}件の履歴</p>
+          </div>
+          <div class="flex gap-1 flex-shrink-0">
+            <button onclick="App.loadProject('${p.id}')" class="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded cursor-pointer" title="読み込み">読込</button>
+            <button onclick="App.applyTemplate('${p.id}')" class="px-2 py-1 text-xs text-green-600 hover:bg-green-50 rounded cursor-pointer" title="テンプレート適用">テンプレ</button>
+            <button onclick="App.exportProject('${p.id}')" class="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded cursor-pointer" title="エクスポート">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            </button>
+            <button onclick="App.deleteProject('${p.id}')" class="px-2 py-1 text-xs text-red-500 hover:bg-red-50 rounded cursor-pointer" title="削除">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    } catch (err) {
+      elements.projectList.innerHTML = `<p class="text-sm text-red-500 text-center py-4">${err.message}</p>`;
+    }
+  }
+
   return {
     init,
     renderElements,
@@ -1680,5 +1790,10 @@ const UI = (() => {
     getGenerateCount,
     clearSelectedElements,
     updateMainPreview,
+    showSaveDialog,
+    hideSaveDialog,
+    showProjectModal,
+    hideProjectModal,
+    renderProjectList,
   };
 })();

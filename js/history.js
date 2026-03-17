@@ -169,6 +169,43 @@ const EditHistory = (() => {
     document.body.removeChild(link);
   }
 
+  // 全エントリをシリアライズ可能な形で返す（保存用）
+  function toSerializable() {
+    return entries.map(e => ({
+      id: e.id,
+      label: e.label,
+      image: e.image,
+      json: e.json,
+      instruction: e.instruction,
+      parentId: e.parentId,
+      timestamp: e.timestamp,
+      thumbnailUrl: e.thumbnailUrl,
+      selectedElements: e.selectedElements || null,
+      editInstructions: e.editInstructions || null,
+      model: e.model || null,
+    }));
+  }
+
+  // シリアライズデータから履歴を復元
+  function fromSerializable(data) {
+    if (!Array.isArray(data) || data.length === 0) return;
+    entries = data.map((e, i) => ({
+      id: i,
+      label: e.label || 'オリジナル',
+      image: e.image,
+      json: e.json,
+      instruction: e.instruction || null,
+      parentId: e.parentId != null ? e.parentId : null,
+      timestamp: e.timestamp || new Date().toISOString(),
+      thumbnailUrl: e.thumbnailUrl || '',
+      selectedElements: e.selectedElements || null,
+      editInstructions: e.editInstructions || null,
+      model: e.model || null,
+    }));
+    currentIndex = entries.length - 1;
+    notifyListeners();
+  }
+
   return {
     createEntry,
     updateCurrentEntry,
@@ -181,5 +218,7 @@ const EditHistory = (() => {
     onChange,
     getThumbnailUrl,
     downloadImage,
+    toSerializable,
+    fromSerializable,
   };
 })();
