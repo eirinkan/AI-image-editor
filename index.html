@@ -101,38 +101,232 @@
   </div>
 
   <!-- ヘルプモーダル -->
-  <div id="helpModal" class="hidden fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
-    <div role="dialog" aria-modal="true" class="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-md mx-4">
-      <div class="flex items-center justify-between mb-5">
-        <h3 class="text-lg font-bold text-gray-800">使い方</h3>
+  <div id="helpModal" class="hidden fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+    <div role="dialog" aria-modal="true" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh]">
+      <!-- モーダルヘッダー -->
+      <div class="flex items-center justify-between px-6 pt-6 pb-4 flex-shrink-0">
+        <h3 class="text-lg font-bold text-gray-800">ヘルプ</h3>
         <button id="helpClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
-      <div class="space-y-4 text-sm text-gray-700">
-        <div class="flex gap-3">
-          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</span>
-          <p><strong>画像を用意</strong> — 画像をアップロードするか、AIで生成します。</p>
+      <!-- タブ切り替え -->
+      <div class="flex border-b border-gray-200 px-6 flex-shrink-0">
+        <button id="helpTabBasic" onclick="document.getElementById('helpContentBasic').classList.remove('hidden'); document.getElementById('helpContentAdvanced').classList.add('hidden'); document.getElementById('helpTabBasic').classList.add('border-blue-500','text-blue-600'); document.getElementById('helpTabBasic').classList.remove('border-transparent','text-gray-500'); document.getElementById('helpTabAdvanced').classList.remove('border-blue-500','text-blue-600'); document.getElementById('helpTabAdvanced').classList.add('border-transparent','text-gray-500');"
+          class="px-4 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600 mr-2 cursor-pointer focus:outline-none transition-colors">
+          使い方
+        </button>
+        <button id="helpTabAdvanced" onclick="document.getElementById('helpContentAdvanced').classList.remove('hidden'); document.getElementById('helpContentBasic').classList.add('hidden'); document.getElementById('helpTabAdvanced').classList.add('border-blue-500','text-blue-600'); document.getElementById('helpTabAdvanced').classList.remove('border-transparent','text-gray-500'); document.getElementById('helpTabBasic').classList.remove('border-blue-500','text-blue-600'); document.getElementById('helpTabBasic').classList.add('border-transparent','text-gray-500');"
+          class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 cursor-pointer focus:outline-none transition-colors">
+          運用ガイド
+        </button>
+      </div>
+
+      <!-- スクロール可能なコンテンツエリア -->
+      <div class="overflow-y-auto flex-1 px-6 py-5">
+
+        <!-- ===== 使い方タブ ===== -->
+        <div id="helpContentBasic" class="space-y-4 text-sm text-gray-700">
+          <!-- ステップ -->
+          <div class="space-y-3">
+            <div class="flex gap-3 items-start">
+              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+              <div>
+                <p class="font-semibold text-gray-800">画像を用意</p>
+                <p class="text-gray-500 mt-0.5">画像をアップロードするか、プロンプトを入力してAIで生成します。</p>
+              </div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+              <div>
+                <p class="font-semibold text-gray-800">フォーカスを選んで分析</p>
+                <p class="text-gray-500 mt-0.5">何を重点的に検出するか選択（全体 / 物体 / テキスト / 人物 / カメラ / 雰囲気）してから「分析する」をクリック。</p>
+              </div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
+              <div>
+                <p class="font-semibold text-gray-800">要素を選択</p>
+                <p class="text-gray-500 mt-0.5">変更したい要素カードをクリック（複数選択可）。画像全体への指示は「画像全体」を選択。</p>
+              </div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5">4</span>
+              <div>
+                <p class="font-semibold text-gray-800">変更内容を入力</p>
+                <p class="text-gray-500 mt-0.5">テキストで指示を書きます。プリセットテンプレートを使えば入力の手間が省けます。</p>
+              </div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5">5</span>
+              <div>
+                <p class="font-semibold text-gray-800">画像を生成</p>
+                <p class="text-gray-500 mt-0.5">「画像を生成」をクリック。AIが指示を適用した新しい画像を生成します。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 便利機能 -->
+          <div class="border-t border-gray-100 pt-4">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">便利機能</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">🖼️</span>
+                <div>
+                  <p class="font-medium text-gray-700 text-xs">参照画像</p>
+                  <p class="text-gray-500 text-xs mt-0.5">オブジェクトの入替やロゴ変更時に画像を添付</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">⚡</span>
+                <div>
+                  <p class="font-medium text-gray-700 text-xs">プリセット</p>
+                  <p class="text-gray-500 text-xs mt-0.5">雰囲気・スタイルをワンクリックで指定</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">📷</span>
+                <div>
+                  <p class="font-medium text-gray-700 text-xs">カメラ設定</p>
+                  <p class="text-gray-500 text-xs mt-0.5">アングル・焦点距離・ボケ感を視覚的に調整</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">➕</span>
+                <div>
+                  <p class="font-medium text-gray-700 text-xs">カスタム要素</p>
+                  <p class="text-gray-500 text-xs mt-0.5">検出されなかった要素を手動で追加</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">↔️</span>
+                <div>
+                  <p class="font-medium text-gray-700 text-xs">Before/After</p>
+                  <p class="text-gray-500 text-xs mt-0.5">スライダーで生成前後を比較</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">✏️</span>
+                <div>
+                  <p class="font-medium text-gray-700 text-xs">要素名の変更</p>
+                  <p class="text-gray-500 text-xs mt-0.5">カード名をダブルクリックで編集（生成精度に影響）</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="flex gap-3">
-          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</span>
-          <p><strong>分析する</strong> — フォーカスを選んで「分析する」をクリック。画像内の要素が検出されます。</p>
+
+        <!-- ===== 運用ガイドタブ ===== -->
+        <div id="helpContentAdvanced" class="hidden space-y-5 text-sm text-gray-700">
+
+          <!-- 効果的な指示の書き方 -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-base">✍️</span>
+              <p class="font-semibold text-gray-800">効果的な指示の書き方</p>
+            </div>
+            <ul class="space-y-2 ml-6">
+              <li class="flex gap-2 items-start">
+                <span class="text-green-500 font-bold flex-shrink-0">✓</span>
+                <div><span class="font-medium">具体的に書く</span> — 「きれいにして」ではなく「背景を夕焼け空に変更し、暖色系のトーンにする」のように具体的に。</div>
+              </li>
+              <li class="flex gap-2 items-start">
+                <span class="text-green-500 font-bold flex-shrink-0">✓</span>
+                <div><span class="font-medium">変更しない部分は触れなくてOK</span> — 指示した要素だけが変更されます。</div>
+              </li>
+              <li class="flex gap-2 items-start">
+                <span class="text-green-500 font-bold flex-shrink-0">✓</span>
+                <div><span class="font-medium">複数要素は個別に指示</span> — 各要素カードに個別の指示を書くと精度が上がります。</div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="border-t border-gray-100"></div>
+
+          <!-- フォーカスの選び方 -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-base">🔍</span>
+              <p class="font-semibold text-gray-800">フォーカスの選び方</p>
+            </div>
+            <div class="space-y-1.5 ml-6">
+              <div class="flex gap-2 items-start">
+                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">全体</span>
+                <p class="text-gray-500">とりあえず全部検出したい時（処理はやや遅い）</p>
+              </div>
+              <div class="flex gap-2 items-start">
+                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">物体</span>
+                <p class="text-gray-500">家具、車、食べ物など物を差し替えたい時</p>
+              </div>
+              <div class="flex gap-2 items-start">
+                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">テキスト</span>
+                <p class="text-gray-500">看板や文字を書き換えたい時</p>
+              </div>
+              <div class="flex gap-2 items-start">
+                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">人物</span>
+                <p class="text-gray-500">服装やポーズを変えたい時</p>
+              </div>
+              <div class="flex gap-2 items-start">
+                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">カメラ</span>
+                <p class="text-gray-500">アングルや構図を変えたい時</p>
+              </div>
+              <div class="flex gap-2 items-start">
+                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">雰囲気</span>
+                <p class="text-gray-500">季節、時間帯、天気を変えたい時</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-gray-100"></div>
+
+          <!-- モデルの使い分け -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-base">🤖</span>
+              <p class="font-semibold text-gray-800">モデルの使い分け</p>
+            </div>
+            <div class="space-y-2 ml-6">
+              <div class="flex gap-3 items-start bg-blue-50 rounded-lg p-3">
+                <span class="flex-shrink-0 inline-block bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded font-semibold mt-0.5">2.5 Pro</span>
+                <p class="text-gray-600">通常利用に十分な精度。<span class="font-medium text-blue-700">推奨</span></p>
+              </div>
+              <div class="flex gap-3 items-start bg-gray-50 rounded-lg p-3">
+                <span class="flex-shrink-0 inline-block bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded font-semibold mt-0.5">3.1 Pro</span>
+                <p class="text-gray-600">複雑な指示や高精度が必要な場合（コスト高）</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-gray-100"></div>
+
+          <!-- 参照画像の活用 -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-base">🖼️</span>
+              <p class="font-semibold text-gray-800">参照画像の活用</p>
+            </div>
+            <ul class="space-y-1.5 ml-6 text-gray-500">
+              <li class="flex gap-2"><span class="flex-shrink-0 text-blue-400">•</span>「この画像のように変えて」という指示と組み合わせる</li>
+              <li class="flex gap-2"><span class="flex-shrink-0 text-blue-400">•</span>ロゴの差し替え、商品の入替に効果的</li>
+              <li class="flex gap-2"><span class="flex-shrink-0 text-blue-400">•</span>画像のスタイルやテイストの参考としても使える</li>
+            </ul>
+          </div>
+
+          <div class="border-t border-gray-100"></div>
+
+          <!-- コスト最適化 -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-base">💰</span>
+              <p class="font-semibold text-gray-800">コスト最適化</p>
+            </div>
+            <ul class="space-y-1.5 ml-6 text-gray-500">
+              <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>小さいサイズ（1K）でテスト → 満足したら大きいサイズで再生成</li>
+              <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>テキスト処理モデルは 2.5 Pro で十分なケースが多い</li>
+              <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>プリセットを活用すると指示作成の手間が省ける</li>
+            </ul>
+          </div>
+
         </div>
-        <div class="flex gap-3">
-          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</span>
-          <p><strong>要素を選択</strong> — 変更したい要素をクリックして、変更内容を入力します。</p>
-        </div>
-        <div class="flex gap-3">
-          <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">4</span>
-          <p><strong>画像を生成</strong> — 「画像を生成」をクリックすると、AIが変更を適用した画像を生成します。</p>
-        </div>
-        <div class="border-t border-gray-200 pt-3">
-          <p class="text-xs text-gray-500"><strong>各機能:</strong></p>
-          <ul class="text-xs text-gray-500 mt-1 space-y-1 ml-4 list-disc">
-            <li>参照画像 — オブジェクトの入替やロゴ変更時に使用</li>
-            <li>プリセット — よく使う変更パターンをワンクリックで適用</li>
-            <li>カスタム要素 — 検出されなかった要素を手動で追加</li>
-            <li>Before/After比較 — 生成結果をスライダーで比較</li>
-          </ul>
-        </div>
+        <!-- /コンテンツエリア -->
       </div>
     </div>
   </div>
