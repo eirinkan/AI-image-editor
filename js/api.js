@@ -84,7 +84,7 @@ Identify ALL elements across these categories:
 - Weather/time of day if visible
 - Camera perspective (angle, focal length estimate)
 
-IMPORTANT: Detect as many elements as the image warrants across all 6 priority levels. Include parts and details of larger objects as separate entries with appropriate priority (e.g., a sofa at priority 1, its cushions at priority 3, its legs at priority 3). Even mundane items like a power outlet, a door handle, a shadow, or a fold in a curtain should be listed. More is always better.`,
+IMPORTANT: You MUST detect a large number of elements — aim for at least 50 objects by default (unless the user specifies otherwise). Cover all 6 priority levels thoroughly. For every priority-1 object, also list its parts as priority-3 entries. For every priority-2 object, also list its details as priority-4 entries. Include background surfaces as priority-5 and their tiny details (outlets, stains, shadows) as priority-6. Even mundane items like a power outlet, a door handle, a shadow, or a fold in a curtain should be listed. More is always better.`,
 
       'furniture': `Focus specifically on furniture and objects in this image. For EACH item provide extremely detailed analysis:
 - Exact name/type of furniture
@@ -241,7 +241,7 @@ CRITICAL RULES:
    - 4: Details/parts of priority 2 elements
    - 5: Background surfaces and large areas (walls, floor, sky)
    - 6: Tiny details of background (outlets, stains, shadows, cracks)
-2. Detect as many elements as the image warrants. Do NOT limit to a fixed number — let the image complexity determine how many elements to report. Include parts of larger objects as separate entries with appropriate priority numbers.
+2. Aim for at least 50 objects by default (unless the user specifies a different number). Include parts of larger objects as separate entries with appropriate priority numbers. Every priority-1 or priority-2 object should have at least one corresponding detail entry (priority-3 or priority-4).
 3. If no text/people/etc are found, use empty arrays.
 4. For each element, position_coords must be the approximate center as a fraction of image width (x) and height (y), 0.0 to 1.0.
 Output ONLY the JSON, no other text.`;
