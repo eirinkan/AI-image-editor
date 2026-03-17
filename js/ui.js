@@ -179,6 +179,21 @@ const UI = (() => {
           img.addEventListener('click', (e) => {
             e.stopPropagation();
             zoomImg.src = img.src;
+            // マーカー付き画像の場合、マーカーを複製して表示
+            const zoomOverlay = document.getElementById('zoomMarkerOverlay');
+            if (zoomOverlay) {
+              zoomOverlay.innerHTML = '';
+              if (id === 'previewImage') {
+                const srcOverlay = document.getElementById('markerOverlay');
+                if (srcOverlay) {
+                  Array.from(srcOverlay.children).forEach(marker => {
+                    const clone = marker.cloneNode(true);
+                    clone.style.pointerEvents = 'none';
+                    zoomOverlay.appendChild(clone);
+                  });
+                }
+              }
+            }
             zoomModal.classList.remove('hidden');
           });
         }

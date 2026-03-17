@@ -736,7 +736,10 @@
 
   <!-- 画像拡大モーダル -->
   <div id="imageZoomModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center cursor-zoom-out" style="backdrop-filter: blur(4px);">
-    <img id="imageZoomImg" class="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl" alt="拡大画像">
+    <div id="imageZoomWrapper" class="relative inline-block max-w-[90vw] max-h-[90vh]">
+      <img id="imageZoomImg" class="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl" alt="拡大画像">
+      <div id="zoomMarkerOverlay" class="absolute inset-0 pointer-events-none rounded-lg overflow-hidden"></div>
+    </div>
   </div>
 
   <!-- テーマ切替スクリプト -->
@@ -813,7 +816,7 @@
   <script src="js/storage.js?v=2"></script>
   <script src="js/history.js?v=13"></script>
   <script src="js/camera-editor.js?v=5"></script>
-  <script src="js/ui.js?v=33"></script>
+  <script src="js/ui.js?v=34"></script>
   <script src="js/generate.js?v=17"></script>
   <script src="js/app.js?v=20"></script>
 </body>
