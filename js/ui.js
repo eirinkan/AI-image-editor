@@ -465,6 +465,7 @@ const UI = (() => {
       elements.previewImage.src = dataUrl;
       if (elements.previewImageClean) elements.previewImageClean.src = dataUrl;
       elements.imagePreview.classList.remove('hidden');
+      elements.removeImage.classList.remove('hidden');
       elements.uploadArea.querySelector('.upload-prompt').classList.add('hidden');
       // マーカーカラムは非表示、ラベルも非表示（1枚だけなので不要）
       if (elements.markerColumn) elements.markerColumn.classList.add('hidden');
@@ -487,6 +488,7 @@ const UI = (() => {
     elements.previewImage.src = '';
     if (elements.previewImageClean) elements.previewImageClean.src = '';
     elements.imagePreview.classList.add('hidden');
+    elements.removeImage.classList.add('hidden');
     elements.uploadArea.querySelector('.upload-prompt').classList.remove('hidden');
     elements.analysisSection.classList.add('hidden');
     elements.elementsSection.classList.add('hidden');
@@ -688,7 +690,7 @@ const UI = (() => {
         elements.elementsList.appendChild(createCategoryHeader(ICONS.group, `グループ (${groups.length})`));
         groups.forEach((group, i) => {
           const card = document.createElement('button');
-          card.className = 'element-card group-card relative bg-white dark:bg-gray-800 border-2 border-amber-300 dark:border-amber-600 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-amber-500 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
+          card.className = 'element-card group-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
           card.dataset.elementId = `group_${i}`;
           card.innerHTML = `
             <span class="group-count-badge">${group.members.length}</span>
@@ -711,7 +713,7 @@ const UI = (() => {
       elements.elementsList.appendChild(createCategoryHeader(ICONS.region, `リージョン (${json.regions.length})`));
       json.regions.forEach((region, i) => {
         const card = document.createElement('button');
-        card.className = 'element-card region-card relative bg-white dark:bg-gray-800 border-2 border-emerald-300 dark:border-emerald-600 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
+        card.className = 'element-card region-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
         card.dataset.elementId = region.id || `region_${i}`;
         card.innerHTML = `
           <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(region.name || region.name_en)}</span>
@@ -975,21 +977,14 @@ const UI = (() => {
       const card = elements.elementsList.querySelector(`[data-element-id="${id}"]`);
       if (card) {
         card.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
-        // グループ/リージョンは元のボーダー色に戻す
-        if (removedEl.type === 'group') {
-          card.classList.add('border-amber-300', 'dark:border-amber-600');
-        } else if (removedEl.type === 'region') {
-          card.classList.add('border-emerald-300', 'dark:border-emerald-600');
-        } else {
-          card.classList.add('border-gray-200', 'dark:border-gray-700');
-        }
+        card.classList.add('border-gray-200', 'dark:border-gray-700');
       }
     } else {
       // 新たに選択
       selectedElements.push({ id, type, name, data });
       const card = elements.elementsList.querySelector(`[data-element-id="${id}"]`);
       if (card) {
-        card.classList.remove('border-gray-200', 'dark:border-gray-700', 'border-gray-300', 'border-amber-300', 'dark:border-amber-600', 'border-emerald-300', 'dark:border-emerald-600');
+        card.classList.remove('border-gray-200', 'dark:border-gray-700', 'border-gray-300');
         card.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
       }
     }
@@ -1750,6 +1745,7 @@ const UI = (() => {
     elements.previewImage.src = dataUrl;
     if (elements.previewImageClean) elements.previewImageClean.src = dataUrl;
     elements.imagePreview.classList.remove('hidden');
+    elements.removeImage.classList.remove('hidden');
   }
 
   // --- プロジェクト保存・一覧 ---

@@ -395,6 +395,8 @@
 
       <!-- アップロードパネル -->
       <div id="uploadPanel">
+        <div class="relative">
+          <button id="removeImage" aria-label="画像を削除" class="hidden absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-9 h-9 flex items-center justify-center hover:bg-red-600 shadow-lg text-lg leading-none z-30 cursor-pointer">&times;</button>
         <div id="uploadArea" class="upload-area bg-white dark:bg-gray-800/50 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-2xl p-12 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/20 shadow-sm transition-all relative">
           <div class="upload-prompt">
             <div class="mb-4 inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-2xl text-blue-400">
@@ -404,7 +406,6 @@
             <p class="text-sm text-gray-400 dark:text-gray-400 mt-1">JPG, PNG, WEBP対応</p>
           </div>
           <div id="imagePreview" class="hidden relative">
-            <button id="removeImage" aria-label="画像を削除" class="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-9 h-9 flex items-center justify-center hover:bg-red-600 shadow-lg text-lg leading-none z-20 cursor-pointer">&times;</button>
             <div class="flex gap-4 justify-center items-start">
               <!-- 元画像（マーカーなし） -->
               <div id="cleanColumn" class="flex flex-col items-center gap-1 flex-1 min-w-0">
@@ -421,6 +422,7 @@
             </div>
           </div>
           <input type="file" id="fileInput" accept="image/*" class="hidden">
+        </div>
         </div>
       </div>
 
@@ -819,7 +821,7 @@
   <script src="js/storage.js?v=1"></script>
   <script src="js/history.js?v=13"></script>
   <script src="js/camera-editor.js?v=5"></script>
-  <script src="js/ui.js?v=25"></script>
+  <script src="js/ui.js?v=26"></script>
   <script src="js/generate.js?v=14"></script>
   <script src="js/app.js?v=16"></script>
 </body>
