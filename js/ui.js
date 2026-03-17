@@ -290,12 +290,11 @@ const UI = (() => {
     elements.helpClose.addEventListener('click', () => elements.helpModal.classList.add('hidden'));
     elements.helpModal.addEventListener('click', (e) => { if (e.target === elements.helpModal) elements.helpModal.classList.add('hidden'); });
 
-    // 粒度スライダー
-    const detailLevelSlider = document.getElementById('detailLevel');
-    if (detailLevelSlider) {
-      detailLevelSlider.addEventListener('input', () => {
-        currentDetailLevel = parseInt(detailLevelSlider.value);
-        updateDetailLevelLabel();
+    // 粒度プルダウン
+    const detailLevelSelect = document.getElementById('detailLevel');
+    if (detailLevelSelect) {
+      detailLevelSelect.addEventListener('change', () => {
+        currentDetailLevel = parseInt(detailLevelSelect.value);
         if (currentRenderJson) {
           renderElements(currentRenderJson);
         }
@@ -706,20 +705,6 @@ const UI = (() => {
     return Object.values(nameMap).filter(g => g.members.length >= 2);
   }
 
-  // 粒度レベルのラベル更新
-  function updateDetailLevelLabel() {
-    const labels = {
-      1: 'メイン要素のみ',
-      2: 'サブ要素まで',
-      3: 'メイン詳細まで',
-      4: 'サブ詳細まで',
-      5: '背景要素まで',
-      6: 'すべて表示',
-    };
-    const labelEl = document.getElementById('detailLevelLabel');
-    if (labelEl) labelEl.textContent = labels[currentDetailLevel] || '';
-  }
-
   // priority値に基づいてフィルタリング（priorityがない要素はレベル2として扱う）
   function filterByPriority(arr) {
     if (!arr) return [];
@@ -848,8 +833,8 @@ const UI = (() => {
             const card = document.createElement('button');
             card.className = 'element-card region-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
             card.dataset.elementId = item.id;
-            const markerBadge = item.markerIndex ? `<span class="marker-badge">${item.markerIndex}</span>` : '';
-            card.innerHTML = `${markerBadge}<span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(item.name)}</span>`;
+            const markerBadge = item.markerIndex ? `<span class="element-badge-inline region-badge">${item.markerIndex}</span>` : '';
+            card.innerHTML = `<span class="inline-flex items-center gap-1.5">${markerBadge}<span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(item.name)}</span></span>`;
             card.addEventListener('click', () => selectElement(item));
             card.addEventListener('mouseenter', () => {
               const marker = document.querySelector(`.image-marker[data-element-id="${item.id}"]`);
@@ -1037,16 +1022,17 @@ const UI = (() => {
 
     const allElements = flattenElements(json)
       .filter(({ item }) => item.position_coords)
-      .map(({ item, id, markerIndex }) => ({
+      .map(({ item, id, markerIndex, type }) => ({
         index: markerIndex,
         coords: item.position_coords,
         id,
+        type,
       }));
 
     // マーカーDOM生成
-    allElements.forEach(({ index, coords, id }) => {
+    allElements.forEach(({ index, coords, id, type }) => {
       const marker = document.createElement('div');
-      marker.className = 'image-marker';
+      marker.className = type === 'region' ? 'image-marker region-marker' : 'image-marker';
       marker.dataset.markerIndex = index;
       marker.dataset.elementId = id;
       marker.style.left = `${coords.x * 100}%`;

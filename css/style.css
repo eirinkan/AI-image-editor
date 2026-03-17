@@ -237,6 +237,19 @@ button {
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.4), 0 2px 6px rgba(0,0,0,0.3);
 }
 
+/* リージョンマーカー（紫） */
+.image-marker.region-marker {
+  background: rgba(147, 51, 234, 0.85);
+}
+.image-marker.region-marker:hover,
+.image-marker.region-marker.active {
+  background: rgba(239, 68, 68, 0.9);
+}
+.image-marker.region-marker.selected {
+  background: rgba(239, 68, 68, 0.9);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.4), 0 2px 6px rgba(0,0,0,0.3);
+}
+
 /* 要素カードのマーカーバッジ */
 .element-badge {
   position: absolute;
@@ -278,6 +291,15 @@ button {
 
 .element-card:hover .element-badge-inline,
 .element-card.highlighted .element-badge-inline {
+  background: rgba(239, 68, 68, 0.9);
+}
+
+/* リージョンバッジ（紫） */
+.element-badge-inline.region-badge {
+  background: rgba(147, 51, 234, 0.85);
+}
+.element-card:hover .element-badge-inline.region-badge,
+.element-card.highlighted .element-badge-inline.region-badge {
   background: rgba(239, 68, 68, 0.9);
 }
 
