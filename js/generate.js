@@ -58,6 +58,10 @@ const TextToImage = (() => {
     const approveBtn = document.getElementById('promptApproveBtn');
     if (approveBtn) approveBtn.addEventListener('click', approveAndGenerate);
 
+    // 「新しく作成」ボタン（プロンプト入力画面に戻る）
+    const newPromptBtn = document.getElementById('newPromptBtn');
+    if (newPromptBtn) newPromptBtn.addEventListener('click', backToIdeaInput);
+
     // 「再生成」ボタン
     const regenerateBtn = document.getElementById('regenerateBtn');
     if (regenerateBtn) regenerateBtn.addEventListener('click', approveAndGenerate);
@@ -208,6 +212,13 @@ const TextToImage = (() => {
 
   // レビュー画面を隠して入力画面に戻る
   function hidePromptReview() {
+    document.getElementById('promptReviewSection').classList.add('hidden');
+    document.getElementById('ideaInputSection').classList.remove('hidden');
+  }
+
+  // 生成結果から入力画面に戻る（新しくプロンプトを作成）
+  function backToIdeaInput() {
+    document.getElementById('generateResultPreview').classList.add('hidden');
     document.getElementById('promptReviewSection').classList.add('hidden');
     document.getElementById('ideaInputSection').classList.remove('hidden');
   }
