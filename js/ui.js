@@ -1119,14 +1119,15 @@ const UI = (() => {
 
   // --- 結果表示 ---
   function showResult(imageData, originalImageData = null) {
-    customBeforeEntryId = null; // 新規生成時はカスタム選択をリセット
     elements.resultSection.classList.remove('hidden');
     elements.resultGrid.classList.add('hidden');
     elements.compareContainer.classList.remove('hidden');
     elements.resultImage.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
 
-    // Before/After比較用データ設定
-    if (originalImageData) {
+    // Before/After比較用データ設定（カスタムBefore設定時はそちらを優先）
+    if (customBeforeEntryId != null && beforeImageData) {
+      hasBeforeImage = true;
+    } else if (originalImageData) {
       beforeImageData = originalImageData;
       hasBeforeImage = true;
       elements.compareBeforeImg.src = `data:${originalImageData.mimeType};base64,${originalImageData.base64}`;
@@ -1160,8 +1161,12 @@ const UI = (() => {
     // compareContainerのAfter画像を更新
     elements.resultImage.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
 
-    // Before/After比較用データ設定
-    if (beforeImage) {
+    // Before/After比較用データ設定（カスタムBefore設定時はそちらを優先）
+    if (customBeforeEntryId != null && beforeImageData) {
+      // カスタムBefore維持（beforeImageDataは既にセット済み）
+      hasBeforeImage = true;
+      elements.compareContainer.classList.remove('hidden');
+    } else if (beforeImage) {
       beforeImageData = beforeImage;
       hasBeforeImage = true;
       elements.compareBeforeImg.src = `data:${beforeImage.mimeType};base64,${beforeImage.base64}`;
@@ -1214,9 +1219,29 @@ const UI = (() => {
     });
   }
 
-  // Before画像を任意の履歴エントリに切り替え
+  // Before画像を任意の履歴エントリに切り替え（同じエントリを再クリックで解除）
   function setBeforeFromEntry(entry) {
     if (!entry || !entry.image) return;
+
+    // 同じエントリをクリック → カスタムBeforeを解除してデフォルトに戻す
+    if (customBeforeEntryId === entry.id) {
+      customBeforeEntryId = null;
+      // デフォルトのBefore（親エントリ）に戻す
+      const currentEntry = EditHistory.getAll()[EditHistory.getCurrentIndex()];
+      if (currentEntry && currentEntry.parentId != null) {
+        const parentEntry = EditHistory.getAll().find(e => e.id === currentEntry.parentId);
+        if (parentEntry && parentEntry.image) {
+          beforeImageData = parentEntry.image;
+          hasBeforeImage = true;
+          elements.compareBeforeImg.src = `data:${parentEntry.image.mimeType};base64,${parentEntry.image.base64}`;
+        }
+      }
+      const allEntries = EditHistory.getAll();
+      const idx = EditHistory.getCurrentIndex();
+      renderHistory(allEntries, idx);
+      return;
+    }
+
     customBeforeEntryId = entry.id;
     beforeImageData = entry.image;
     hasBeforeImage = true;
