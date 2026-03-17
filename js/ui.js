@@ -269,7 +269,6 @@ const UI = (() => {
   // コスト定義
   // テキスト処理: 中央値（概算 ¥/回）
   const TEXT_COST_MAP = {
-    'gemini-2.0-flash-lite':        { analysis: '¥0.2', edit: '¥0.2', prompt: '¥0.2' },
     'gemini-2.5-pro-preview-06-05': { analysis: '¥3',   edit: '¥2',   prompt: '¥2' },
     'gemini-3.1-pro-preview':       { analysis: '¥5',   edit: '¥3',   prompt: '¥3' },
   };

@@ -5,8 +5,7 @@ const GeminiAPI = (() => {
 
   // 選択可能モデル定義
   const TEXT_MODELS = [
-    { id: 'gemini-2.0-flash-lite', name: '2.0 Flash Lite', cost: '最安', note: '高速・低コスト。シンプルな指示向き' },
-    { id: 'gemini-2.5-pro-preview-06-05', name: '2.5 Pro', cost: '高い', note: '高精度。複雑な分析・指示に強い' },
+    { id: 'gemini-2.5-pro-preview-06-05', name: '2.5 Pro', cost: '標準', note: '高精度。複雑な分析・指示に強い' },
     { id: 'gemini-3.1-pro-preview', name: '3.1 Pro', cost: '最高', note: '最新・最高精度。コスト高' },
   ];
 
@@ -16,7 +15,7 @@ const GeminiAPI = (() => {
   ];
 
   // デフォルトモデル
-  const DEFAULT_TEXT_MODEL = 'gemini-2.0-flash-lite';
+  const DEFAULT_TEXT_MODEL = 'gemini-2.5-pro-preview-06-05';
   const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-image-preview';
 
   // 動的モデル取得
