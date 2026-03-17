@@ -380,22 +380,22 @@ const App = (() => {
   // --- プロジェクト保存・読み込み ---
 
   // 現在のセッションをIndexedDBに保存
-  async function saveProject(name) {
+  // overwrite: true=上書き保存, false=新規保存
+  async function saveProject(name, overwrite = true) {
     const entries = EditHistory.toSerializable();
-    if (entries.length === 0) {
-      UI.showError('保存する編集履歴がありません。画像をアップロードして分析を行ってください。');
-      return;
-    }
 
     // 最終エントリのサムネイルをプロジェクトサムネイルに使用
-    const lastEntry = entries[entries.length - 1];
-    const thumbnail = lastEntry.thumbnailUrl || '';
+    const lastEntry = entries.length > 0 ? entries[entries.length - 1] : null;
+    const thumbnail = lastEntry ? (lastEntry.thumbnailUrl || '') : '';
+
+    // 新規保存の場合はIDをクリア
+    const projectId = overwrite ? currentProjectId : null;
 
     try {
       const projectData = {
-        id: currentProjectId || undefined,
+        id: projectId || undefined,
         name: name || `プロジェクト ${new Date().toLocaleString('ja-JP')}`,
-        createdAt: currentProjectId ? undefined : undefined,
+        createdAt: projectId ? undefined : undefined,
         thumbnail: thumbnail,
         originalImage: state.originalImage,
         entries: entries,
@@ -403,10 +403,15 @@ const App = (() => {
 
       const saved = await ProjectStorage.saveProject(projectData);
       currentProjectId = saved.id;
-      UI.showSuccess('プロジェクトを保存しました');
+      UI.showSuccess(projectId ? '上書き保存しました' : '新規保存しました');
     } catch (err) {
       UI.showError('保存に失敗しました: ' + err.message);
     }
+  }
+
+  // 現在のプロジェクトIDを取得
+  function getCurrentProjectId() {
+    return currentProjectId;
   }
 
   // プロジェクトを読み込んで復元
@@ -514,6 +519,7 @@ const App = (() => {
     downloadCurrent,
     getState: () => state,
     saveProject,
+    getCurrentProjectId,
     loadProject,
     exportProject,
     importProject,

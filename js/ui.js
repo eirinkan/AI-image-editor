@@ -132,7 +132,9 @@ const UI = (() => {
       saveProjectModal: document.getElementById('saveProjectModal'),
       saveProjectClose: document.getElementById('saveProjectClose'),
       saveProjectName: document.getElementById('saveProjectName'),
+      saveProjectInfo: document.getElementById('saveProjectInfo'),
       saveProjectCancel: document.getElementById('saveProjectCancel'),
+      saveProjectOverwrite: document.getElementById('saveProjectOverwrite'),
       saveProjectConfirm: document.getElementById('saveProjectConfirm'),
       projectListBtn: document.getElementById('projectListBtn'),
       projectModal: document.getElementById('projectModal'),
@@ -153,10 +155,17 @@ const UI = (() => {
     elements.saveProjectClose.addEventListener('click', () => hideSaveDialog());
     elements.saveProjectCancel.addEventListener('click', () => hideSaveDialog());
     elements.saveProjectModal.addEventListener('click', (e) => { if (e.target === elements.saveProjectModal) hideSaveDialog(); });
+    // 新規保存
     elements.saveProjectConfirm.addEventListener('click', () => {
       const name = elements.saveProjectName.value.trim();
       hideSaveDialog();
-      App.saveProject(name || null);
+      App.saveProject(name || null, false);
+    });
+    // 上書き保存
+    elements.saveProjectOverwrite.addEventListener('click', () => {
+      const name = elements.saveProjectName.value.trim();
+      hideSaveDialog();
+      App.saveProject(name || null, true);
     });
     elements.saveProjectName.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); elements.saveProjectConfirm.click(); }
@@ -1685,6 +1694,16 @@ const UI = (() => {
 
   function showSaveDialog() {
     elements.saveProjectName.value = '';
+    const hasExisting = !!App.getCurrentProjectId();
+    // 上書きボタンの表示制御
+    if (hasExisting) {
+      elements.saveProjectOverwrite.classList.remove('hidden');
+      elements.saveProjectInfo.textContent = '既存プロジェクトに上書き、または新しいプロジェクトとして保存できます。';
+      elements.saveProjectInfo.classList.remove('hidden');
+    } else {
+      elements.saveProjectOverwrite.classList.add('hidden');
+      elements.saveProjectInfo.classList.add('hidden');
+    }
     elements.saveProjectModal.classList.remove('hidden');
     setTimeout(() => elements.saveProjectName.focus(), 100);
   }

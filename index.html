@@ -713,11 +713,13 @@
         <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">プロジェクトを保存</h3>
         <button id="saveProjectClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
+      <p id="saveProjectInfo" class="text-xs text-gray-400 dark:text-gray-400 mb-3 hidden"></p>
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">プロジェクト名</label>
       <input id="saveProjectName" type="text" placeholder="名前を入力（省略時は自動生成）" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4">
       <div class="flex gap-2 justify-end">
         <button id="saveProjectCancel" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg cursor-pointer">キャンセル</button>
-        <button id="saveProjectConfirm" class="px-4 py-2 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded-lg cursor-pointer">保存</button>
+        <button id="saveProjectOverwrite" class="hidden px-4 py-2 text-sm text-white bg-green-500 hover:bg-green-600 rounded-lg cursor-pointer">上書き保存</button>
+        <button id="saveProjectConfirm" class="px-4 py-2 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded-lg cursor-pointer">新規保存</button>
       </div>
     </div>
   </div>
@@ -821,8 +823,8 @@
   <script src="js/storage.js?v=1"></script>
   <script src="js/history.js?v=13"></script>
   <script src="js/camera-editor.js?v=5"></script>
-  <script src="js/ui.js?v=22"></script>
+  <script src="js/ui.js?v=23"></script>
   <script src="js/generate.js?v=12"></script>
-  <script src="js/app.js?v=15"></script>
+  <script src="js/app.js?v=16"></script>
 </body>
 </html>
