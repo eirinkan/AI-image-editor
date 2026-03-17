@@ -208,10 +208,34 @@ const UI = (() => {
                 }
               }
             }
+            // マーカートグルボタンの表示制御
+            const toggleBtn = document.getElementById('zoomMarkerToggle');
+            if (toggleBtn) {
+              if (id === 'previewImage' && zoomOverlay && zoomOverlay.children.length > 0) {
+                toggleBtn.classList.remove('hidden');
+                toggleBtn.textContent = 'マーカー非表示';
+                zoomOverlay.classList.remove('hidden');
+              } else {
+                toggleBtn.classList.add('hidden');
+              }
+            }
             zoomModal.classList.remove('hidden');
           });
         }
       });
+
+      // マーカー表示トグルボタン
+      const toggleBtn = document.getElementById('zoomMarkerToggle');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const zoomOverlay = document.getElementById('zoomMarkerOverlay');
+          if (zoomOverlay) {
+            const isHidden = zoomOverlay.classList.toggle('hidden');
+            toggleBtn.textContent = isHidden ? 'マーカー表示' : 'マーカー非表示';
+          }
+        });
+      }
     }
 
     // プロジェクト保存・一覧モーダル
@@ -685,7 +709,9 @@ const UI = (() => {
       if (json.objects && json.objects.length > 0) {
         const groups = computeAutoGroups(json.objects);
         groups.forEach((group, i) => {
-          groupItems.push({ id: `group_${i}`, type: 'group', name: `${group.name}（${group.members.length}個）`, data: { ...group, members: group.members }, cardClass: 'group-card' });
+          // メンバーIDを事前計算（selectElement内で参照するため）
+          const memberIds = group.members.map(member => member.id || `obj_${json.objects.indexOf(member)}`);
+          groupItems.push({ id: `group_${i}`, type: 'group', name: `${group.name}（${group.members.length}個）`, data: { ...group, members: group.members, memberIds }, cardClass: 'group-card' });
         });
       }
 
@@ -982,6 +1008,13 @@ const UI = (() => {
       }
       const marker = document.querySelector(`.image-marker[data-element-id="${id}"]`);
       if (marker) marker.classList.remove('selected');
+      // グループの場合、メンバーのマーカーも解除
+      if (type === 'group' && data && data.memberIds) {
+        data.memberIds.forEach(memberId => {
+          const m = document.querySelector(`.image-marker[data-element-id="${memberId}"]`);
+          if (m) m.classList.remove('selected');
+        });
+      }
     } else {
       // 新たに選択
       selectedElements.push({ id, type, name, data });
@@ -992,6 +1025,13 @@ const UI = (() => {
       }
       const marker = document.querySelector(`.image-marker[data-element-id="${id}"]`);
       if (marker) marker.classList.add('selected');
+      // グループの場合、メンバーのマーカーも選択
+      if (type === 'group' && data && data.memberIds) {
+        data.memberIds.forEach(memberId => {
+          const m = document.querySelector(`.image-marker[data-element-id="${memberId}"]`);
+          if (m) m.classList.add('selected');
+        });
+      }
     }
 
     // 選択数カウンター更新

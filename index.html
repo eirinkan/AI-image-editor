@@ -736,6 +736,9 @@
 
   <!-- 画像拡大モーダル -->
   <div id="imageZoomModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center cursor-zoom-out" style="backdrop-filter: blur(4px);">
+    <button id="zoomMarkerToggle" class="hidden absolute top-4 right-4 z-10 bg-white/90 hover:bg-white text-gray-700 rounded-full px-3 py-1.5 text-xs font-medium shadow-lg transition-all cursor-pointer" style="pointer-events: auto;">
+      マーカー非表示
+    </button>
     <div id="imageZoomWrapper" class="relative inline-block max-w-[90vw] max-h-[90vh]">
       <img id="imageZoomImg" class="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl" alt="拡大画像">
       <div id="zoomMarkerOverlay" class="absolute inset-0 pointer-events-none rounded-lg overflow-hidden"></div>
@@ -816,7 +819,7 @@
   <script src="js/storage.js?v=2"></script>
   <script src="js/history.js?v=13"></script>
   <script src="js/camera-editor.js?v=5"></script>
-  <script src="js/ui.js?v=35"></script>
+  <script src="js/ui.js?v=36"></script>
   <script src="js/generate.js?v=17"></script>
   <script src="js/app.js?v=20"></script>
 </body>
