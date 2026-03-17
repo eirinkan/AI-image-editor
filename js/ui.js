@@ -672,7 +672,8 @@ const UI = (() => {
 
     // 画像全体への指示ボタン（環境・設定カテゴリ内）
     const globalBtn = document.createElement('button');
-    globalBtn.className = 'element-card border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-purple-400 hover:bg-purple-50 transition-colors cursor-pointer min-h-[100px]';
+    globalBtn.className = 'element-card border-2 border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-purple-400 hover:bg-purple-50 transition-colors cursor-pointer min-h-[100px]';
+    globalBtn.dataset.elementId = 'global';
     globalBtn.innerHTML = `
       <span class="text-gray-400">${ICONS.globe}</span>
       <span class="text-sm text-gray-500">画像全体への指示</span>
@@ -904,14 +905,14 @@ const UI = (() => {
       const card = elements.elementsList.querySelector(`[data-element-id="${id}"]`);
       if (card) {
         card.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
-        card.classList.add('border-gray-200');
+        card.classList.add('border-gray-200', 'border-gray-300');
       }
     } else {
       // 新たに選択
       selectedElements.push({ id, type, name, data });
       const card = elements.elementsList.querySelector(`[data-element-id="${id}"]`);
       if (card) {
-        card.classList.remove('border-gray-200');
+        card.classList.remove('border-gray-200', 'border-gray-300');
         card.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
       }
     }
@@ -922,8 +923,8 @@ const UI = (() => {
     // 編集パネルの表示更新
     if (selectedElements.length > 0) {
       elements.editSection.classList.remove('hidden');
-      // 「画像全体」が選択されている場合のみプリセットを表示
-      const hasGlobal = selectedElements.some(el => el.type === 'global');
+      // 「画像全体」または「雰囲気・照明」が選択されている場合プリセットを表示
+      const hasGlobal = selectedElements.some(el => el.type === 'global' || el.type === 'atmosphere');
       if (hasGlobal) {
         elements.presetTemplates.classList.remove('hidden');
       } else {
@@ -1489,13 +1490,15 @@ const UI = (() => {
     const instruction = PRESETS[presetKey];
     if (!instruction) return;
 
-    // 「画像全体」のtextareaに指示をセット
+    // 「画像全体」または「雰囲気・照明」のtextareaに指示をセット
     const globalRow = elements.editInstructionsList.querySelector('[data-instruction-for="global"]');
-    if (globalRow) {
-      const textarea = globalRow.querySelector('textarea');
+    const atmosphereRow = elements.editInstructionsList.querySelector('[data-instruction-for="atmosphere"]');
+    const targetRow = globalRow || atmosphereRow;
+    if (targetRow) {
+      const textarea = targetRow.querySelector('textarea');
       if (textarea) {
         textarea.value = instruction;
-        textarea.focus();
+        textarea.focus({ preventScroll: true });
       }
     }
   }

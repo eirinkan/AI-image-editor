@@ -62,66 +62,54 @@ const CameraEditor = (() => {
   let keepFlags = {}; // 「今までと同じ」フラグ
   let onChangeCallback = null;
 
-  // JSON値から初期状態を推測
+  // JSON値から初期状態を推測（全項目「今までと同じ」をデフォルトに）
   function inferFromJson(cameraJson) {
     const values = {};
-    const keeps = {};
-    if (!cameraJson) {
-      // JSONにカメラ情報がない場合、全て「今までと同じ」
-      keeps.angle = true;
-      keeps.shotType = true;
-      keeps.focalLength = true;
-      keeps.depthOfField = true;
-      keeps.composition = true;
-      keepFlags = keeps;
-      return values;
-    }
+    const keeps = {
+      angle: true,
+      shotType: true,
+      focalLength: true,
+      depthOfField: true,
+      composition: true,
+    };
 
-    // angle
-    const angle = (cameraJson.angle || '').toLowerCase();
-    if (!angle) {
-      keeps.angle = true;
-    } else if (angle.includes('low')) values.angle = 'low';
-    else if (angle.includes('high')) values.angle = 'high';
-    else if (angle.includes('bird')) values.angle = 'birds-eye';
-    else if (angle.includes('worm')) values.angle = 'worms-eye';
-    else values.angle = 'eye-level';
+    // カメラ情報がある場合でも、デフォルトは「今までと同じ」
+    // ユーザーが明示的に変更する形にする
+    if (cameraJson) {
+      // 推論値は保持するが、keepフラグはオンのまま
+      const angle = (cameraJson.angle || '').toLowerCase();
+      if (angle) {
+        if (angle.includes('low')) values.angle = 'low';
+        else if (angle.includes('high')) values.angle = 'high';
+        else if (angle.includes('bird')) values.angle = 'birds-eye';
+        else if (angle.includes('worm')) values.angle = 'worms-eye';
+        else values.angle = 'eye-level';
+      }
 
-    // shotType — JSONにshot_typeがない場合は「今までと同じ」
-    if (!cameraJson.shot_type) {
-      keeps.shotType = true;
-    }
+      const fl = cameraJson.focal_length || '';
+      if (fl) {
+        const flMatch = fl.match(/(\d+)\s*mm/i);
+        if (flMatch) values.focalLength = parseInt(flMatch[1]);
+        else if (fl.includes('wide')) values.focalLength = 24;
+        else if (fl.includes('telephoto')) values.focalLength = 135;
+        else values.focalLength = 50;
+      }
 
-    // focal_length
-    const fl = cameraJson.focal_length || '';
-    if (!fl) {
-      keeps.focalLength = true;
-    } else {
-      const flMatch = fl.match(/(\d+)\s*mm/i);
-      if (flMatch) values.focalLength = parseInt(flMatch[1]);
-      else if (fl.includes('wide')) values.focalLength = 24;
-      else if (fl.includes('telephoto')) values.focalLength = 135;
-      else values.focalLength = 50;
-    }
+      const dof = (cameraJson.depth_of_field || '').toLowerCase();
+      if (dof) {
+        if (dof.includes('shallow')) values.depthOfField = 2.0;
+        else if (dof.includes('deep')) values.depthOfField = 11;
+        else values.depthOfField = 5.6;
+      }
 
-    // depth_of_field
-    const dof = (cameraJson.depth_of_field || '').toLowerCase();
-    if (!dof) {
-      keeps.depthOfField = true;
-    } else if (dof.includes('shallow')) values.depthOfField = 2.0;
-    else if (dof.includes('deep')) values.depthOfField = 11;
-    else values.depthOfField = 5.6;
-
-    // composition
-    values.composition = [];
-    const comp = (cameraJson.composition || '').toLowerCase();
-    if (!comp) {
-      keeps.composition = true;
-    } else {
-      if (comp.includes('third')) values.composition.push('rule-of-thirds');
-      if (comp.includes('symmetr')) values.composition.push('symmetry');
-      if (comp.includes('leading')) values.composition.push('leading-lines');
-      if (comp.includes('center')) values.composition.push('center');
+      values.composition = [];
+      const comp = (cameraJson.composition || '').toLowerCase();
+      if (comp) {
+        if (comp.includes('third')) values.composition.push('rule-of-thirds');
+        if (comp.includes('symmetr')) values.composition.push('symmetry');
+        if (comp.includes('leading')) values.composition.push('leading-lines');
+        if (comp.includes('center')) values.composition.push('center');
+      }
     }
 
     keepFlags = keeps;

@@ -119,7 +119,8 @@ Include even small items like cups, books, plants, decorative objects.`,
 - Facial expression if visible
 - Hair style and color
 - Accessories (jewelry, glasses, bags, etc.)
-- Interaction with other people or objects`
+- Interaction with other people or objects
+IMPORTANT: All people descriptions (description, clothing, pose, position fields) MUST be written in Japanese.`
     };
 
     // 選択されたフォーカスのプロンプトを組み合わせる
@@ -192,10 +193,10 @@ Include even small items like cups, books, plants, decorative objects.`,
   "people": [
     {
       "id": "unique_id",
-      "description": "brief description",
-      "clothing": "...",
-      "pose": "...",
-      "position": "...",
+      "description": "brief description in Japanese",
+      "clothing": "clothing description in Japanese",
+      "pose": "pose description in Japanese",
+      "position": "position description in Japanese",
       "position_coords": { "x": 0.5, "y": 0.3 }
     }
   ]
