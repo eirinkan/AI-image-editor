@@ -343,34 +343,34 @@ const UI = (() => {
       { label: 'プロンプト', key: 'prompt' },
     ];
     const imageSizes = ['1K', '2K', '4K'];
-    const thCls = 'py-1.5 px-2 text-gray-500 font-normal whitespace-nowrap border border-gray-200';
-    const tdCls = 'py-1.5 px-2 border border-gray-200';
+    const thCls = 'py-1.5 px-2 text-gray-500 dark:text-gray-400 font-normal whitespace-nowrap border border-gray-200 dark:border-gray-700';
+    const tdCls = 'py-1.5 px-2 border border-gray-200 dark:border-gray-700';
 
     // テキスト処理コスト表（モデル × 処理）
-    let textHtml = `<p class="text-gray-500 font-medium mb-1">テキスト処理（中央値/回）</p>`;
+    let textHtml = `<p class="text-gray-500 dark:text-gray-400 font-medium mb-1">テキスト処理（中央値/回）</p>`;
     textHtml += `<table class="w-full border-collapse"><thead><tr><th class="${thCls} text-left"></th>`;
     textModels.forEach(m => { textHtml += `<th class="${thCls} text-right">${m.name}</th>`; });
     textHtml += `</tr></thead><tbody>`;
     processes.forEach(p => {
-      textHtml += `<tr><td class="${tdCls} text-gray-600">${p.label}</td>`;
+      textHtml += `<tr><td class="${tdCls} text-gray-600 dark:text-gray-300">${p.label}</td>`;
       textModels.forEach(m => {
         const cost = TEXT_COST_MAP[m.id] ? TEXT_COST_MAP[m.id][p.key] : '-';
-        textHtml += `<td class="${tdCls} text-right text-gray-800">${cost}</td>`;
+        textHtml += `<td class="${tdCls} text-right text-gray-800 dark:text-gray-100">${cost}</td>`;
       });
       textHtml += `</tr>`;
     });
     textHtml += `</tbody></table>`;
 
     // 画像生成コスト表（モデル × サイズ）
-    let imageHtml = `<p class="text-gray-500 font-medium mb-1 mt-3">画像生成（概算/回）</p>`;
+    let imageHtml = `<p class="text-gray-500 dark:text-gray-400 font-medium mb-1 mt-3">画像生成（概算/回）</p>`;
     imageHtml += `<table class="w-full border-collapse"><thead><tr><th class="${thCls} text-left">サイズ</th>`;
     imageModels.forEach(m => { imageHtml += `<th class="${thCls} text-right">${m.name}</th>`; });
     imageHtml += `</tr></thead><tbody>`;
     imageSizes.forEach(size => {
-      imageHtml += `<tr><td class="${tdCls} text-gray-600">${size}</td>`;
+      imageHtml += `<tr><td class="${tdCls} text-gray-600 dark:text-gray-300">${size}</td>`;
       imageModels.forEach(m => {
         const cost = IMAGE_COST_MAP[m.id] ? IMAGE_COST_MAP[m.id][size] : '-';
-        imageHtml += `<td class="${tdCls} text-right text-gray-800">${cost}</td>`;
+        imageHtml += `<td class="${tdCls} text-right text-gray-800 dark:text-gray-100">${cost}</td>`;
       });
       imageHtml += `</tr>`;
     });
@@ -546,26 +546,31 @@ const UI = (() => {
       // 「全体」選択時は他を全解除
       elements.focusTags.querySelectorAll('[data-focus]').forEach(t => {
         t.classList.remove('bg-blue-500', 'text-white');
-        t.classList.add('bg-gray-200', 'text-gray-700');
+        t.classList.add('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
       });
-      tag.classList.remove('bg-gray-200', 'text-gray-700');
+      tag.classList.remove('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
       tag.classList.add('bg-blue-500', 'text-white');
     } else {
       // 「全体」を解除
       const allTag = elements.focusTags.querySelector('[data-focus="all"]');
       allTag.classList.remove('bg-blue-500', 'text-white');
-      allTag.classList.add('bg-gray-200', 'text-gray-700');
+      allTag.classList.add('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
 
-      // トグル
-      tag.classList.toggle('bg-blue-500');
-      tag.classList.toggle('text-white');
-      tag.classList.toggle('bg-gray-200');
-      tag.classList.toggle('text-gray-700');
+      // トグル（選択状態の判定）
+      if (tag.classList.contains('bg-blue-500')) {
+        // 選択解除
+        tag.classList.remove('bg-blue-500', 'text-white');
+        tag.classList.add('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
+      } else {
+        // 選択
+        tag.classList.remove('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
+        tag.classList.add('bg-blue-500', 'text-white');
+      }
 
       // 何も選択されていなければ「全体」に戻す
       const selected = elements.focusTags.querySelectorAll('.bg-blue-500');
       if (selected.length === 0) {
-        allTag.classList.remove('bg-gray-200', 'text-gray-700');
+        allTag.classList.remove('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
         allTag.classList.add('bg-blue-500', 'text-white');
       }
     }
@@ -681,11 +686,11 @@ const UI = (() => {
 
     // 画像全体への指示ボタン（環境・設定カテゴリ内）
     const globalBtn = document.createElement('button');
-    globalBtn.className = 'element-card border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer min-h-[100px]';
+    globalBtn.className = 'element-card border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer min-h-[100px]';
     globalBtn.dataset.elementId = 'global';
     globalBtn.innerHTML = `
-      <span class="text-gray-400">${ICONS.globe}</span>
-      <span class="text-sm text-gray-500">画像全体への指示</span>
+      <span class="text-gray-400 dark:text-gray-500">${ICONS.globe}</span>
+      <span class="text-sm text-gray-500 dark:text-gray-400">画像全体への指示</span>
     `;
     globalBtn.addEventListener('click', () => selectElement({
       id: 'global',
@@ -703,7 +708,7 @@ const UI = (() => {
 
   function createElementCard({ id, type, name, subtitle, data, markerIndex }) {
     const card = document.createElement('button');
-    card.className = 'element-card relative bg-white border-2 border-gray-200 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
+    card.className = 'element-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 flex flex-col items-start gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-[100px]';
     card.dataset.elementId = id;
 
     // position_coords がある場合のみバッジを表示
@@ -717,8 +722,8 @@ const UI = (() => {
 
     card.innerHTML = `
       ${badgeHtml}
-      <span class="element-name font-medium text-gray-800 text-sm leading-tight">${escapeHtml(name)}</span>
-      <span class="text-xs text-gray-500 leading-tight">${escapeHtml(subtitle)}</span>
+      <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(name)}</span>
+      <span class="text-xs text-gray-500 dark:text-gray-400 leading-tight">${escapeHtml(subtitle)}</span>
     `;
 
     // ホバー時に画像上のマーカーと連動
@@ -897,14 +902,14 @@ const UI = (() => {
       const card = elements.elementsList.querySelector(`[data-element-id="${id}"]`);
       if (card) {
         card.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
-        card.classList.add('border-gray-200', 'border-gray-300');
+        card.classList.add('border-gray-200', 'dark:border-gray-700');
       }
     } else {
       // 新たに選択
       selectedElements.push({ id, type, name, data });
       const card = elements.elementsList.querySelector(`[data-element-id="${id}"]`);
       if (card) {
-        card.classList.remove('border-gray-200', 'border-gray-300');
+        card.classList.remove('border-gray-200', 'dark:border-gray-700', 'border-gray-300');
         card.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
       }
     }
@@ -946,7 +951,7 @@ const UI = (() => {
 
     selectedElements.forEach((el, i) => {
       const row = document.createElement('div');
-      row.className = 'edit-instruction-row border border-gray-200 rounded-lg p-3 space-y-2';
+      row.className = 'edit-instruction-row border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-2';
       row.dataset.instructionFor = el.id;
 
       const header = document.createElement('div');
@@ -956,7 +961,7 @@ const UI = (() => {
           <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold">${i + 1}</span>
           <span class="font-medium text-sm text-blue-600">${escapeHtml(el.name)}</span>
         </div>
-        <button class="remove-instruction text-gray-400 hover:text-red-500 text-lg leading-none" data-remove-id="${el.id}">&times;</button>
+        <button class="remove-instruction text-gray-400 dark:text-gray-500 hover:text-red-500 text-lg leading-none" data-remove-id="${el.id}">&times;</button>
       `;
 
       row.appendChild(header);
@@ -975,7 +980,7 @@ const UI = (() => {
         // 通常: テキストエリア
         const textarea = document.createElement('textarea');
         textarea.rows = 2;
-        textarea.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none';
+        textarea.className = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none';
         textarea.placeholder = getPlaceholder(el.type);
         textarea.dataset.elementId = el.id;
         if (savedValues[el.id]) textarea.value = savedValues[el.id];
@@ -1233,13 +1238,13 @@ const UI = (() => {
     entries.forEach((entry, i) => {
       const item = document.createElement('div');
       const isCurrent = i === currentIndex;
-      item.className = `group flex flex-col items-center gap-1 p-2 rounded-lg transition-all cursor-pointer ${isCurrent ? 'bg-blue-50' : 'bg-gray-50 hover:bg-gray-100'}`;
+      item.className = `group flex flex-col items-center gap-1 p-2 rounded-lg transition-all cursor-pointer ${isCurrent ? 'bg-blue-50 dark:bg-blue-900/30' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'}`;
 
       const thumbUrl = EditHistory.getThumbnailUrl(entry);
       item.innerHTML = `
-        <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 history-thumb ${isCurrent ? 'ring-2 ring-blue-500' : ''}">
+        <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 history-thumb ${isCurrent ? 'ring-2 ring-blue-500' : ''}">
           ${isCurrent ? '<span class="absolute top-0.5 left-0.5 z-10 px-1 py-0.5 text-[8px] font-bold bg-blue-500 text-white rounded">編集中</span>' : ''}
-          ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>'}
+          ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs">No img</div>'}
           <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <button class="history-dl-btn text-white hover:text-blue-300 transition-colors p-1" title="ダウンロード">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -1249,7 +1254,7 @@ const UI = (() => {
             </button>` : ''}
           </div>
         </div>
-        <span class="text-[10px] font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-600'} text-center leading-tight line-clamp-2 w-full history-thumb">${escapeHtml(entry.label)}</span>
+        <span class="text-[10px] font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-600 dark:text-gray-300'} text-center leading-tight line-clamp-2 w-full history-thumb">${escapeHtml(entry.label)}</span>
       `;
 
       // サムネイル・ラベルクリックで履歴切り替え
@@ -1350,10 +1355,10 @@ const UI = (() => {
   // --- エラー / 成功メッセージ ---
   function showError(message) {
     clearTimeout(errorTimer);
-    elements.errorToast.classList.remove('hidden', 'bg-green-100', 'border-green-400');
-    elements.errorToast.classList.add('bg-red-100', 'border-red-400');
-    elements.errorMessage.classList.remove('text-green-800');
-    elements.errorMessage.classList.add('text-red-800');
+    elements.errorToast.classList.remove('hidden', 'bg-green-100', 'dark:bg-green-900/30', 'border-green-400', 'dark:border-green-700');
+    elements.errorToast.classList.add('bg-red-100', 'dark:bg-red-900/30', 'border-red-400', 'dark:border-red-700');
+    elements.errorMessage.classList.remove('text-green-800', 'dark:text-green-300');
+    elements.errorMessage.classList.add('text-red-800', 'dark:text-red-300');
     elements.errorClose.classList.remove('text-green-500');
     elements.errorClose.classList.add('text-red-500');
 
@@ -1379,10 +1384,10 @@ const UI = (() => {
   function showSuccess(message) {
     clearTimeout(errorTimer);
     elements.errorMessage.textContent = message;
-    elements.errorToast.classList.remove('hidden', 'bg-red-100', 'border-red-400');
-    elements.errorToast.classList.add('bg-green-100', 'border-green-400');
-    elements.errorMessage.classList.remove('text-red-800');
-    elements.errorMessage.classList.add('text-green-800');
+    elements.errorToast.classList.remove('hidden', 'bg-red-100', 'dark:bg-red-900/30', 'border-red-400', 'dark:border-red-700');
+    elements.errorToast.classList.add('bg-green-100', 'dark:bg-green-900/30', 'border-green-400', 'dark:border-green-700');
+    elements.errorMessage.classList.remove('text-red-800', 'dark:text-red-300');
+    elements.errorMessage.classList.add('text-green-800', 'dark:text-green-300');
     elements.errorClose.classList.remove('text-red-500');
     elements.errorClose.classList.add('text-green-500');
     errorTimer = setTimeout(hideError, 3000);
@@ -1467,7 +1472,7 @@ const UI = (() => {
 
     results.forEach((imgData, i) => {
       const card = document.createElement('div');
-      card.className = 'relative rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-400 transition-colors cursor-pointer group';
+      card.className = 'relative rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 hover:border-blue-400 transition-colors cursor-pointer group';
 
       const img = document.createElement('img');
       img.src = `data:${imgData.mimeType};base64,${imgData.base64}`;
@@ -1637,19 +1642,19 @@ const UI = (() => {
       }
 
       container.innerHTML = projects.map(p => `
-        <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer" data-project-id="${p.id}" onclick="App.loadProject('${p.id}')">
-          <div class="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+        <div class="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" data-project-id="${p.id}" onclick="App.loadProject('${p.id}')">
+          <div class="w-16 h-16 flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center">
             ${p.thumbnail
               ? `<img src="${p.thumbnail}" alt="" class="w-full h-full object-cover">`
-              : '<svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>'
+              : '<svg class="w-8 h-8 text-gray-300 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>'
             }
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-800 truncate">${p.name}</p>
-            <p class="text-xs text-gray-400">${formatDate(p.updatedAt)} ・ 画像${p.entryCount}枚</p>
+            <p class="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">${p.name}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500">${formatDate(p.updatedAt)} ・ 画像${p.entryCount}枚</p>
           </div>
           <div class="flex gap-1 flex-shrink-0">
-            <button onclick="event.stopPropagation(); App.exportProject('${p.id}')" class="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded cursor-pointer" title="エクスポート">
+            <button onclick="event.stopPropagation(); App.exportProject('${p.id}')" class="px-2 py-1 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer" title="エクスポート">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             </button>
             <button onclick="event.stopPropagation(); App.deleteProject('${p.id}')" class="px-2 py-1 text-xs text-red-500 hover:bg-red-50 rounded cursor-pointer" title="削除">

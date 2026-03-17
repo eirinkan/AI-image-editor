@@ -670,6 +670,110 @@ button {
   }
 }
 
+/* ========== ダークモード ========== */
+
+/* CSS変数のダーク版 */
+.dark {
+  --color-bg: #111827;
+  --color-surface: #1F2937;
+  --color-text: #F9FAFB;
+  --color-text-muted: #9CA3AF;
+  --color-border: #374151;
+}
+
+/* ダークモード: ヘッダー */
+.dark header {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ダークモード: サブタブ */
+.dark .sub-tab.active {
+  background: #1F2937;
+  color: #93C5FD;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* ダークモード: スピナー */
+.dark .spinner {
+  border-color: #374151;
+  border-top-color: #60A5FA;
+}
+
+/* ダークモード: 要素カード選択時 */
+.dark .element-card.border-blue-500 {
+  background: #1e3a5f;
+}
+
+/* ダークモード: カテゴリヘッダー */
+.dark .category-header {
+  color: #9CA3AF;
+  border-bottom-color: #374151;
+}
+
+/* ダークモード: カメラUI */
+.dark .cam-visual-card {
+  background: #1F2937;
+  border-color: #374151;
+}
+.dark .cam-visual-card:hover {
+  border-color: #7C3AED;
+  background: #1F2937;
+}
+.dark .cam-visual-card .card-label {
+  color: #9CA3AF;
+}
+
+.dark .comp-visual-btn {
+  background: #1F2937;
+  border-color: #374151;
+}
+.dark .comp-visual-btn:hover {
+  border-color: #7C3AED;
+  background: #1F2937;
+}
+.dark .comp-visual-btn .card-label {
+  color: #9CA3AF;
+}
+
+/* ダークモード: スライダー */
+.dark .cam-slider {
+  background: #374151;
+}
+.dark .cam-slider::-webkit-slider-thumb {
+  border-color: #1F2937;
+}
+.dark .cam-slider::-moz-range-thumb {
+  border-color: #1F2937;
+}
+
+/* ダークモード: ローディング */
+.dark .loading-step.active .step-label {
+  color: #93C5FD;
+}
+.dark .loading-step.done .step-label {
+  color: #4ADE80;
+}
+
+/* ダークモード: カテゴリカード */
+.dark .category-card:hover {
+  border-color: #7C3AED;
+}
+.dark .category-card.selected {
+  border-color: #7C3AED;
+  background-color: rgba(139, 92, 246, 0.1);
+}
+
+/* ダークモード: アスペクト比・解像度ボタン */
+.dark .aspect-btn.selected,
+.dark .size-btn.selected {
+  background-color: rgba(139, 92, 246, 0.15);
+}
+
+/* ダークモード: Before/After スライダー */
+.dark .compare-slider {
+  background: #9CA3AF;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
