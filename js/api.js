@@ -5,17 +5,17 @@ const GeminiAPI = (() => {
 
   // 選択可能モデル定義
   const TEXT_MODELS = [
-    { id: 'gemini-2.5-pro-preview-06-05', name: '2.5 Pro', cost: '標準', note: '高精度。複雑な分析・指示に強い' },
+    { id: 'gemini-2.5-pro', name: '2.5 Pro', cost: '標準', note: '高精度。複雑な分析・指示に強い' },
     { id: 'gemini-3.1-pro-preview', name: '3.1 Pro', cost: '最高', note: '最新・最高精度。コスト高' },
   ];
 
   const IMAGE_MODELS = [
     { id: 'gemini-3.1-flash-image-preview', name: '3.1 Flash（Nano Banana 2）', cost: '標準', note: '高速・低コスト。品質は十分実用的' },
-    { id: 'gemini-3.1-pro-image-preview', name: '3.1 Pro（Nano Banana Pro）', cost: '高い', note: '高品質。ディテールや構図の忠実度が上がる' },
+    { id: 'gemini-3-pro-image-preview', name: '3 Pro（Nano Banana Pro）', cost: '高い', note: '高品質。ディテールや構図の忠実度が上がる' },
   ];
 
   // デフォルトモデル
-  const DEFAULT_TEXT_MODEL = 'gemini-2.5-pro-preview-06-05';
+  const DEFAULT_TEXT_MODEL = 'gemini-2.5-pro';
   const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-image-preview';
 
   // 動的モデル取得（存在しないモデルが保存されている場合はデフォルトに戻す）
