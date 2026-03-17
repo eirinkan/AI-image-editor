@@ -1008,9 +1008,16 @@ const UI = (() => {
       }
       const marker = document.querySelector(`.image-marker[data-element-id="${id}"]`);
       if (marker) marker.classList.remove('selected');
-      // グループの場合、メンバーのマーカーも解除
+      // グループの場合、メンバーも選択解除
       if (type === 'group' && data && data.memberIds) {
-        data.memberIds.forEach(memberId => {
+        data.memberIds.forEach((memberId, idx) => {
+          const mi = selectedElements.findIndex(el => el.id === memberId);
+          if (mi >= 0) selectedElements.splice(mi, 1);
+          const memberCard = elements.elementsList.querySelector(`[data-element-id="${memberId}"]`);
+          if (memberCard) {
+            memberCard.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
+            memberCard.classList.add('border-gray-200', 'dark:border-gray-700');
+          }
           const m = document.querySelector(`.image-marker[data-element-id="${memberId}"]`);
           if (m) m.classList.remove('selected');
         });
@@ -1025,9 +1032,17 @@ const UI = (() => {
       }
       const marker = document.querySelector(`.image-marker[data-element-id="${id}"]`);
       if (marker) marker.classList.add('selected');
-      // グループの場合、メンバーのマーカーも選択
-      if (type === 'group' && data && data.memberIds) {
-        data.memberIds.forEach(memberId => {
+      // グループの場合、メンバーも個別に選択
+      if (type === 'group' && data && data.members && data.memberIds) {
+        data.members.forEach((member, idx) => {
+          const memberId = data.memberIds[idx];
+          if (selectedElements.some(el => el.id === memberId)) return;
+          selectedElements.push({ id: memberId, type: 'object', name: member.name || member.name_en, data: member });
+          const memberCard = elements.elementsList.querySelector(`[data-element-id="${memberId}"]`);
+          if (memberCard) {
+            memberCard.classList.remove('border-gray-200', 'dark:border-gray-700', 'border-gray-300');
+            memberCard.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
+          }
           const m = document.querySelector(`.image-marker[data-element-id="${memberId}"]`);
           if (m) m.classList.add('selected');
         });
