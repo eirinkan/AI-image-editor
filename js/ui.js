@@ -35,6 +35,11 @@ const UI = (() => {
   // cancelBtnのイベントハンドラ（cloneNodeを使わず付け替えで管理）
   let cancelHandler = null;
 
+  // 粒度フィルタリング用の現在レベル（1-6）
+  let currentDetailLevel = 2;
+  // 現在表示中のJSON（粒度変更時に再描画するために保持）
+  let currentRenderJson = null;
+
   // 初期化
   function init() {
     cacheElements();
@@ -281,6 +286,18 @@ const UI = (() => {
     elements.helpBtn.addEventListener('click', () => elements.helpModal.classList.remove('hidden'));
     elements.helpClose.addEventListener('click', () => elements.helpModal.classList.add('hidden'));
     elements.helpModal.addEventListener('click', (e) => { if (e.target === elements.helpModal) elements.helpModal.classList.add('hidden'); });
+
+    // 粒度スライダー
+    const detailLevelSlider = document.getElementById('detailLevel');
+    if (detailLevelSlider) {
+      detailLevelSlider.addEventListener('input', () => {
+        currentDetailLevel = parseInt(detailLevelSlider.value);
+        updateDetailLevelLabel();
+        if (currentRenderJson) {
+          renderElements(currentRenderJson);
+        }
+      });
+    }
 
     // APIキー（自動保存）
     elements.apiKeyToggle.addEventListener('click', toggleApiKeyVisibility);
@@ -662,63 +679,96 @@ const UI = (() => {
     return Object.values(nameMap).filter(g => g.members.length >= 2);
   }
 
+  // 粒度レベルのラベル更新
+  function updateDetailLevelLabel() {
+    const labels = {
+      1: 'メイン要素のみ',
+      2: 'サブ要素まで',
+      3: 'メイン詳細まで',
+      4: 'サブ詳細まで',
+      5: '背景要素まで',
+      6: 'すべて表示',
+    };
+    const labelEl = document.getElementById('detailLevelLabel');
+    if (labelEl) labelEl.textContent = labels[currentDetailLevel] || '';
+  }
+
+  // priority値に基づいてフィルタリング（priorityがない要素はレベル2として扱う）
+  function filterByPriority(arr) {
+    if (!arr) return [];
+    return arr.filter(item => (item.priority || 2) <= currentDetailLevel);
+  }
+
   // --- 要素カード表示 ---
   function renderElements(json) {
+    // 元のJSONを保持（粒度変更時に再描画するため）
+    currentRenderJson = json;
+
     elements.elementsSection.classList.remove('hidden');
     elements.elementsList.innerHTML = '';
+
+    // 粒度フィルタリング
+    const filteredObjects = filterByPriority(json.objects);
+    const filteredPeople = filterByPriority(json.people);
+    const filteredTextElements = filterByPriority(json.text_elements);
+    const filteredRegions = filterByPriority(json.regions);
+
+    // 表示件数を更示
+    const totalAll = (json.objects?.length || 0) + (json.people?.length || 0) + (json.text_elements?.length || 0) + (json.regions?.length || 0);
+    const totalFiltered = filteredObjects.length + filteredPeople.length + filteredTextElements.length + filteredRegions.length;
+    const countEl = document.getElementById('detailLevelCount');
+    if (countEl) countEl.textContent = `${totalFiltered} / ${totalAll} 要素を表示中`;
 
     // マーカーインデックスカウンター（objects→text_elements→peopleの順）
     let markerIndex = 1;
 
     // オブジェクト・人物（統合表示）
-    const objectCount = (json.objects?.length || 0) + (json.people?.length || 0);
+    const objectCount = filteredObjects.length + filteredPeople.length;
     if (objectCount > 0) {
-      if (json.objects) {
-        json.objects.forEach((obj, i) => {
-          const card = createElementCard({
-            id: obj.id || `obj_${i}`,
-            type: 'object',
-            name: obj.name || obj.name_en,
-            data: obj,
-            markerIndex: markerIndex,
-          });
-          elements.elementsList.appendChild(card);
-          markerIndex++;
+      filteredObjects.forEach((obj, i) => {
+        const origIndex = json.objects.indexOf(obj);
+        const card = createElementCard({
+          id: obj.id || `obj_${origIndex}`,
+          type: 'object',
+          name: obj.name || obj.name_en,
+          data: obj,
+          markerIndex: markerIndex,
         });
-      }
-      if (json.people) {
-        json.people.forEach((p, i) => {
-          const card = createElementCard({
-            id: p.id || `person_${i}`,
-            type: 'person',
-            name: p.description || `人物 ${i + 1}`,
-            data: p,
-            markerIndex: markerIndex,
-          });
-          elements.elementsList.appendChild(card);
-          markerIndex++;
+        elements.elementsList.appendChild(card);
+        markerIndex++;
+      });
+      filteredPeople.forEach((p, i) => {
+        const origIndex = json.people.indexOf(p);
+        const card = createElementCard({
+          id: p.id || `person_${origIndex}`,
+          type: 'person',
+          name: p.description || `人物 ${i + 1}`,
+          data: p,
+          markerIndex: markerIndex,
         });
-      }
+        elements.elementsList.appendChild(card);
+        markerIndex++;
+      });
     }
 
     // グループ（同種オブジェクト・リージョン・環境設定を統合）
     {
       const groupItems = [];
 
-      // 同種オブジェクトの自動グループ化
-      if (json.objects && json.objects.length > 0) {
-        const groups = computeAutoGroups(json.objects);
+      // 同種オブジェクトの自動グループ化（フィルタ済みオブジェクトで）
+      if (filteredObjects.length > 0) {
+        const groups = computeAutoGroups(filteredObjects);
         groups.forEach((group, i) => {
-          // メンバーIDを事前計算（selectElement内で参照するため）
           const memberIds = group.members.map(member => member.id || `obj_${json.objects.indexOf(member)}`);
           groupItems.push({ id: `group_${i}`, type: 'group', name: `${group.name}（${group.members.length}個）`, data: { ...group, members: group.members, memberIds }, cardClass: 'group-card' });
         });
       }
 
-      // リージョン
-      if (json.regions?.length > 0) {
-        json.regions.forEach((region, i) => {
-          groupItems.push({ id: region.id || `region_${i}`, type: 'region', name: region.name || region.name_en, data: region, cardClass: 'region-card' });
+      // リージョン（フィルタ済み）
+      if (filteredRegions.length > 0) {
+        filteredRegions.forEach((region, i) => {
+          const origIndex = json.regions.indexOf(region);
+          groupItems.push({ id: region.id || `region_${origIndex}`, type: 'region', name: region.name || region.name_en, data: region, cardClass: 'region-card' });
         });
       }
 
@@ -915,28 +965,36 @@ const UI = (() => {
     }
   }
 
-  // JSON内のオブジェクト・テキスト・人物を統一リストに展開
+  // JSON内のオブジェクト・テキスト・人物を統一リストに展開（粒度フィルタ適用）
   function flattenElements(json) {
     const list = [];
     let markerIndex = 1;
     if (json.objects) {
       json.objects.forEach((obj, i) => {
-        list.push({ item: obj, type: 'object', id: obj.id || `obj_${i}`, markerIndex: markerIndex++ });
+        if ((obj.priority || 2) <= currentDetailLevel) {
+          list.push({ item: obj, type: 'object', id: obj.id || `obj_${i}`, markerIndex: markerIndex++ });
+        }
       });
     }
     if (json.text_elements) {
       json.text_elements.forEach((te, i) => {
-        list.push({ item: te, type: 'text', id: te.id || `text_${i}`, markerIndex: markerIndex++ });
+        if ((te.priority || 2) <= currentDetailLevel) {
+          list.push({ item: te, type: 'text', id: te.id || `text_${i}`, markerIndex: markerIndex++ });
+        }
       });
     }
     if (json.people) {
       json.people.forEach((p, i) => {
-        list.push({ item: p, type: 'person', id: p.id || `person_${i}`, markerIndex: markerIndex++ });
+        if ((p.priority || 2) <= currentDetailLevel) {
+          list.push({ item: p, type: 'person', id: p.id || `person_${i}`, markerIndex: markerIndex++ });
+        }
       });
     }
     if (json.regions) {
       json.regions.forEach((r, i) => {
-        list.push({ item: r, type: 'region', id: r.id || `region_${i}`, markerIndex: markerIndex++ });
+        if ((r.priority || 5) <= currentDetailLevel) {
+          list.push({ item: r, type: 'region', id: r.id || `region_${i}`, markerIndex: markerIndex++ });
+        }
       });
     }
     return list;

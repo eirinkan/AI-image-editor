@@ -59,23 +59,32 @@ const GeminiAPI = (() => {
   // フォーカスタグに応じた分析プロンプトを構築
   function buildAnalysisPrompt(focusTags, customInstruction) {
     const focusInstructions = {
-      'all': `Analyze this image exhaustively. Your goal is to detect AS MANY elements as possible — the user needs a comprehensive inventory of everything visible in this image. Do NOT skip anything, even if it seems small, partially visible, or unimportant.
+      'all': `Analyze this image exhaustively. Your goal is to detect AS MANY elements as possible at multiple levels of detail. The user needs a comprehensive, hierarchical inventory of everything visible.
 
-Identify ALL elements in these categories:
-- Large furniture & major objects (tables, chairs, sofas, beds, shelves, cabinets, appliances, etc.)
-- Small objects & accessories (cups, books, plants, vases, remote controls, cushions, picture frames, candles, bottles, bags, etc.)
-- Decorative elements (artwork, posters, wall hangings, ornaments, figurines, patterns on fabric, etc.)
-- Architectural elements (doors, windows, walls, columns, stairs, railings, moldings, ceiling fixtures, outlets, switches, etc.)
-- Surfaces & materials (flooring type, wall finish, countertop material, rug/carpet, curtains/blinds, etc.)
-- Background elements (items partially visible, objects seen through windows, reflections in mirrors, etc.)
-- Lighting fixtures (lamps, ceiling lights, sconces, candles, LED strips, natural light sources)
+Each element MUST have a "priority" field (integer 1-6) indicating its detail level:
+  1 = Main elements: Large, prominent objects that dominate the scene (large furniture, vehicles, main subjects, people)
+  2 = Sub elements: Supporting objects, smaller items, accessories (cushions, books, cups, plants, decorative items, small furniture)
+  3 = Main element details: Parts/details OF main elements (table legs, sofa cushion seams, chair armrests, clothing buttons, shoe laces)
+  4 = Sub element details: Parts/details OF sub elements (vase patterns, book spines, plant leaves, label text on bottles)
+  5 = Background elements: Walls, floors, ceilings, sky, distant scenery, large architectural surfaces, windows as openings
+  6 = Background element details: Wall stains, cracks, power outlets, light switches, shadows on walls, reflections, dust, subtle textures
+
+Identify ALL elements across these categories:
+- Large furniture & major objects (tables, chairs, sofas, beds, shelves, cabinets, appliances)
+- Small objects & accessories (cups, books, plants, vases, remote controls, cushions, frames, candles, bottles, bags)
+- Decorative elements (artwork, posters, wall hangings, ornaments, figurines, fabric patterns)
+- Architectural elements (doors, windows, columns, stairs, railings, moldings, ceiling fixtures, outlets, switches)
+- Surfaces & materials (flooring, wall finish, countertop material, rug/carpet, curtains/blinds)
+- Background elements (items partially visible, objects through windows, reflections in mirrors)
+- Lighting fixtures (lamps, ceiling lights, sconces, candles, LED strips, natural light)
+- Parts and details of ALL above elements (legs, handles, knobs, seams, patterns, labels, screws)
 - Text, logos, signage, labels on any object
 - People (clothing, pose, position, accessories) if present
 - Scene type (indoor/outdoor), style, atmosphere
 - Weather/time of day if visible
 - Camera perspective (angle, focal length estimate)
 
-IMPORTANT: List at least 15-30 objects in the "objects" array. Even mundane items like a power outlet, a door handle, a shadow on the wall, or a fold in a curtain should be listed. More is always better — the user will select which elements to edit.`,
+IMPORTANT: List at least 40-60 objects in the "objects" array. Include parts and details of larger objects as separate entries (e.g., a sofa AND its cushions AND its legs as separate objects). Even mundane items like a power outlet, a door handle, a shadow, or a fold in a curtain should be listed. More is always better.`,
 
       'furniture': `Focus specifically on furniture and objects in this image. For EACH item provide extremely detailed analysis:
 - Exact name/type of furniture
@@ -180,6 +189,7 @@ IMPORTANT: All people descriptions (description, clothing, pose, position fields
       "id": "unique_id",
       "name": "object name in Japanese",
       "name_en": "object name in English",
+      "priority": 1,
       "color": "specific color",
       "material": "specific material",
       "position": "position description",
@@ -191,6 +201,7 @@ IMPORTANT: All people descriptions (description, clothing, pose, position fields
     {
       "id": "unique_id",
       "content": "exact text",
+      "priority": 2,
       "style": "font/style description",
       "position": "position description",
       "position_coords": { "x": 0.5, "y": 0.3 }
@@ -200,6 +211,7 @@ IMPORTANT: All people descriptions (description, clothing, pose, position fields
     {
       "id": "unique_id",
       "description": "brief description in Japanese",
+      "priority": 1,
       "clothing": "clothing description in Japanese",
       "pose": "pose description in Japanese",
       "position": "position description in Japanese",
@@ -211,6 +223,7 @@ IMPORTANT: All people descriptions (description, clothing, pose, position fields
       "id": "region_sky",
       "name": "青空",
       "name_en": "blue sky",
+      "priority": 5,
       "type": "background|surface|structure",
       "description": "広域の面的要素の説明",
       "position_coords": { "x": 0.5, "y": 0.15 }
@@ -218,10 +231,19 @@ IMPORTANT: All people descriptions (description, clothing, pose, position fields
   ]
 }
 
-Also identify large-area or background regions (sky, ground, walls, water, floor, ceiling, etc.) in the "regions" array. These are elements too large or diffuse to list as individual objects. Identify 2-8 regions. If none, use empty array.
+Also identify large-area or background regions (sky, ground, walls, water, floor, ceiling, etc.) in the "regions" array. These are elements too large or diffuse to list as individual objects. Identify 3-10 regions. If none, use empty array.
 
-IMPORTANT: Detect as many elements as possible. It is far better to include too many elements than too few — the user needs a rich inventory to choose from. If no text/people/etc are found, use empty arrays.
-For each element in objects, text_elements, and people, position_coords must be the approximate center of the object as a fraction of image width (x) and height (y), ranging from 0.0 to 1.0. For example, an object in the top-left quarter would have {"x": 0.25, "y": 0.25}.
+CRITICAL RULES:
+1. Every element in objects, text_elements, people, and regions MUST have a "priority" field (1-6). Assign priority based on:
+   - 1: Main scene elements (large, prominent, focal point)
+   - 2: Sub elements (smaller, supporting, accessory)
+   - 3: Details/parts of priority 1 elements
+   - 4: Details/parts of priority 2 elements
+   - 5: Background surfaces and large areas (walls, floor, sky)
+   - 6: Tiny details of background (outlets, stains, shadows, cracks)
+2. Detect as many elements as possible (aim for 40-60 objects). Include parts of larger objects as separate entries with higher priority numbers.
+3. If no text/people/etc are found, use empty arrays.
+4. For each element, position_coords must be the approximate center as a fraction of image width (x) and height (y), 0.0 to 1.0.
 Output ONLY the JSON, no other text.`;
 
     return prompt;

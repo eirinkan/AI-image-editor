@@ -547,6 +547,24 @@
         <span class="text-xs font-bold text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md">STEP 2</span>
         <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">検出された要素を選択する</span>
       </h2>
+      <!-- 粒度スライダー -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 mb-3">
+        <div class="flex items-center gap-3">
+          <label for="detailLevel" class="text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">表示レベル</label>
+          <input type="range" id="detailLevel" min="1" max="6" value="2" step="1"
+            class="flex-1 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500">
+          <span id="detailLevelLabel" class="text-xs font-medium text-blue-600 dark:text-blue-400 min-w-[6rem] text-right">サブ要素まで</span>
+        </div>
+        <div class="flex justify-between text-[10px] text-gray-400 dark:text-gray-500 mt-1 px-0.5">
+          <span>メイン</span>
+          <span>サブ</span>
+          <span>メイン詳細</span>
+          <span>サブ詳細</span>
+          <span>背景</span>
+          <span>背景詳細</span>
+        </div>
+        <p id="detailLevelCount" class="text-[11px] text-gray-400 dark:text-gray-500 mt-1"></p>
+      </div>
       <div id="elementsList" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         <!-- 要素カードがここに動的に挿入される -->
       </div>
@@ -815,11 +833,11 @@
   </script>
 
   <!-- スクリプト -->
-  <script src="js/api.js?v=14"></script>
+  <script src="js/api.js?v=15"></script>
   <script src="js/storage.js?v=2"></script>
   <script src="js/history.js?v=13"></script>
   <script src="js/camera-editor.js?v=5"></script>
-  <script src="js/ui.js?v=37"></script>
+  <script src="js/ui.js?v=38"></script>
   <script src="js/generate.js?v=17"></script>
   <script src="js/app.js?v=20"></script>
 </body>
