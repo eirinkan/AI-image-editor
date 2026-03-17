@@ -211,6 +211,12 @@ const App = (() => {
     if (fileInput) fileInput.value = '';
     if (markerColumn) markerColumn.classList.add('hidden');
 
+    // 履歴サイドバーを非表示にしてクリア
+    const historySidebar = document.getElementById('historySidebar');
+    const historyTimeline = document.getElementById('historyTimeline');
+    if (historySidebar) historySidebar.classList.add('hidden');
+    if (historyTimeline) historyTimeline.innerHTML = '';
+
     // タブバー復活、アップロードタブに戻す
     if (subTabBar) subTabBar.classList.remove('hidden');
     if (uploadPanel) uploadPanel.classList.remove('hidden');
