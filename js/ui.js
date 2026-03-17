@@ -159,6 +159,32 @@ const UI = (() => {
       });
     }
 
+    // 画像拡大モーダル
+    const zoomModal = document.getElementById('imageZoomModal');
+    const zoomImg = document.getElementById('imageZoomImg');
+    if (zoomModal) {
+      // クリックで閉じる
+      zoomModal.addEventListener('click', () => zoomModal.classList.add('hidden'));
+      // Escで閉じる
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !zoomModal.classList.contains('hidden')) {
+          zoomModal.classList.add('hidden');
+        }
+      });
+      // 対象画像にクリックイベント
+      ['previewImageClean', 'previewImage'].forEach(id => {
+        const img = document.getElementById(id);
+        if (img) {
+          img.style.cursor = 'zoom-in';
+          img.addEventListener('click', (e) => {
+            e.stopPropagation();
+            zoomImg.src = img.src;
+            zoomModal.classList.remove('hidden');
+          });
+        }
+      });
+    }
+
     // プロジェクト保存・一覧モーダル
     elements.saveProjectBtn.addEventListener('click', () => showSaveDialog());
     elements.saveProjectClose.addEventListener('click', () => hideSaveDialog());
@@ -302,13 +328,13 @@ const UI = (() => {
   // コスト定義
   // テキスト処理: 中央値（概算 ¥/回）
   const TEXT_COST_MAP = {
-    'gemini-2.5-pro':         { analysis: '¥3',   edit: '¥2',   prompt: '¥2' },
-    'gemini-3.1-pro-preview': { analysis: '¥5',   edit: '¥3',   prompt: '¥3' },
+    'gemini-2.5-pro':         { analysis: '¥5',   edit: '¥3',   prompt: '¥2' },
+    'gemini-3.1-pro-preview': { analysis: '¥6',   edit: '¥4',   prompt: '¥2' },
   };
   // 画像生成: サイズ別（概算 ¥/回）
   const IMAGE_COST_MAP = {
-    'gemini-3.1-flash-image-preview': { '1K': '¥3',  '2K': '¥5',  '4K': '¥10' },
-    'gemini-3-pro-image-preview':     { '1K': '¥5',  '2K': '¥10', '4K': '¥20' },
+    'gemini-3.1-flash-image-preview': { '1K': '¥7',  '2K': '¥12', '4K': '¥23' },
+    'gemini-3-pro-image-preview':     { '1K': '¥20', '2K': '¥28', '4K': '¥36' },
   };
 
   function initModelSelectors() {
@@ -594,7 +620,6 @@ const UI = (() => {
     // オブジェクト・人物（統合表示）
     const objectCount = (json.objects?.length || 0) + (json.people?.length || 0);
     if (objectCount > 0) {
-      elements.elementsList.appendChild(createCategoryHeader(ICONS.cube, `オブジェクト (${objectCount})`));
       if (json.objects) {
         json.objects.forEach((obj, i) => {
           const card = createElementCard({
@@ -623,106 +648,91 @@ const UI = (() => {
       }
     }
 
-    // テキスト要素
-    if (json.text_elements && json.text_elements.length > 0) {
-      elements.elementsList.appendChild(createCategoryHeader(ICONS.text, `テキスト (${json.text_elements.length})`));
-      json.text_elements.forEach((te, i) => {
-        const card = createElementCard({
-          id: te.id || `text_${i}`,
-          type: 'text',
-          name: te.content,
-          data: te,
-          markerIndex: markerIndex,
-        });
-        elements.elementsList.appendChild(card);
-        markerIndex++;
-      });
-    }
+    // グループ（同種オブジェクト・リージョン・環境設定を統合）
+    {
+      const groupItems = [];
 
-    // グループ（同種オブジェクトの自動グループ化）
-    if (json.objects && json.objects.length > 0) {
-      const groups = computeAutoGroups(json.objects);
-      if (groups.length > 0) {
-        elements.elementsList.appendChild(createCategoryHeader(ICONS.group, `グループ (${groups.length})`));
+      // 同種オブジェクトの自動グループ化
+      if (json.objects && json.objects.length > 0) {
+        const groups = computeAutoGroups(json.objects);
         groups.forEach((group, i) => {
-          const card = document.createElement('button');
-          card.className = 'element-card group-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
-          card.dataset.elementId = `group_${i}`;
-          card.innerHTML = `
-            <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(group.name)}（${group.members.length}個）</span>
-          `;
-          card.addEventListener('click', () => selectElement({
-            id: `group_${i}`,
-            type: 'group',
-            name: `${group.name}（${group.members.length}個）`,
-            data: { ...group, members: group.members },
-          }));
-          elements.elementsList.appendChild(card);
+          groupItems.push({ id: `group_${i}`, type: 'group', name: `${group.name}（${group.members.length}個）`, data: { ...group, members: group.members }, cardClass: 'group-card' });
+        });
+      }
+
+      // リージョン
+      if (json.regions?.length > 0) {
+        json.regions.forEach((region, i) => {
+          groupItems.push({ id: region.id || `region_${i}`, type: 'region', name: region.name || region.name_en, data: region, cardClass: 'region-card' });
+        });
+      }
+
+      // 雰囲気・照明
+      if (json.atmosphere) {
+        groupItems.push({ id: 'atmosphere', type: 'atmosphere', name: '雰囲気・照明', data: json.atmosphere });
+      }
+
+      // カメラ・構図
+      if (json.camera) {
+        groupItems.push({ id: 'camera', type: 'camera', name: 'カメラ・構図', data: json.camera });
+      }
+
+      // 全体
+      groupItems.push({ id: 'global', type: 'global', name: '全体', data: json });
+
+      if (groupItems.length > 0) {
+        elements.elementsList.appendChild(createCategoryHeader(ICONS.group, `グループ (${groupItems.length})`));
+        groupItems.forEach(item => {
+          if (item.type === 'group') {
+            const card = document.createElement('button');
+            card.className = 'element-card group-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
+            card.dataset.elementId = item.id;
+            card.innerHTML = `<span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(item.name)}</span>`;
+            card.addEventListener('click', () => selectElement(item));
+            card.addEventListener('mouseenter', () => {
+              item.data.members.forEach(member => {
+                const memberId = member.id || `obj_${json.objects.indexOf(member)}`;
+                const marker = document.querySelector(`.image-marker[data-element-id="${memberId}"]`);
+                if (marker) marker.classList.add('active');
+              });
+            });
+            card.addEventListener('mouseleave', () => {
+              item.data.members.forEach(member => {
+                const memberId = member.id || `obj_${json.objects.indexOf(member)}`;
+                const marker = document.querySelector(`.image-marker[data-element-id="${memberId}"]`);
+                if (marker) marker.classList.remove('active');
+              });
+            });
+            elements.elementsList.appendChild(card);
+          } else if (item.type === 'global') {
+            const globalBtn = document.createElement('button');
+            globalBtn.className = 'element-card border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer min-h-0';
+            globalBtn.dataset.elementId = 'global';
+            globalBtn.innerHTML = `<span class="text-sm text-gray-600 dark:text-gray-300 font-medium">全体</span>`;
+            globalBtn.addEventListener('click', () => selectElement(item));
+            elements.elementsList.appendChild(globalBtn);
+          } else if (item.cardClass === 'region-card') {
+            const card = document.createElement('button');
+            card.className = 'element-card region-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
+            card.dataset.elementId = item.id;
+            card.innerHTML = `<span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(item.name)}</span>`;
+            card.addEventListener('click', () => selectElement(item));
+            card.addEventListener('mouseenter', () => {
+              const marker = document.querySelector(`.image-marker[data-element-id="${item.id}"]`);
+              if (marker) marker.classList.add('active');
+            });
+            card.addEventListener('mouseleave', () => {
+              const marker = document.querySelector(`.image-marker[data-element-id="${item.id}"]`);
+              if (marker) marker.classList.remove('active');
+            });
+            elements.elementsList.appendChild(card);
+          } else {
+            const card = createElementCard({ id: item.id, type: item.type, name: item.name, data: item.data });
+            elements.elementsList.appendChild(card);
+          }
         });
       }
     }
-
-    // リージョン（面的・背景要素）
-    if (json.regions?.length > 0) {
-      elements.elementsList.appendChild(createCategoryHeader(ICONS.region, `リージョン (${json.regions.length})`));
-      json.regions.forEach((region, i) => {
-        const card = document.createElement('button');
-        card.className = 'element-card region-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
-        card.dataset.elementId = region.id || `region_${i}`;
-        card.innerHTML = `
-          <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(region.name || region.name_en)}</span>
-        `;
-        card.addEventListener('click', () => selectElement({
-          id: region.id || `region_${i}`,
-          type: 'region',
-          name: region.name || region.name_en,
-          data: region,
-        }));
-        elements.elementsList.appendChild(card);
-      });
-    }
-
-    // 環境・設定カテゴリ（常に表示）
-    elements.elementsList.appendChild(createCategoryHeader(ICONS.globe, '環境・設定'));
-
-    // 雰囲気・照明（常に表示・マーカーなし）
-    if (json.atmosphere) {
-      const atm = json.atmosphere;
-      const card = createElementCard({
-        id: 'atmosphere',
-        type: 'atmosphere',
-        name: '雰囲気・照明',
-        data: atm,
-      });
-      elements.elementsList.appendChild(card);
-    }
-
-    // カメラ（マーカーなし）
-    if (json.camera) {
-      const cam = json.camera;
-      const card = createElementCard({
-        id: 'camera',
-        type: 'camera',
-        name: 'カメラ・構図',
-        data: cam,
-      });
-      elements.elementsList.appendChild(card);
-    }
-
-    // 画像全体への指示ボタン（環境・設定カテゴリ内）
-    const globalBtn = document.createElement('button');
-    globalBtn.className = 'element-card border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer min-h-0';
-    globalBtn.dataset.elementId = 'global';
-    globalBtn.innerHTML = `
-      <span class="text-sm text-gray-600 dark:text-gray-300 font-medium">全体</span>
-    `;
-    globalBtn.addEventListener('click', () => selectElement({
-      id: 'global',
-      type: 'global',
-      name: '全体',
-      data: json,
-    }));
-    elements.elementsList.appendChild(globalBtn);
 
     // 画像上にマーカーを描画 & マーカーカラム表示
     renderMarkers(json);
@@ -867,6 +877,11 @@ const UI = (() => {
     if (json.people) {
       json.people.forEach((p, i) => {
         list.push({ item: p, type: 'person', id: p.id || `person_${i}`, markerIndex: markerIndex++ });
+      });
+    }
+    if (json.regions) {
+      json.regions.forEach((r, i) => {
+        list.push({ item: r, type: 'region', id: r.id || `region_${i}`, markerIndex: markerIndex++ });
       });
     }
     return list;
