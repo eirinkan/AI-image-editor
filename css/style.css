@@ -310,7 +310,7 @@ button {
 
 /* グループカード（amber系ボーダー） */
 .element-card.group-card {
-  background: #fffbeb;
+  background: transparent;
 }
 
 /* グループ個数バッジ */
@@ -335,15 +335,15 @@ button {
 
 /* リージョンカード（emerald系ボーダー） */
 .element-card.region-card {
-  background: #ecfdf5;
+  background: transparent;
 }
 
 /* グループ・リージョン選択時 */
 .element-card.group-card.border-blue-500 {
-  background: #fef3c7;
+  background: transparent;
 }
 .element-card.region-card.border-blue-500 {
-  background: #d1fae5;
+  background: transparent;
 }
 
 /* 編集指示入力欄 */
