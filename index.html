@@ -536,19 +536,12 @@
 
     <!-- Step 2: 分析フォーカス -->
     <section id="analysisSection" class="hidden">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
-        <div class="flex gap-3">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+        <div class="flex gap-2 items-center">
           <input type="text" id="customInstruction"
-            class="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+            class="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent"
             placeholder="追加の指示（例: 小物を細かく検出して）">
-          <button id="analyzeBtn" class="px-6 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all font-medium text-sm shadow-md hover:shadow-lg flex items-center gap-2 flex-shrink-0 cursor-pointer">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            分析する
-          </button>
-        </div>
-        <div class="flex items-center gap-2">
-          <label for="detailLevel" class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">表示レベル</label>
-          <select id="detailLevel" class="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent cursor-pointer">
+          <select id="detailLevel" class="px-2 py-2 text-xs border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent cursor-pointer flex-shrink-0">
             <option value="1">メイン要素のみ</option>
             <option value="2" selected>サブ要素まで</option>
             <option value="3">メイン詳細まで</option>
@@ -556,7 +549,11 @@
             <option value="5">背景要素まで</option>
             <option value="6">すべて表示</option>
           </select>
-          <span id="detailLevelCount" class="text-[11px] text-gray-400 dark:text-gray-500"></span>
+          <span id="detailLevelCount" class="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap hidden"></span>
+          <button id="analyzeBtn" class="px-5 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all font-medium text-sm shadow-md hover:shadow-lg flex items-center gap-1.5 flex-shrink-0 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            分析
+          </button>
         </div>
       </div>
     </section>
