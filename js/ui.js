@@ -756,13 +756,12 @@ const UI = (() => {
     globalBtn.className = 'element-card border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer min-h-0';
     globalBtn.dataset.elementId = 'global';
     globalBtn.innerHTML = `
-      <span class="text-gray-400 dark:text-gray-400">${ICONS.globe}</span>
-      <span class="text-sm text-gray-500 dark:text-gray-400">画像全体への指示</span>
+      <span class="text-sm text-gray-600 dark:text-gray-300 font-medium">全体</span>
     `;
     globalBtn.addEventListener('click', () => selectElement({
       id: 'global',
       type: 'global',
-      name: '画像全体',
+      name: '全体',
       data: json,
     }));
     elements.elementsList.appendChild(globalBtn);
@@ -780,8 +779,10 @@ const UI = (() => {
 
     // position_coords がある場合のみバッジを表示
     let badgeHtml = '';
-    if (markerIndex && data.position_coords) {
+    const hasBadge = markerIndex && data.position_coords;
+    if (hasBadge) {
       badgeHtml = `<span class="element-badge">${markerIndex}</span>`;
+      card.classList.add('pl-5'); // バッジ分のパディング
     }
 
     // 編集可能な要素タイプか判定（atmosphere, camera, global以外）

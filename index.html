@@ -172,14 +172,14 @@
               <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
               <div>
                 <p class="font-semibold text-gray-800 dark:text-gray-100">要素を選択</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">変更したい要素カードをクリック（複数選択可）。同種オブジェクトのグループや背景リージョンも自動検出。画像全体への指示は「画像全体」を選択。</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">変更したい要素カードをクリック（複数選択可）。同種オブジェクトのグループや背景リージョンも自動検出。画像全体への指示は「全体」を選択。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
               <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">4</span>
               <div>
                 <p class="font-semibold text-gray-800 dark:text-gray-100">変更内容を入力</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">テキストで指示を書きます。プリセットテンプレート（雰囲気・画像全体・リージョン選択時に表示）を使えば入力の手間が省けます。</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">テキストで指示を書きます。プリセットテンプレート（雰囲気・全体・リージョン選択時に表示）を使えば入力の手間が省けます。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
@@ -241,7 +241,7 @@
                 <span class="text-base leading-none mt-0.5">⚡</span>
                 <div>
                   <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">プリセット</p>
-                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">雰囲気・スタイルをワンクリックで指定（雰囲気/画像全体/リージョン選択時）</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">雰囲気・スタイルをワンクリックで指定（雰囲気/全体/リージョン選択時）</p>
                 </div>
               </div>
               <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
@@ -573,14 +573,14 @@
 
     <!-- 要素一覧 -->
     <section id="elementsSection" class="hidden">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">検出された要素</h2>
-      <p class="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg p-2.5 text-amber-700 dark:text-amber-400 font-medium text-xs mb-4 flex items-center gap-1.5 leading-relaxed">
-        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
-        <span>要素名は画像生成に影響します。ダブルクリックで変更可能。</span>
-      </p>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">検出された要素</h2>
       <div id="elementsList" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         <!-- 要素カードがここに動的に挿入される -->
       </div>
+      <p class="text-gray-400 dark:text-gray-500 text-xs mt-2 flex items-center gap-1.5 leading-relaxed">
+        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>要素名は画像生成に影響します。ダブルクリックで変更可能。</span>
+      </p>
     </section>
 
     <!-- 編集パネル -->
@@ -840,7 +840,7 @@
   <script src="js/storage.js?v=1"></script>
   <script src="js/history.js?v=13"></script>
   <script src="js/camera-editor.js?v=5"></script>
-  <script src="js/ui.js?v=27"></script>
+  <script src="js/ui.js?v=28"></script>
   <script src="js/generate.js?v=14"></script>
   <script src="js/app.js?v=16"></script>
 </body>
