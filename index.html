@@ -2,6 +2,15 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <!-- ダークモード早期適用（フラッシュ防止） -->
+  <script>
+    (function() {
+      var theme = localStorage.getItem('theme') || 'light';
+      if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; img-src 'self' data: blob:; connect-src 'self' https://generativelanguage.googleapis.com; font-src 'self' https://fonts.gstatic.com;">
   <title>AI画像エディタ - JSON画像変更</title>
@@ -9,30 +18,35 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors">
 
   <!-- ヘッダー -->
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+  <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
-      <h1 class="text-lg font-bold text-gray-800 flex-shrink-0 tracking-tight">
+      <h1 class="text-lg font-bold text-gray-800 dark:text-gray-100 flex-shrink-0 tracking-tight">
         <span class="text-blue-500 font-extrabold">AI</span> 画像エディタ
       </h1>
       <div class="flex items-center gap-3">
-        <button id="saveProjectBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+        <button id="saveProjectBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 3v4H7"></path><rect x="7" y="13" width="10" height="6" rx="1" stroke-width="2"></rect></svg>
           保存
         </button>
-        <button id="projectListBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+        <button id="projectListBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
           プロジェクト
         </button>
-        <button id="settingsBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+        <button id="settingsBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
           設定
         </button>
-        <button id="helpBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+        <button id="helpBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"></path></svg>
           ヘルプ
         </button>
@@ -42,53 +56,72 @@
 
   <!-- 設定モーダル -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-    <div role="dialog" aria-modal="true" class="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+    <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-5">
-        <h3 class="text-lg font-bold text-gray-800">設定</h3>
-        <button id="settingsClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 text-2xl leading-none cursor-pointer">&times;</button>
+        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">設定</h3>
+        <button id="settingsClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
 
       <!-- APIキー -->
       <div class="space-y-3 mb-6">
-        <label for="apiKeyInput" class="block text-sm font-medium text-gray-700">Gemini APIキー</label>
+        <label for="apiKeyInput" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Gemini APIキー</label>
         <div class="relative">
           <input type="password" id="apiKeyInput" autocomplete="off"
-            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent pr-10"
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent pr-10"
             placeholder="Gemini APIキーを入力（自動保存）">
-          <button id="apiKeyToggle" aria-label="APIキーの表示/非表示" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer">
+          <button id="apiKeyToggle" aria-label="APIキーの表示/非表示" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-pointer">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
             </svg>
           </button>
         </div>
-        <p id="apiKeyStatus" class="text-xs text-gray-400"></p>
+        <p id="apiKeyStatus" class="text-xs text-gray-400 dark:text-gray-500"></p>
+      </div>
+
+      <!-- テーマ設定 -->
+      <div class="border-t border-gray-100 dark:border-gray-700 pt-5 mb-5">
+        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">テーマ</h4>
+        <div class="flex gap-2">
+          <button id="themeLight" class="theme-btn flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-medium transition-all cursor-pointer border-blue-500 bg-blue-50 text-blue-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            ライト
+          </button>
+          <button id="themeDark" class="theme-btn flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-medium transition-all cursor-pointer border-gray-200 text-gray-600 hover:border-gray-300 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            ダーク
+          </button>
+          <button id="themeSystem" class="theme-btn flex items-center gap-2 px-4 py-2 rounded-xl border-2 text-sm font-medium transition-all cursor-pointer border-gray-200 text-gray-600 hover:border-gray-300 dark:border-gray-600 dark:text-gray-300">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            システム
+          </button>
+        </div>
       </div>
 
       <!-- モデル設定 -->
-      <div class="border-t border-gray-100 pt-5 mb-5">
-        <h4 class="text-sm font-semibold text-gray-800 mb-3">モデル設定</h4>
+      <div class="border-t border-gray-100 dark:border-gray-700 pt-5 mb-5">
+        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">モデル設定</h4>
 
         <div class="space-y-3">
           <div>
-            <label for="textModelSelect" class="block text-xs font-medium text-gray-600 mb-1">テキスト処理モデル<span class="text-gray-400">（画像分析・編集指示の理解・プロンプト作成）</span></label>
-            <select id="textModelSelect" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white cursor-pointer"></select>
-            <p id="textModelNote" class="text-xs text-gray-400 mt-1"></p>
+            <label for="textModelSelect" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">テキスト処理モデル<span class="text-gray-400 dark:text-gray-500">（画像分析・編集指示の理解・プロンプト作成）</span></label>
+            <select id="textModelSelect" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white cursor-pointer"></select>
+            <p id="textModelNote" class="text-xs text-gray-400 dark:text-gray-500 mt-1"></p>
           </div>
 
           <div>
-            <label for="imageModelSelect" class="block text-xs font-medium text-gray-600 mb-1">画像生成モデル<span class="text-gray-400">（画像編集・テキストから画像生成）</span></label>
-            <select id="imageModelSelect" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white cursor-pointer"></select>
-            <p id="imageModelNote" class="text-xs text-gray-400 mt-1"></p>
+            <label for="imageModelSelect" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">画像生成モデル<span class="text-gray-400 dark:text-gray-500">（画像編集・テキストから画像生成）</span></label>
+            <select id="imageModelSelect" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white cursor-pointer"></select>
+            <p id="imageModelNote" class="text-xs text-gray-400 dark:text-gray-500 mt-1"></p>
           </div>
         </div>
       </div>
 
       <!-- コスト情報（モデル別一覧） -->
-      <div class="border-t border-gray-100 pt-5 mb-5">
-        <h4 class="text-sm font-semibold text-gray-800 mb-3">概算コスト</h4>
+      <div class="border-t border-gray-100 dark:border-gray-700 pt-5 mb-5">
+        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">概算コスト</h4>
         <div id="costTableContainer" class="space-y-3 text-xs"></div>
-        <p class="text-xs text-gray-400 mt-2">※概算です。画像サイズ・解像度により変動します。<br>詳細は<a href="https://ai.google.dev/pricing" target="_blank" rel="noopener" class="text-blue-500 hover:underline">Googleの料金表</a>をご確認ください。</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">※概算です。画像サイズ・解像度により変動します。<br>詳細は<a href="https://ai.google.dev/pricing" target="_blank" rel="noopener" class="text-blue-500 hover:underline">Googleの料金表</a>をご確認ください。</p>
       </div>
 
     </div>
@@ -96,20 +129,20 @@
 
   <!-- ヘルプモーダル -->
   <div id="helpModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-    <div role="dialog" aria-modal="true" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh]">
+    <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh]">
       <!-- モーダルヘッダー -->
       <div class="flex items-center justify-between px-6 pt-6 pb-4 flex-shrink-0">
-        <h3 class="text-lg font-bold text-gray-800">ヘルプ</h3>
-        <button id="helpClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 text-2xl leading-none cursor-pointer">&times;</button>
+        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">ヘルプ</h3>
+        <button id="helpClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
       <!-- タブ切り替え -->
-      <div class="flex border-b border-gray-200 px-6 flex-shrink-0">
+      <div class="flex border-b border-gray-200 dark:border-gray-700 px-6 flex-shrink-0">
         <button id="helpTabBasic" onclick="document.getElementById('helpContentBasic').classList.remove('hidden'); document.getElementById('helpContentAdvanced').classList.add('hidden'); document.getElementById('helpTabBasic').classList.add('border-blue-500','text-blue-600'); document.getElementById('helpTabBasic').classList.remove('border-transparent','text-gray-500'); document.getElementById('helpTabAdvanced').classList.remove('border-blue-500','text-blue-600'); document.getElementById('helpTabAdvanced').classList.add('border-transparent','text-gray-500');"
           class="px-4 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600 mr-2 cursor-pointer focus:outline-none transition-colors">
           使い方
         </button>
         <button id="helpTabAdvanced" onclick="document.getElementById('helpContentAdvanced').classList.remove('hidden'); document.getElementById('helpContentBasic').classList.add('hidden'); document.getElementById('helpTabAdvanced').classList.add('border-blue-500','text-blue-600'); document.getElementById('helpTabAdvanced').classList.remove('border-transparent','text-gray-500'); document.getElementById('helpTabBasic').classList.remove('border-blue-500','text-blue-600'); document.getElementById('helpTabBasic').classList.add('border-transparent','text-gray-500');"
-          class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 cursor-pointer focus:outline-none transition-colors">
+          class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer focus:outline-none transition-colors">
           運用ガイド
         </button>
       </div>
@@ -118,90 +151,90 @@
       <div class="overflow-y-auto flex-1 px-6 py-5">
 
         <!-- ===== 使い方タブ ===== -->
-        <div id="helpContentBasic" class="space-y-4 text-sm text-gray-700">
+        <div id="helpContentBasic" class="space-y-4 text-sm text-gray-700 dark:text-gray-300">
           <!-- ステップ -->
           <div class="space-y-3">
             <div class="flex gap-3 items-start">
-              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
               <div>
-                <p class="font-semibold text-gray-800">画像を用意</p>
-                <p class="text-gray-500 mt-0.5">画像をアップロードするか、プロンプトを入力してAIで生成します。</p>
+                <p class="font-semibold text-gray-800 dark:text-gray-100">画像を用意</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">画像をアップロードするか、プロンプトを入力してAIで生成します。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
-              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
               <div>
-                <p class="font-semibold text-gray-800">フォーカスを選んで分析</p>
-                <p class="text-gray-500 mt-0.5">何を重点的に検出するか選択（全体 / 物体 / テキスト / 人物 / カメラ / 雰囲気）してから「分析する」をクリック。</p>
+                <p class="font-semibold text-gray-800 dark:text-gray-100">フォーカスを選んで分析</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">何を重点的に検出するか選択（全体 / 物体 / テキスト / 人物 / カメラ / 雰囲気）してから「分析する」をクリック。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
-              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
+              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
               <div>
-                <p class="font-semibold text-gray-800">要素を選択</p>
-                <p class="text-gray-500 mt-0.5">変更したい要素カードをクリック（複数選択可）。画像全体への指示は「画像全体」を選択。</p>
+                <p class="font-semibold text-gray-800 dark:text-gray-100">要素を選択</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">変更したい要素カードをクリック（複数選択可）。画像全体への指示は「画像全体」を選択。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
-              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5">4</span>
+              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">4</span>
               <div>
-                <p class="font-semibold text-gray-800">変更内容を入力</p>
-                <p class="text-gray-500 mt-0.5">テキストで指示を書きます。プリセットテンプレートを使えば入力の手間が省けます。</p>
+                <p class="font-semibold text-gray-800 dark:text-gray-100">変更内容を入力</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">テキストで指示を書きます。プリセットテンプレートを使えば入力の手間が省けます。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
-              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold mt-0.5">5</span>
+              <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">5</span>
               <div>
-                <p class="font-semibold text-gray-800">画像を生成</p>
-                <p class="text-gray-500 mt-0.5">「画像を生成」をクリック。AIが指示を適用した新しい画像を生成します。</p>
+                <p class="font-semibold text-gray-800 dark:text-gray-100">画像を生成</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">「画像を生成」をクリック。AIが指示を適用した新しい画像を生成します。</p>
               </div>
             </div>
           </div>
 
           <!-- 便利機能 -->
-          <div class="border-t border-gray-100 pt-4">
-            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">便利機能</p>
+          <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">便利機能</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                 <span class="text-base leading-none mt-0.5">🖼️</span>
                 <div>
-                  <p class="font-medium text-gray-700 text-xs">参照画像</p>
-                  <p class="text-gray-500 text-xs mt-0.5">オブジェクトの入替やロゴ変更時に画像を添付</p>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">参照画像</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">オブジェクトの入替やロゴ変更時に画像を添付</p>
                 </div>
               </div>
-              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                 <span class="text-base leading-none mt-0.5">⚡</span>
                 <div>
-                  <p class="font-medium text-gray-700 text-xs">プリセット</p>
-                  <p class="text-gray-500 text-xs mt-0.5">雰囲気・スタイルをワンクリックで指定</p>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">プリセット</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">雰囲気・スタイルをワンクリックで指定</p>
                 </div>
               </div>
-              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                 <span class="text-base leading-none mt-0.5">📷</span>
                 <div>
-                  <p class="font-medium text-gray-700 text-xs">カメラ設定</p>
-                  <p class="text-gray-500 text-xs mt-0.5">アングル・焦点距離・ボケ感を視覚的に調整</p>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">カメラ設定</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">アングル・焦点距離・ボケ感を視覚的に調整</p>
                 </div>
               </div>
-              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                 <span class="text-base leading-none mt-0.5">➕</span>
                 <div>
-                  <p class="font-medium text-gray-700 text-xs">カスタム要素</p>
-                  <p class="text-gray-500 text-xs mt-0.5">検出されなかった要素を手動で追加</p>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">カスタム要素</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">検出されなかった要素を手動で追加</p>
                 </div>
               </div>
-              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                 <span class="text-base leading-none mt-0.5">↔️</span>
                 <div>
-                  <p class="font-medium text-gray-700 text-xs">Before/After</p>
-                  <p class="text-gray-500 text-xs mt-0.5">スライダーで生成前後を比較</p>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">Before/After</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">スライダーで生成前後を比較</p>
                 </div>
               </div>
-              <div class="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                 <span class="text-base leading-none mt-0.5">✏️</span>
                 <div>
-                  <p class="font-medium text-gray-700 text-xs">要素名の変更</p>
-                  <p class="text-gray-500 text-xs mt-0.5">カード名をダブルクリックで編集（生成精度に影響）</p>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">要素名の変更</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">カード名をダブルクリックで編集（生成精度に影響）</p>
                 </div>
               </div>
             </div>
@@ -209,13 +242,13 @@
         </div>
 
         <!-- ===== 運用ガイドタブ ===== -->
-        <div id="helpContentAdvanced" class="hidden space-y-5 text-sm text-gray-700">
+        <div id="helpContentAdvanced" class="hidden space-y-5 text-sm text-gray-700 dark:text-gray-300">
 
           <!-- 効果的な指示の書き方 -->
           <div>
             <div class="flex items-center gap-2 mb-2">
               <span class="text-base">✍️</span>
-              <p class="font-semibold text-gray-800">効果的な指示の書き方</p>
+              <p class="font-semibold text-gray-800 dark:text-gray-100">効果的な指示の書き方</p>
             </div>
             <ul class="space-y-2 ml-6">
               <li class="flex gap-2 items-start">
@@ -233,69 +266,69 @@
             </ul>
           </div>
 
-          <div class="border-t border-gray-100"></div>
+          <div class="border-t border-gray-100 dark:border-gray-700"></div>
 
           <!-- フォーカスの選び方 -->
           <div>
             <div class="flex items-center gap-2 mb-2">
               <span class="text-base">🔍</span>
-              <p class="font-semibold text-gray-800">フォーカスの選び方</p>
+              <p class="font-semibold text-gray-800 dark:text-gray-100">フォーカスの選び方</p>
             </div>
             <div class="space-y-1.5 ml-6">
               <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">全体</span>
-                <p class="text-gray-500">とりあえず全部検出したい時（処理はやや遅い）</p>
+                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">全体</span>
+                <p class="text-gray-500 dark:text-gray-400">とりあえず全部検出したい時（処理はやや遅い）</p>
               </div>
               <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">物体</span>
-                <p class="text-gray-500">家具、車、食べ物など物を差し替えたい時</p>
+                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">物体</span>
+                <p class="text-gray-500 dark:text-gray-400">家具、車、食べ物など物を差し替えたい時</p>
               </div>
               <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">テキスト</span>
-                <p class="text-gray-500">看板や文字を書き換えたい時</p>
+                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">テキスト</span>
+                <p class="text-gray-500 dark:text-gray-400">看板や文字を書き換えたい時</p>
               </div>
               <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">人物</span>
-                <p class="text-gray-500">服装やポーズを変えたい時</p>
+                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">人物</span>
+                <p class="text-gray-500 dark:text-gray-400">服装やポーズを変えたい時</p>
               </div>
               <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">カメラ</span>
-                <p class="text-gray-500">アングルや構図を変えたい時</p>
+                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">カメラ</span>
+                <p class="text-gray-500 dark:text-gray-400">アングルや構図を変えたい時</p>
               </div>
               <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-mono">雰囲気</span>
-                <p class="text-gray-500">季節、時間帯、天気を変えたい時</p>
+                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">雰囲気</span>
+                <p class="text-gray-500 dark:text-gray-400">季節、時間帯、天気を変えたい時</p>
               </div>
             </div>
           </div>
 
-          <div class="border-t border-gray-100"></div>
+          <div class="border-t border-gray-100 dark:border-gray-700"></div>
 
           <!-- モデルの使い分け -->
           <div>
             <div class="flex items-center gap-2 mb-2">
               <span class="text-base">🤖</span>
-              <p class="font-semibold text-gray-800">モデルの使い分け</p>
+              <p class="font-semibold text-gray-800 dark:text-gray-100">モデルの使い分け</p>
             </div>
             <div class="space-y-2 ml-6">
-              <div class="flex gap-3 items-start bg-blue-50 rounded-lg p-3">
-                <span class="flex-shrink-0 inline-block bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded font-semibold mt-0.5">2.5 Pro</span>
-                <p class="text-gray-600">通常利用に十分な精度。<span class="font-medium text-blue-700">推奨</span></p>
+              <div class="flex gap-3 items-start bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                <span class="flex-shrink-0 inline-block bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs px-2 py-0.5 rounded font-semibold mt-0.5">2.5 Pro</span>
+                <p class="text-gray-600 dark:text-gray-300">通常利用に十分な精度。<span class="font-medium text-blue-700 dark:text-blue-400">推奨</span></p>
               </div>
-              <div class="flex gap-3 items-start bg-gray-50 rounded-lg p-3">
-                <span class="flex-shrink-0 inline-block bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded font-semibold mt-0.5">3.1 Pro</span>
-                <p class="text-gray-600">複雑な指示や高精度が必要な場合（コスト高）</p>
+              <div class="flex gap-3 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <span class="flex-shrink-0 inline-block bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs px-2 py-0.5 rounded font-semibold mt-0.5">3.1 Pro</span>
+                <p class="text-gray-600 dark:text-gray-300">複雑な指示や高精度が必要な場合（コスト高）</p>
               </div>
             </div>
           </div>
 
-          <div class="border-t border-gray-100"></div>
+          <div class="border-t border-gray-100 dark:border-gray-700"></div>
 
           <!-- 参照画像の活用 -->
           <div>
             <div class="flex items-center gap-2 mb-2">
               <span class="text-base">🖼️</span>
-              <p class="font-semibold text-gray-800">参照画像の活用</p>
+              <p class="font-semibold text-gray-800 dark:text-gray-100">参照画像の活用</p>
             </div>
             <ul class="space-y-1.5 ml-6 text-gray-500">
               <li class="flex gap-2"><span class="flex-shrink-0 text-blue-400">•</span>「この画像のように変えて」という指示と組み合わせる</li>
@@ -304,13 +337,13 @@
             </ul>
           </div>
 
-          <div class="border-t border-gray-100"></div>
+          <div class="border-t border-gray-100 dark:border-gray-700"></div>
 
           <!-- コスト最適化 -->
           <div>
             <div class="flex items-center gap-2 mb-2">
               <span class="text-base">💰</span>
-              <p class="font-semibold text-gray-800">コスト最適化</p>
+              <p class="font-semibold text-gray-800 dark:text-gray-100">コスト最適化</p>
             </div>
             <ul class="space-y-1.5 ml-6 text-gray-500">
               <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>小さいサイズ（1K）でテスト → 満足したら大きいサイズで再生成</li>
@@ -344,17 +377,17 @@
     <!-- Step 1: 画像を用意 -->
     <section>
       <h2 class="flex items-center gap-2 mb-3">
-        <span class="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">STEP 1</span>
-        <span class="text-sm font-semibold text-gray-700">画像を用意</span>
+        <span class="text-xs font-bold text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md">STEP 1</span>
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">画像を用意</span>
       </h2>
 
       <!-- サブタブ -->
-      <div class="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit mb-4">
+      <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit mb-4">
         <button id="subTabUpload" class="sub-tab active px-5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer">
           <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path></svg>
           アップロード
         </button>
-        <button id="subTabGenerate" class="sub-tab px-5 py-2 rounded-lg text-sm font-medium transition-all text-gray-500 hover:text-gray-700 cursor-pointer">
+        <button id="subTabGenerate" class="sub-tab px-5 py-2 rounded-lg text-sm font-medium transition-all text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer">
           <svg class="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"></path></svg>
           AI生成
         </button>
@@ -362,13 +395,13 @@
 
       <!-- アップロードパネル -->
       <div id="uploadPanel">
-        <div id="uploadArea" class="upload-area bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 shadow-sm transition-all relative">
+        <div id="uploadArea" class="upload-area bg-white dark:bg-gray-800/50 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-2xl p-12 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/20 shadow-sm transition-all relative">
           <div class="upload-prompt">
             <div class="mb-4 inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-2xl text-blue-400">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path></svg>
             </div>
-            <p class="text-gray-700 font-medium">クリックまたはドラッグ&ドロップで画像をアップロード</p>
-            <p class="text-sm text-gray-400 mt-1">JPG, PNG, WEBP対応</p>
+            <p class="text-gray-700 dark:text-gray-200 font-medium">クリックまたはドラッグ&ドロップで画像をアップロード</p>
+            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, WEBP対応</p>
           </div>
           <div id="imagePreview" class="hidden relative">
             <button id="removeImage" aria-label="画像を削除" class="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-9 h-9 flex items-center justify-center hover:bg-red-600 shadow-lg text-lg leading-none z-20 cursor-pointer">&times;</button>
@@ -396,10 +429,10 @@
 
         <!-- アイデア入力セクション -->
         <section id="ideaInputSection">
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">作りたい画像を日本語で入力</h3>
-          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">作りたい画像を日本語で入力</h3>
+          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
             <textarea id="userIdeaInput" rows="4"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-none"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-none"
               placeholder="例: 白い背景にZitA SQUAREのゴミ箱を置いた商品写真。清潔感のあるスタジオ照明で、正面やや上からのアングル。"></textarea>
 
             <div class="flex justify-end">
@@ -413,20 +446,20 @@
 
         <!-- プロンプト確認・編集セクション -->
         <section id="promptReviewSection" class="hidden">
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">プロンプトを確認・編集</h3>
-          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">プロンプトを確認・編集</h3>
+          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
             <!-- 英語プロンプト（編集可能） -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">英語プロンプト</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">英語プロンプト</label>
               <textarea id="promptEditArea" rows="6"
-                class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-vertical"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl text-sm font-mono focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-vertical"
                 placeholder=""></textarea>
             </div>
 
             <!-- 出力設定（AIが推奨値を自動選択、ユーザーが変更可能） -->
             <div class="space-y-3">
               <div>
-                <p class="text-sm text-gray-600 mb-2">アスペクト比 <span class="text-xs text-purple-500">（AI推奨値を自動選択済み）</span></p>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">アスペクト比 <span class="text-xs text-purple-500 dark:text-purple-400">（AI推奨値を自動選択済み）</span></p>
                 <div id="aspectRatioList" class="flex flex-wrap gap-2">
                   <button data-ratio="1:1" class="aspect-btn selected px-3 py-1.5 text-xs rounded-lg border-2 transition-colors">1:1</button>
                   <button data-ratio="2:3" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">2:3</button>
@@ -440,7 +473,7 @@
                 </div>
               </div>
               <div>
-                <p class="text-sm text-gray-600 mb-2">解像度 <span class="text-xs text-gray-400">（高解像度ほどコストが高くなります）</span></p>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">解像度 <span class="text-xs text-gray-400 dark:text-gray-500">（高解像度ほどコストが高くなります）</span></p>
                 <div id="imageSizeList" class="flex gap-2">
                   <button data-size="1K" class="size-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">1K</button>
                   <button data-size="2K" class="size-btn selected px-3 py-1.5 text-xs rounded-lg border-2 transition-colors">2K</button>
@@ -451,13 +484,13 @@
 
             <!-- 解説 -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">解説</label>
-              <div id="promptExplanation" class="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 leading-relaxed"></div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">解説</label>
+              <div id="promptExplanation" class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-sm text-gray-700 dark:text-gray-200 leading-relaxed"></div>
             </div>
 
             <!-- ボタン -->
             <div class="flex gap-3 justify-end">
-              <button id="promptBackBtn" class="px-5 py-2.5 text-sm text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer">
+              <button id="promptBackBtn" class="px-5 py-2.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">
                 ← 戻って修正
               </button>
               <button id="promptApproveBtn" class="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm shadow-lg flex items-center gap-2 cursor-pointer">
@@ -470,15 +503,15 @@
 
         <!-- 生成結果プレビュー -->
         <section id="generateResultPreview" class="hidden">
-          <h3 class="text-sm font-semibold text-gray-700 mb-3">生成結果</h3>
-          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">生成結果</h3>
+          <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
             <img id="generateResultImage" class="max-h-[500px] mx-auto rounded-lg shadow-md block" alt="生成結果">
             <div class="flex justify-center gap-3 mt-4">
               <button id="editGeneratedBtn" class="px-5 py-2.5 text-sm bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all shadow-sm hover:shadow-md flex items-center gap-1.5 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"></path></svg>
                 この画像を編集
               </button>
-              <button id="regenerateBtn" class="px-5 py-2.5 text-sm bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all flex items-center gap-1.5 cursor-pointer">
+              <button id="regenerateBtn" class="px-5 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all flex items-center gap-1.5 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path></svg>
                 再生成
               </button>
@@ -496,22 +529,22 @@
     <!-- Step 2: 分析フォーカス -->
     <section id="analysisSection" class="hidden">
       <h2 class="flex items-center gap-2 mb-3">
-        <span class="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">STEP 2</span>
-        <span class="text-sm font-semibold text-gray-700">分析フォーカスを選択</span>
+        <span class="text-xs font-bold text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md">STEP 2</span>
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">分析フォーカスを選択</span>
       </h2>
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
         <div id="focusTags" class="flex flex-wrap gap-2">
           <button data-focus="all" class="px-4 py-2 rounded-full text-sm font-medium bg-blue-500 text-white transition-colors cursor-pointer">全体</button>
-          <button data-focus="furniture" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer">家具・物</button>
-          <button data-focus="color_material" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer">色・素材</button>
-          <button data-focus="lighting" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer">照明・天候</button>
-          <button data-focus="text_logo" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer">テキスト・ロゴ</button>
-          <button data-focus="camera" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer">カメラ</button>
-          <button data-focus="people" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer">人物</button>
+          <button data-focus="furniture" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">家具・物</button>
+          <button data-focus="color_material" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">色・素材</button>
+          <button data-focus="lighting" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">照明・天候</button>
+          <button data-focus="text_logo" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">テキスト・ロゴ</button>
+          <button data-focus="camera" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">カメラ</button>
+          <button data-focus="people" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">人物</button>
         </div>
         <div class="flex gap-3">
           <input type="text" id="customInstruction"
-            class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+            class="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent"
             placeholder="追加の指示（例: 小物を細かく検出して）">
           <button id="analyzeBtn" class="px-6 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all font-medium text-sm shadow-md hover:shadow-lg flex items-center gap-2 flex-shrink-0 cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -523,12 +556,12 @@
 
     <!-- 要素一覧 -->
     <section id="elementsSection" class="hidden">
-      <h2 class="text-sm font-semibold text-gray-700 mb-1">検出された要素</h2>
-      <p class="bg-amber-50 border border-amber-300 rounded-lg p-2.5 text-amber-700 font-medium text-xs mb-4 flex items-center gap-1.5 leading-relaxed">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">検出された要素</h2>
+      <p class="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg p-2.5 text-amber-700 dark:text-amber-400 font-medium text-xs mb-4 flex items-center gap-1.5 leading-relaxed">
         <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
         <span>要素名は画像生成に影響します。</span>
       </p>
-      <div id="elementsList" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+      <div id="elementsList" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         <!-- 要素カードがここに動的に挿入される -->
       </div>
     </section>
@@ -536,13 +569,13 @@
     <!-- 編集パネル -->
     <section id="editSection" class="hidden">
       <h2 class="flex items-center gap-2 mb-3">
-        <span class="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">STEP 3</span>
-        <span class="text-sm font-semibold text-gray-700">変更内容を指示（複数選択可）</span>
+        <span class="text-xs font-bold text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md">STEP 3</span>
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">変更内容を指示（複数選択可）</span>
       </h2>
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
         <!-- プリセットテンプレート -->
         <div id="presetTemplates" class="hidden">
-          <p class="text-xs text-gray-500 mb-2">プリセットテンプレート</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">プリセットテンプレート</p>
           <div class="flex flex-wrap gap-2" id="presetList">
             <button class="preset-btn px-3 py-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 rounded-full hover:bg-orange-100 transition-colors" data-preset="golden_hour">🌅 ゴールデンアワー</button>
             <button class="preset-btn px-3 py-1.5 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors" data-preset="winter">❄️ 冬景色</button>
@@ -579,9 +612,9 @@
         <div class="flex items-start gap-4">
           <!-- 参照画像 -->
           <div class="flex-1">
-            <p class="text-xs text-gray-500 mb-2">参照画像（任意: オブジェクト入替・ロゴ変更等に使用）</p>
-            <div id="referenceUploadArea" class="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-blue-300 transition-colors relative">
-              <span class="ref-prompt text-sm text-gray-400">クリックして参照画像を追加</span>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">参照画像（任意: オブジェクト入替・ロゴ変更等に使用）</p>
+            <div id="referenceUploadArea" class="border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-300 transition-colors relative">
+              <span class="ref-prompt text-sm text-gray-400 dark:text-gray-500">クリックして参照画像を追加</span>
               <img id="referencePreview" class="hidden max-h-32 mx-auto rounded" alt="参照画像">
               <button id="removeReference" aria-label="参照画像を削除" class="hidden absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600">&times;</button>
               <input type="file" id="referenceFileInput" accept="image/*" class="hidden">
@@ -592,14 +625,14 @@
           <div class="flex flex-col items-end gap-2 pt-6">
             <div class="flex items-center gap-3">
               <div class="flex items-center gap-2">
-                <label for="generateCount" class="text-xs text-gray-500 whitespace-nowrap">枚数</label>
-                <select id="generateCount" class="px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent cursor-pointer">
+                <label for="generateCount" class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">枚数</label>
+                <select id="generateCount" class="px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent cursor-pointer">
                   <option value="1">1枚</option>
                   <option value="2">2枚</option>
                   <option value="4">4枚</option>
                   <option value="custom">指定...</option>
                 </select>
-                <input type="number" id="generateCountCustom" min="1" max="8" value="3" class="hidden w-14 px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                <input type="number" id="generateCountCustom" min="1" max="8" value="3" class="hidden w-14 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent">
               </div>
               <button id="generateBtn" class="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all font-medium text-sm shadow-lg hover:shadow-xl flex items-center gap-2 cursor-pointer">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
@@ -614,10 +647,10 @@
     <!-- 結果表示 -->
     <section id="resultSection" class="hidden">
       <h2 class="flex items-center gap-2 mb-3">
-        <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">RESULT</span>
-        <span class="text-sm font-semibold text-gray-700">生成結果</span>
+        <span class="text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-0.5 rounded-md">RESULT</span>
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">生成結果</span>
       </h2>
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         <!-- 複数枚グリッド表示 -->
         <div id="resultGrid" class="hidden">
           <!-- 複数枚の結果がグリッドで表示される -->
@@ -655,35 +688,35 @@
 
   <!-- ローディングオーバーレイ（ステップ別プログレス + キャンセル） -->
   <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl min-w-[280px]">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl min-w-[280px]">
       <div class="spinner"></div>
       <div id="loadingSteps" class="w-full space-y-2 hidden">
         <div class="loading-step flex items-center gap-2" data-step="1">
           <span class="step-icon w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">1</span>
-          <span class="step-label text-sm text-gray-500">編集内容を準備中...</span>
+          <span class="step-label text-sm text-gray-500 dark:text-gray-400">編集内容を準備中...</span>
         </div>
         <div class="loading-step flex items-center gap-2" data-step="2">
           <span class="step-icon w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">2</span>
-          <span class="step-label text-sm text-gray-500">画像生成中...</span>
+          <span class="step-label text-sm text-gray-500 dark:text-gray-400">画像生成中...</span>
         </div>
       </div>
-      <p id="loadingText" role="status" aria-live="polite" class="text-gray-600 font-medium">処理中...</p>
-      <button id="cancelBtn" class="hidden px-4 py-1.5 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-red-100 hover:text-red-600 transition-colors">キャンセル</button>
+      <p id="loadingText" role="status" aria-live="polite" class="text-gray-600 dark:text-gray-300 font-medium">処理中...</p>
+      <button id="cancelBtn" class="hidden px-4 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-red-100 hover:text-red-600 transition-colors">キャンセル</button>
     </div>
   </div>
 
   <!-- エラー/成功トースト -->
   <!-- 保存ダイアログ -->
   <div id="saveProjectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-    <div role="dialog" aria-modal="true" class="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-sm mx-4">
+    <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-sm mx-4">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-gray-800">プロジェクトを保存</h3>
-        <button id="saveProjectClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 text-2xl leading-none cursor-pointer">&times;</button>
+        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">プロジェクトを保存</h3>
+        <button id="saveProjectClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">プロジェクト名</label>
-      <input id="saveProjectName" type="text" placeholder="名前を入力（省略時は自動生成）" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">プロジェクト名</label>
+      <input id="saveProjectName" type="text" placeholder="名前を入力（省略時は自動生成）" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4">
       <div class="flex gap-2 justify-end">
-        <button id="saveProjectCancel" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer">キャンセル</button>
+        <button id="saveProjectCancel" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg cursor-pointer">キャンセル</button>
         <button id="saveProjectConfirm" class="px-4 py-2 text-sm text-white bg-blue-500 hover:bg-blue-600 rounded-lg cursor-pointer">保存</button>
       </div>
     </div>
@@ -691,10 +724,10 @@
 
   <!-- プロジェクト一覧モーダル -->
   <div id="projectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-    <div role="dialog" aria-modal="true" class="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+    <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-gray-800">プロジェクト一覧</h3>
-        <button id="projectModalClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 text-2xl leading-none cursor-pointer">&times;</button>
+        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">プロジェクト一覧</h3>
+        <button id="projectModalClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
       <div class="flex gap-2 mb-4">
         <label class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer border border-blue-200">
@@ -704,7 +737,7 @@
         </label>
       </div>
       <div id="projectList" class="space-y-3">
-        <p class="text-sm text-gray-400 text-center py-8">保存されたプロジェクトはありません</p>
+        <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-8">保存されたプロジェクトはありません</p>
       </div>
     </div>
   </div>
@@ -713,6 +746,75 @@
     <p id="errorMessage" class="text-sm flex-1"></p>
     <button id="errorClose" aria-label="閉じる" class="flex-shrink-0 text-lg leading-none">&times;</button>
   </div>
+
+  <!-- テーマ切替スクリプト -->
+  <script>
+    // テーマボタンの初期化（DOMロード後）
+    document.addEventListener('DOMContentLoaded', function() {
+      const html = document.documentElement;
+      const themeLight = document.getElementById('themeLight');
+      const themeDark = document.getElementById('themeDark');
+      const themeSystem = document.getElementById('themeSystem');
+
+      function applyTheme(theme) {
+        if (theme === 'dark') {
+          html.classList.add('dark');
+        } else if (theme === 'light') {
+          html.classList.remove('dark');
+        } else {
+          // system
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            html.classList.add('dark');
+          } else {
+            html.classList.remove('dark');
+          }
+        }
+      }
+
+      function updateThemeButtons(theme) {
+        // 全ボタンをリセット
+        [themeLight, themeDark, themeSystem].forEach(btn => {
+          btn.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+          btn.classList.add('border-gray-200', 'text-gray-600');
+        });
+        // 選択中のボタンをアクティブに
+        const activeBtn = { light: themeLight, dark: themeDark, system: themeSystem }[theme];
+        if (activeBtn) {
+          activeBtn.classList.remove('border-gray-200', 'text-gray-600');
+          activeBtn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+        }
+      }
+
+      // 初期状態を反映
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      updateThemeButtons(savedTheme);
+
+      themeLight.addEventListener('click', function() {
+        localStorage.setItem('theme', 'light');
+        applyTheme('light');
+        updateThemeButtons('light');
+      });
+
+      themeDark.addEventListener('click', function() {
+        localStorage.setItem('theme', 'dark');
+        applyTheme('dark');
+        updateThemeButtons('dark');
+      });
+
+      themeSystem.addEventListener('click', function() {
+        localStorage.setItem('theme', 'system');
+        applyTheme('system');
+        updateThemeButtons('system');
+      });
+
+      // システムテーマ変更の監視
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+        if (localStorage.getItem('theme') === 'system') {
+          applyTheme('system');
+        }
+      });
+    });
+  </script>
 
   <!-- スクリプト -->
   <script src="js/api.js?v=13"></script>
