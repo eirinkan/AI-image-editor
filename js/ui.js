@@ -684,13 +684,23 @@ const UI = (() => {
     return header;
   }
 
-  // 同名オブジェクトを自動グループ化（name_en一致で2個以上）
+  // 同名オブジェクトを自動グループ化（name_en正規化で2個以上）
   function computeAutoGroups(objects) {
     const nameMap = {};
     objects.forEach(obj => {
-      const key = (obj.name_en || obj.name || '').toLowerCase().replace(/\s*[\d]+$/, '').trim();
+      let key = (obj.name_en || obj.name || '').toLowerCase();
+      // 末尾の数字、括弧付き修飾語（left/right/front/back等）、日本語の括弧修飾を除去して正規化
+      key = key
+        .replace(/\s*\(.*?\)\s*/g, '')      // (left), (右) など括弧内を除去
+        .replace(/\s*（.*?）\s*/g, '')       // 全角括弧も除去
+        .replace(/\s*[\d]+$/, '')            // 末尾の数字
+        .trim();
       if (!key) return;
-      if (!nameMap[key]) nameMap[key] = { name: obj.name, name_en: key, members: [] };
+      if (!nameMap[key]) {
+        // グループ名は正規化した名前を使う（括弧修飾なし）
+        const cleanName = (obj.name || '').replace(/\s*\(.*?\)\s*/g, '').replace(/\s*（.*?）\s*/g, '').replace(/\s*[\d]+$/, '').trim();
+        nameMap[key] = { name: cleanName || obj.name, name_en: key, members: [] };
+      }
       nameMap[key].members.push(obj);
     });
     return Object.values(nameMap).filter(g => g.members.length >= 2);
@@ -781,11 +791,12 @@ const UI = (() => {
         });
       }
 
-      // リージョン（フィルタ済み）
+      // リージョン（フィルタ済み・マーカー番号付き）
       if (filteredRegions.length > 0) {
         filteredRegions.forEach((region, i) => {
           const origIndex = json.regions.indexOf(region);
-          groupItems.push({ id: region.id || `region_${origIndex}`, type: 'region', name: region.name || region.name_en, data: region, cardClass: 'region-card' });
+          groupItems.push({ id: region.id || `region_${origIndex}`, type: 'region', name: region.name || region.name_en, data: region, cardClass: 'region-card', markerIndex: markerIndex });
+          markerIndex++;
         });
       }
 
@@ -837,7 +848,8 @@ const UI = (() => {
             const card = document.createElement('button');
             card.className = 'element-card region-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
             card.dataset.elementId = item.id;
-            card.innerHTML = `<span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(item.name)}</span>`;
+            const markerBadge = item.markerIndex ? `<span class="marker-badge">${item.markerIndex}</span>` : '';
+            card.innerHTML = `${markerBadge}<span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(item.name)}</span>`;
             card.addEventListener('click', () => selectElement(item));
             card.addEventListener('mouseenter', () => {
               const marker = document.querySelector(`.image-marker[data-element-id="${item.id}"]`);
