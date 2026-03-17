@@ -270,7 +270,6 @@ const UI = (() => {
   // テキスト処理: 中央値（概算 ¥/回）
   const TEXT_COST_MAP = {
     'gemini-2.0-flash-lite':        { analysis: '¥0.2', edit: '¥0.2', prompt: '¥0.2' },
-    'gemini-2.0-flash':             { analysis: '¥1',   edit: '¥0.5', prompt: '¥0.5' },
     'gemini-2.5-pro-preview-06-05': { analysis: '¥3',   edit: '¥2',   prompt: '¥2' },
     'gemini-3.1-pro-preview':       { analysis: '¥5',   edit: '¥3',   prompt: '¥3' },
   };
@@ -993,7 +992,7 @@ const UI = (() => {
 
         // 最後に追加された要素にフォーカス
         if (i === selectedElements.length - 1 && !savedValues[el.id]) {
-          setTimeout(() => textarea.focus(), 50);
+          setTimeout(() => textarea.focus({ preventScroll: true }), 50);
         }
       }
 
