@@ -18,12 +18,18 @@ const GeminiAPI = (() => {
   const DEFAULT_TEXT_MODEL = 'gemini-2.5-pro-preview-06-05';
   const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-image-preview';
 
-  // 動的モデル取得
+  // 動的モデル取得（存在しないモデルが保存されている場合はデフォルトに戻す）
   function getTextModel() {
-    return localStorage.getItem('gemini_text_model') || DEFAULT_TEXT_MODEL;
+    const saved = localStorage.getItem('gemini_text_model');
+    if (saved && TEXT_MODELS.some(m => m.id === saved)) return saved;
+    localStorage.removeItem('gemini_text_model');
+    return DEFAULT_TEXT_MODEL;
   }
   function getImageModel() {
-    return localStorage.getItem('gemini_image_model') || DEFAULT_IMAGE_MODEL;
+    const saved = localStorage.getItem('gemini_image_model');
+    if (saved && IMAGE_MODELS.some(m => m.id === saved)) return saved;
+    localStorage.removeItem('gemini_image_model');
+    return DEFAULT_IMAGE_MODEL;
   }
   function setTextModel(id) {
     localStorage.setItem('gemini_text_model', id);
