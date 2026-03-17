@@ -719,7 +719,6 @@ const UI = (() => {
       ${badgeHtml}
       <span class="element-name font-medium text-gray-800 text-sm leading-tight">${escapeHtml(name)}</span>
       <span class="text-xs text-gray-500 leading-tight">${escapeHtml(subtitle)}</span>
-      ${isEditable ? '<span class="text-[10px] text-gray-400 mt-0.5">ダブルクリックで名前変更</span>' : ''}
     `;
 
     // ホバー時に画像上のマーカーと連動
@@ -1125,10 +1124,37 @@ const UI = (() => {
   function setupCompareSlider() {
     let isDragging = false;
 
+    // 画像の実際の描画領域を取得（object-fit: containの余白を除く）
+    function getImageRect() {
+      const img = elements.resultImage;
+      const containerRect = img.getBoundingClientRect();
+      const naturalW = img.naturalWidth || 1;
+      const naturalH = img.naturalHeight || 1;
+      const scale = Math.min(containerRect.width / naturalW, containerRect.height / naturalH);
+      const renderedW = naturalW * scale;
+      const renderedH = naturalH * scale;
+      const offsetX = (containerRect.width - renderedW) / 2;
+      const offsetY = (containerRect.height - renderedH) / 2;
+      return {
+        left: containerRect.left + offsetX,
+        top: containerRect.top + offsetY,
+        width: renderedW,
+        height: renderedH,
+      };
+    }
+
+    function isInsideImage(e) {
+      const rect = getImageRect();
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+      return clientX >= rect.left && clientX <= rect.left + rect.width
+          && clientY >= rect.top && clientY <= rect.top + rect.height;
+    }
+
     function getSliderRatio(e) {
-      const rect = elements.resultImage.getBoundingClientRect();
+      const rect = getImageRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      return (clientX - rect.left) / rect.width;
+      return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     }
 
     function onStart(e) {
@@ -1161,23 +1187,42 @@ const UI = (() => {
       document.removeEventListener('touchend', onEnd);
     }
 
-    // マウスホバーでスライダー表示（画像上のみ反応）
-    elements.resultImage.addEventListener('mouseenter', () => {
+    // マウスホバーでスライダー表示（画像の実描画領域のみ反応）
+    elements.compareContainer.addEventListener('mouseenter', (e) => {
       if (!hasBeforeImage) return;
-      activateCompare();
+      if (isInsideImage(e)) activateCompare();
     });
-    elements.resultImage.addEventListener('mouseleave', () => {
+    elements.compareContainer.addEventListener('mousemove', (e) => {
+      if (!hasBeforeImage || isDragging) return;
+      const inside = isInsideImage(e);
+      if (inside && !elements.compareContainer.classList.contains('compare-active')) {
+        activateCompare();
+      } else if (!inside && elements.compareContainer.classList.contains('compare-active')) {
+        deactivateCompare();
+      }
+    });
+    elements.compareContainer.addEventListener('mouseleave', () => {
       if (isDragging) return; // ドラッグ中は閉じない
       deactivateCompare();
     });
 
     // マウスドラッグ（documentリスナーはonStartで登録）
     elements.compareSlider.addEventListener('mousedown', onStart);
-    elements.resultImage.addEventListener('mousedown', onStart);
+    elements.compareContainer.addEventListener('mousedown', (e) => {
+      if (!isInsideImage(e)) return;
+      onStart(e);
+    });
 
     // タッチ操作（documentリスナーはonStartで登録）
     elements.compareSlider.addEventListener('touchstart', onStart, { passive: false });
-    elements.resultImage.addEventListener('touchstart', onStart, { passive: false });
+    elements.compareContainer.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      const rect = getImageRect();
+      const inside = touch.clientX >= rect.left && touch.clientX <= rect.left + rect.width
+                  && touch.clientY >= rect.top && touch.clientY <= rect.top + rect.height;
+      if (!inside) return;
+      onStart(e);
+    }, { passive: false });
   }
 
   // --- 履歴タイムライン（縦型サイドバー） ---
@@ -1225,7 +1270,7 @@ const UI = (() => {
       if (delBtn) {
         delBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (!confirm('この履歴を削除しますか？')) return;
+          if (!confirm('この画像を削除しますか？')) return;
           EditHistory.removeEntry(i);
         });
       }
