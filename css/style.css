@@ -410,7 +410,6 @@ button {
 }
 
 /* モーダル共通 */
-#customElementModal,
 #settingsModal,
 #helpModal {
   backdrop-filter: blur(4px);

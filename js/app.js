@@ -499,104 +499,6 @@ const App = (() => {
     }
   }
 
-  // テンプレート適用: 過去の編集設定を現在の画像に適用
-  async function applyTemplate(projectId) {
-    if (!state.currentJson) {
-      UI.showError('先に画像をアップロードして分析を行ってください。テンプレートは分析済みの画像に対して適用できます。');
-      return;
-    }
-
-    try {
-      const project = await ProjectStorage.loadProject(projectId);
-      if (!project.entries || project.entries.length < 2) {
-        UI.showError('このプロジェクトには適用可能な編集指示がありません');
-        return;
-      }
-
-      // 最終エントリから編集指示を取得
-      const lastEntry = project.entries[project.entries.length - 1];
-      const instructions = lastEntry.editInstructions || [];
-
-      // 指示テキストがない場合、instruction（ラベル）から復元を試みる
-      let applicableInstructions = [];
-      if (instructions.length > 0) {
-        applicableInstructions = instructions;
-      } else if (lastEntry.instruction) {
-        // "要素名: 指示 / 要素名: 指示" 形式から復元
-        const parts = lastEntry.instruction.split(' / ');
-        applicableInstructions = parts.map(p => {
-          const colonIdx = p.indexOf(': ');
-          if (colonIdx >= 0) {
-            return { elementName: p.substring(0, colonIdx), instruction: p.substring(colonIdx + 2) };
-          }
-          return { elementName: '画像全体', instruction: p };
-        });
-      }
-
-      if (applicableInstructions.length === 0) {
-        UI.showError('適用可能な編集指示が見つかりませんでした');
-        return;
-      }
-
-      // 現在の分析結果の要素名と照合
-      const currentElements = [];
-      if (state.currentJson.objects) {
-        state.currentJson.objects.forEach(obj => currentElements.push(obj.name));
-      }
-      if (state.currentJson.scene) currentElements.push(state.currentJson.scene.description || 'シーン');
-
-      // マッチング: 完全一致 → 部分一致
-      const matched = [];
-      const unmatched = [];
-      applicableInstructions.forEach(inst => {
-        const exactMatch = currentElements.find(name => name === inst.elementName);
-        if (exactMatch) {
-          matched.push(inst);
-        } else {
-          const partialMatch = currentElements.find(name =>
-            name.includes(inst.elementName) || inst.elementName.includes(name)
-          );
-          if (partialMatch) {
-            matched.push({ elementName: partialMatch, instruction: inst.instruction });
-          } else {
-            unmatched.push(inst);
-          }
-        }
-      });
-
-      // 編集指示欄にテンプレートの指示を反映
-      const editInstructionsList = document.getElementById('editInstructionsList');
-      if (editInstructionsList) {
-        const textareas = editInstructionsList.querySelectorAll('textarea');
-        textareas.forEach(ta => {
-          const row = ta.closest('[data-element-name]');
-          if (!row) return;
-          const elName = row.dataset.elementName;
-          const matchedInst = matched.find(m => m.elementName === elName);
-          if (matchedInst) {
-            ta.value = matchedInst.instruction;
-          }
-        });
-      }
-
-      // マッチしない指示はカスタム指示欄に追加
-      if (unmatched.length > 0) {
-        const customInstruction = document.getElementById('customInstruction');
-        if (customInstruction) {
-          const unmatchedText = unmatched.map(u => `${u.elementName}: ${u.instruction}`).join('\n');
-          customInstruction.value = (customInstruction.value ? customInstruction.value + '\n' : '') + unmatchedText;
-        }
-      }
-
-      UI.hideProjectModal();
-      const matchInfo = matched.length > 0 ? `${matched.length}件の指示を適用` : '';
-      const unmatchInfo = unmatched.length > 0 ? `${unmatched.length}件は指示欄に追加` : '';
-      UI.showSuccess(`テンプレートを適用しました。${[matchInfo, unmatchInfo].filter(Boolean).join('、')}`);
-    } catch (err) {
-      UI.showError('テンプレート適用に失敗しました: ' + err.message);
-    }
-  }
-
   return {
     init,
     onImageUploaded,
@@ -616,7 +518,6 @@ const App = (() => {
     exportProject,
     importProject,
     deleteProject,
-    applyTemplate,
   };
 })();
 

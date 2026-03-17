@@ -104,17 +104,6 @@ const UI = (() => {
       presetTemplates: document.getElementById('presetTemplates'),
       presetList: document.getElementById('presetList'),
 
-      // カスタム要素モーダル
-      customElementModal: document.getElementById('customElementModal'),
-      customElementInput: document.getElementById('customElementInput'),
-      customElementConfirm: document.getElementById('customElementConfirm'),
-      customElementCancel: document.getElementById('customElementCancel'),
-
-      // カスタム要素登録（設定モーダル内）
-      customElementRegisterInput: document.getElementById('customElementRegisterInput'),
-      customElementRegisterBtn: document.getElementById('customElementRegisterBtn'),
-      customElementRegisteredList: document.getElementById('customElementRegisteredList'),
-
       // モデル選択
       textModelSelect: document.getElementById('textModelSelect'),
       textModelNote: document.getElementById('textModelNote'),
@@ -245,27 +234,8 @@ const UI = (() => {
     // Before/After比較スライダー（ホバー＋ドラッグ）
     setupCompareSlider();
 
-    // カスタム要素モーダル
-    elements.customElementConfirm.addEventListener('click', confirmCustomElement);
-    elements.customElementCancel.addEventListener('click', closeCustomElementModal);
-    elements.customElementInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') confirmCustomElement();
-      if (e.key === 'Escape') closeCustomElementModal();
-    });
-    // モーダル背景クリックで閉じる
-    elements.customElementModal.addEventListener('click', (e) => {
-      if (e.target === elements.customElementModal) closeCustomElementModal();
-    });
-
     // プリセットテンプレート
     elements.presetList.addEventListener('click', handlePresetClick);
-
-    // カスタム要素登録（設定モーダル内）
-    elements.customElementRegisterBtn.addEventListener('click', registerCustomElement);
-    elements.customElementRegisterInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') registerCustomElement();
-    });
-    renderRegisteredCustomElements();
   }
 
   // --- APIキー（自動保存） ---
@@ -729,21 +699,6 @@ const UI = (() => {
     renderMarkers(json);
     if (elements.markerColumn) elements.markerColumn.classList.remove('hidden');
 
-    // 登録済みカスタム要素をカードとして表示
-    const customElements = getRegisteredCustomElements();
-    if (customElements.length > 0) {
-      elements.elementsList.appendChild(createCategoryHeader(ICONS.plus, 'カスタム要素'));
-      customElements.forEach(name => {
-        const card = createElementCard({
-          id: 'custom_reg_' + name,
-          type: 'object',
-          name: name,
-          subtitle: 'カスタム',
-          data: { name, custom: true },
-        });
-        elements.elementsList.appendChild(card);
-      });
-    }
   }
 
   function createElementCard({ id, type, name, subtitle, data, markerIndex }) {
@@ -1076,109 +1031,6 @@ const UI = (() => {
     return placeholders[type] || '変更内容を入力してください';
   }
 
-  function showCustomElementDialog() {
-    elements.customElementInput.value = '';
-    elements.customElementModal.classList.remove('hidden');
-    setTimeout(() => elements.customElementInput.focus(), 50);
-
-    // フォーカストラップ：モーダル内でTabキーが循環する
-    const modal = elements.customElementModal;
-    const focusableEls = modal.querySelectorAll('input, button, [tabindex]:not([tabindex="-1"])');
-    const firstEl = focusableEls[0];
-    const lastEl = focusableEls[focusableEls.length - 1];
-
-    function trapFocus(e) {
-      if (e.key !== 'Tab') return;
-      if (e.shiftKey) {
-        if (document.activeElement === firstEl) {
-          e.preventDefault();
-          lastEl.focus();
-        }
-      } else {
-        if (document.activeElement === lastEl) {
-          e.preventDefault();
-          firstEl.focus();
-        }
-      }
-    }
-    modal._trapFocus = trapFocus;
-    modal.addEventListener('keydown', trapFocus);
-  }
-
-  function confirmCustomElement() {
-    const name = elements.customElementInput.value.trim();
-    if (name) {
-      selectElement({
-        id: 'custom_' + Date.now(),
-        type: 'object',
-        name: name,
-        data: { name, custom: true },
-      });
-    }
-    closeCustomElementModal();
-  }
-
-  function closeCustomElementModal() {
-    // フォーカストラップ解除
-    if (elements.customElementModal._trapFocus) {
-      elements.customElementModal.removeEventListener('keydown', elements.customElementModal._trapFocus);
-    }
-    elements.customElementModal.classList.add('hidden');
-  }
-
-  // --- カスタム要素の永続管理（設定モーダル内） ---
-  function getRegisteredCustomElements() {
-    try {
-      return JSON.parse(localStorage.getItem('custom_elements') || '[]');
-    } catch { return []; }
-  }
-
-  function saveRegisteredCustomElements(list) {
-    localStorage.setItem('custom_elements', JSON.stringify(list));
-  }
-
-  function registerCustomElement() {
-    const name = elements.customElementRegisterInput.value.trim();
-    if (!name) return;
-    const list = getRegisteredCustomElements();
-    if (list.includes(name)) {
-      showError('この要素は既に登録されています');
-      return;
-    }
-    list.push(name);
-    saveRegisteredCustomElements(list);
-    elements.customElementRegisterInput.value = '';
-    renderRegisteredCustomElements();
-    showSuccess(`「${name}」を登録しました`);
-  }
-
-  function unregisterCustomElement(name) {
-    const list = getRegisteredCustomElements().filter(n => n !== name);
-    saveRegisteredCustomElements(list);
-    renderRegisteredCustomElements();
-  }
-
-  function renderRegisteredCustomElements() {
-    const container = elements.customElementRegisteredList;
-    if (!container) return;
-    const list = getRegisteredCustomElements();
-    container.innerHTML = '';
-    if (list.length === 0) {
-      container.innerHTML = '<p class="text-xs text-gray-400">登録済み要素はありません</p>';
-      return;
-    }
-    list.forEach(name => {
-      const row = document.createElement('div');
-      row.className = 'flex items-center justify-between bg-gray-50 rounded-lg px-3 py-1.5';
-      row.innerHTML = `
-        <span class="text-sm text-gray-700">${escapeHtml(name)}</span>
-        <button class="text-gray-400 hover:text-red-500 text-lg leading-none cursor-pointer" title="削除">&times;</button>
-      `;
-      row.querySelector('button').addEventListener('click', () => unregisterCustomElement(name));
-      container.appendChild(row);
-    });
-  }
-
   // --- 結果表示 ---
   function showResult(imageData, originalImageData = null) {
     elements.resultSection.classList.remove('hidden');
@@ -1274,7 +1126,7 @@ const UI = (() => {
     let isDragging = false;
 
     function getSliderRatio(e) {
-      const rect = elements.compareContainer.getBoundingClientRect();
+      const rect = elements.resultImage.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       return (clientX - rect.left) / rect.width;
     }
@@ -1309,23 +1161,23 @@ const UI = (() => {
       document.removeEventListener('touchend', onEnd);
     }
 
-    // マウスホバーでスライダー表示
-    elements.compareContainer.addEventListener('mouseenter', () => {
+    // マウスホバーでスライダー表示（画像上のみ反応）
+    elements.resultImage.addEventListener('mouseenter', () => {
       if (!hasBeforeImage) return;
       activateCompare();
     });
-    elements.compareContainer.addEventListener('mouseleave', () => {
+    elements.resultImage.addEventListener('mouseleave', () => {
       if (isDragging) return; // ドラッグ中は閉じない
       deactivateCompare();
     });
 
     // マウスドラッグ（documentリスナーはonStartで登録）
     elements.compareSlider.addEventListener('mousedown', onStart);
-    elements.compareContainer.addEventListener('mousedown', onStart);
+    elements.resultImage.addEventListener('mousedown', onStart);
 
     // タッチ操作（documentリスナーはonStartで登録）
     elements.compareSlider.addEventListener('touchstart', onStart, { passive: false });
-    elements.compareContainer.addEventListener('touchstart', onStart, { passive: false });
+    elements.resultImage.addEventListener('touchstart', onStart, { passive: false });
   }
 
   // --- 履歴タイムライン（縦型サイドバー） ---
@@ -1340,7 +1192,8 @@ const UI = (() => {
 
       const thumbUrl = EditHistory.getThumbnailUrl(entry);
       item.innerHTML = `
-        <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 history-thumb">
+        <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 history-thumb ${isCurrent ? 'ring-2 ring-blue-500' : ''}">
+          ${isCurrent ? '<span class="absolute top-0.5 left-0.5 z-10 px-1 py-0.5 text-[8px] font-bold bg-blue-500 text-white rounded">編集中</span>' : ''}
           ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>'}
           <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <button class="history-dl-btn text-white hover:text-blue-300 transition-colors p-1" title="ダウンロード">
@@ -1372,6 +1225,7 @@ const UI = (() => {
       if (delBtn) {
         delBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          if (!confirm('この履歴を削除しますか？')) return;
           EditHistory.removeEntry(i);
         });
       }
@@ -1738,7 +1592,7 @@ const UI = (() => {
       }
 
       container.innerHTML = projects.map(p => `
-        <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50" data-project-id="${p.id}">
+        <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer" data-project-id="${p.id}" onclick="App.loadProject('${p.id}')">
           <div class="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
             ${p.thumbnail
               ? `<img src="${p.thumbnail}" alt="" class="w-full h-full object-cover">`
@@ -1747,15 +1601,13 @@ const UI = (() => {
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-gray-800 truncate">${p.name}</p>
-            <p class="text-xs text-gray-400">${formatDate(p.updatedAt)} ・ ${p.entryCount}件の履歴</p>
+            <p class="text-xs text-gray-400">${formatDate(p.updatedAt)} ・ 画像${p.entryCount}枚</p>
           </div>
           <div class="flex gap-1 flex-shrink-0">
-            <button onclick="App.loadProject('${p.id}')" class="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded cursor-pointer" title="読み込み">読込</button>
-            <button onclick="App.applyTemplate('${p.id}')" class="px-2 py-1 text-xs text-green-600 hover:bg-green-50 rounded cursor-pointer" title="テンプレート適用">テンプレ</button>
-            <button onclick="App.exportProject('${p.id}')" class="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded cursor-pointer" title="エクスポート">
+            <button onclick="event.stopPropagation(); App.exportProject('${p.id}')" class="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded cursor-pointer" title="エクスポート">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             </button>
-            <button onclick="App.deleteProject('${p.id}')" class="px-2 py-1 text-xs text-red-500 hover:bg-red-50 rounded cursor-pointer" title="削除">
+            <button onclick="event.stopPropagation(); App.deleteProject('${p.id}')" class="px-2 py-1 text-xs text-red-500 hover:bg-red-50 rounded cursor-pointer" title="削除">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </button>
           </div>
