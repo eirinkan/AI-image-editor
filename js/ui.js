@@ -184,7 +184,7 @@ const UI = (() => {
         }
       });
       // 対象画像にクリックイベント
-      ['previewImageClean', 'previewImage'].forEach(id => {
+      ['previewImageClean', 'previewImage', 'resultImage', 'generateResultImage'].forEach(id => {
         const img = document.getElementById(id);
         if (img) {
           img.style.cursor = 'zoom-in';
