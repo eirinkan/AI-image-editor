@@ -101,8 +101,8 @@ const TextToImage = (() => {
       generatePanel.classList.add('hidden');
       subTabUpload.classList.add('active');
       subTabGenerate.classList.remove('active');
-      subTabGenerate.classList.add('text-gray-500');
-      subTabUpload.classList.remove('text-gray-500');
+      subTabGenerate.classList.add('text-gray-500', 'dark:text-gray-400');
+      subTabUpload.classList.remove('text-gray-500', 'dark:text-gray-400');
 
       // アップロードタブに切り替えた際、生成フローの状態をリセット
       const ideaInputSection = document.getElementById('ideaInputSection');
@@ -116,8 +116,8 @@ const TextToImage = (() => {
       generatePanel.classList.remove('hidden');
       subTabGenerate.classList.add('active');
       subTabUpload.classList.remove('active');
-      subTabUpload.classList.add('text-gray-500');
-      subTabGenerate.classList.remove('text-gray-500');
+      subTabUpload.classList.add('text-gray-500', 'dark:text-gray-400');
+      subTabGenerate.classList.remove('text-gray-500', 'dark:text-gray-400');
 
       // 生成タブに切り替えた際、フローの状態をリセット
       const ideaInputSection = document.getElementById('ideaInputSection');
@@ -137,12 +137,12 @@ const TextToImage = (() => {
     if (!aspectList) return;
     aspectList.querySelectorAll('.aspect-btn').forEach(b => {
       b.classList.remove('selected');
-      b.classList.add('border-gray-200', 'text-gray-600');
+      b.classList.add('border-gray-200', 'text-gray-600', 'dark:text-gray-300');
     });
     const target = aspectList.querySelector(`[data-ratio="${ratio}"]`);
     if (target) {
       target.classList.add('selected');
-      target.classList.remove('border-gray-200', 'text-gray-600');
+      target.classList.remove('border-gray-200', 'text-gray-600', 'dark:text-gray-300');
     }
   }
 
@@ -152,12 +152,12 @@ const TextToImage = (() => {
     if (!sizeList) return;
     sizeList.querySelectorAll('.size-btn').forEach(b => {
       b.classList.remove('selected');
-      b.classList.add('border-gray-200', 'text-gray-600');
+      b.classList.add('border-gray-200', 'text-gray-600', 'dark:text-gray-300');
     });
     const target = sizeList.querySelector(`[data-size="${size}"]`);
     if (target) {
       target.classList.add('selected');
-      target.classList.remove('border-gray-200', 'text-gray-600');
+      target.classList.remove('border-gray-200', 'text-gray-600', 'dark:text-gray-300');
     }
   }
 
@@ -341,9 +341,9 @@ const TextToImage = (() => {
     return escaped
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/^### (.*$)/gm, '<h4 class="font-bold text-gray-800 mt-3 mb-1">$1</h4>')
-      .replace(/^## (.*$)/gm, '<h3 class="font-bold text-gray-800 mt-4 mb-2 text-base">$1</h3>')
-      .replace(/^- (.*$)/gm, '<li class="ml-4 text-sm text-gray-600">$1</li>')
+      .replace(/^### (.*$)/gm, '<h4 class="font-bold text-gray-800 dark:text-gray-100 mt-3 mb-1">$1</h4>')
+      .replace(/^## (.*$)/gm, '<h3 class="font-bold text-gray-800 dark:text-gray-100 mt-4 mb-2 text-base">$1</h3>')
+      .replace(/^- (.*$)/gm, '<li class="ml-4 text-sm text-gray-600 dark:text-gray-300">$1</li>')
       .replace(/\n\n/g, '<br><br>')
       .replace(/\n/g, '<br>');
   }

@@ -131,7 +131,7 @@ const CameraEditor = (() => {
   // 「今までと同じ」チェックボックス行を作成するヘルパー
   function createKeepCheckboxRow(key, onKeepChange) {
     const keepRow = document.createElement('label');
-    keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500';
+    keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500 dark:text-gray-400';
     const keepCheck = document.createElement('input');
     keepCheck.type = 'checkbox';
     keepCheck.checked = !!keepFlags[key];
@@ -154,7 +154,7 @@ const CameraEditor = (() => {
       section.className = 'camera-control-section';
 
       const label = document.createElement('p');
-      label.className = 'text-xs font-medium text-gray-500 mb-2';
+      label.className = 'text-xs font-medium text-gray-500 dark:text-gray-400 mb-2';
       label.textContent = ctrl.label;
       section.appendChild(label);
 
@@ -169,10 +169,10 @@ const CameraEditor = (() => {
 
     // プロンプトプレビュー
     const preview = document.createElement('div');
-    preview.className = 'camera-prompt-preview bg-purple-50 border border-purple-200 rounded-lg p-3 mt-3';
+    preview.className = 'camera-prompt-preview bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-3 mt-3';
     preview.innerHTML = `
-      <p class="text-[10px] text-purple-400 mb-1">生成されるカメラ指示</p>
-      <p id="cameraPromptPreview" class="text-xs text-purple-700 font-mono leading-relaxed"></p>
+      <p class="text-[10px] text-purple-400 dark:text-purple-300 mb-1">生成されるカメラ指示</p>
+      <p id="cameraPromptPreview" class="text-xs text-purple-700 dark:text-purple-300 font-mono leading-relaxed"></p>
     `;
     container.appendChild(preview);
 
@@ -378,7 +378,7 @@ const CameraEditor = (() => {
 
     // 「今までと同じ」チェックボックス
     const keepRow = document.createElement('label');
-    keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500';
+    keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500 dark:text-gray-400';
     const keepCheck = document.createElement('input');
     keepCheck.type = 'checkbox';
     keepCheck.checked = !!keepFlags[key];
@@ -392,7 +392,7 @@ const CameraEditor = (() => {
     sliderRow.className = 'flex items-center gap-3';
 
     const labelLeft = document.createElement('span');
-    labelLeft.className = 'text-[10px] text-gray-400 w-12 text-right flex-shrink-0';
+    labelLeft.className = 'text-[10px] text-gray-400 dark:text-gray-400 w-12 text-right flex-shrink-0';
     labelLeft.textContent = ctrl.labels[0];
 
     const input = document.createElement('input');
@@ -404,11 +404,11 @@ const CameraEditor = (() => {
     input.className = 'cam-slider flex-1';
 
     const labelRight = document.createElement('span');
-    labelRight.className = 'text-[10px] text-gray-400 w-12 flex-shrink-0';
+    labelRight.className = 'text-[10px] text-gray-400 dark:text-gray-400 w-12 flex-shrink-0';
     labelRight.textContent = ctrl.labels[ctrl.labels.length - 1];
 
     const valueDisplay = document.createElement('span');
-    valueDisplay.className = 'text-xs font-mono font-medium text-purple-600 w-14 text-center flex-shrink-0';
+    valueDisplay.className = 'text-xs font-mono font-medium text-purple-600 dark:text-purple-400 w-14 text-center flex-shrink-0';
     valueDisplay.textContent = `${val}${ctrl.unit || ''}`;
 
     sliderRow.appendChild(labelLeft);
@@ -496,7 +496,7 @@ const CameraEditor = (() => {
 
     // 「今までと同じ」チェックボックス
     const keepRow = document.createElement('label');
-    keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500';
+    keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500 dark:text-gray-400';
     const keepCheck = document.createElement('input');
     keepCheck.type = 'checkbox';
     keepCheck.checked = !!keepFlags[key];
@@ -510,7 +510,7 @@ const CameraEditor = (() => {
     sliderRow.className = 'flex items-center gap-3';
 
     const labelLeft = document.createElement('span');
-    labelLeft.className = 'text-[10px] text-gray-400 w-12 text-right flex-shrink-0';
+    labelLeft.className = 'text-[10px] text-gray-400 dark:text-gray-400 w-12 text-right flex-shrink-0';
     labelLeft.textContent = ctrl.labels[0];
 
     const input = document.createElement('input');
@@ -522,11 +522,11 @@ const CameraEditor = (() => {
     input.className = 'cam-slider flex-1';
 
     const labelRight = document.createElement('span');
-    labelRight.className = 'text-[10px] text-gray-400 w-12 flex-shrink-0';
+    labelRight.className = 'text-[10px] text-gray-400 dark:text-gray-400 w-12 flex-shrink-0';
     labelRight.textContent = ctrl.labels[ctrl.labels.length - 1];
 
     const valueDisplay = document.createElement('span');
-    valueDisplay.className = 'text-xs font-mono font-medium text-purple-600 w-14 text-center flex-shrink-0';
+    valueDisplay.className = 'text-xs font-mono font-medium text-purple-600 dark:text-purple-400 w-14 text-center flex-shrink-0';
     valueDisplay.textContent = `f/${parseFloat(val).toFixed(1)}`;
 
     sliderRow.appendChild(labelLeft);

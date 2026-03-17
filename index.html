@@ -42,11 +42,11 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
           プロジェクト
         </button>
-        <button id="settingsBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
+        <button id="settingsBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
           設定
         </button>
-        <button id="helpBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
+        <button id="helpBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"></path></svg>
           ヘルプ
         </button>
@@ -59,7 +59,7 @@
     <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-5">
         <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">設定</h3>
-        <button id="settingsClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
+        <button id="settingsClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
 
       <!-- APIキー -->
@@ -69,14 +69,14 @@
           <input type="password" id="apiKeyInput" autocomplete="off"
             class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent pr-10"
             placeholder="Gemini APIキーを入力（自動保存）">
-          <button id="apiKeyToggle" aria-label="APIキーの表示/非表示" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-pointer">
+          <button id="apiKeyToggle" aria-label="APIキーの表示/非表示" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 cursor-pointer">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
             </svg>
           </button>
         </div>
-        <p id="apiKeyStatus" class="text-xs text-gray-400 dark:text-gray-500"></p>
+        <p id="apiKeyStatus" class="text-xs text-gray-400 dark:text-gray-400"></p>
       </div>
 
       <!-- テーマ設定 -->
@@ -104,15 +104,15 @@
 
         <div class="space-y-3">
           <div>
-            <label for="textModelSelect" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">テキスト処理モデル<span class="text-gray-400 dark:text-gray-500">（画像分析・編集指示の理解・プロンプト作成）</span></label>
+            <label for="textModelSelect" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">テキスト処理モデル<span class="text-gray-400 dark:text-gray-400">（画像分析・編集指示の理解・プロンプト作成）</span></label>
             <select id="textModelSelect" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white cursor-pointer"></select>
-            <p id="textModelNote" class="text-xs text-gray-400 dark:text-gray-500 mt-1"></p>
+            <p id="textModelNote" class="text-xs text-gray-400 dark:text-gray-400 mt-1"></p>
           </div>
 
           <div>
-            <label for="imageModelSelect" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">画像生成モデル<span class="text-gray-400 dark:text-gray-500">（画像編集・テキストから画像生成）</span></label>
+            <label for="imageModelSelect" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">画像生成モデル<span class="text-gray-400 dark:text-gray-400">（画像編集・テキストから画像生成）</span></label>
             <select id="imageModelSelect" class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white cursor-pointer"></select>
-            <p id="imageModelNote" class="text-xs text-gray-400 dark:text-gray-500 mt-1"></p>
+            <p id="imageModelNote" class="text-xs text-gray-400 dark:text-gray-400 mt-1"></p>
           </div>
         </div>
       </div>
@@ -121,7 +121,7 @@
       <div class="border-t border-gray-100 dark:border-gray-700 pt-5 mb-5">
         <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">概算コスト</h4>
         <div id="costTableContainer" class="space-y-3 text-xs"></div>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">※概算です。画像サイズ・解像度により変動します。<br>詳細は<a href="https://ai.google.dev/pricing" target="_blank" rel="noopener" class="text-blue-500 hover:underline">Googleの料金表</a>をご確認ください。</p>
+        <p class="text-xs text-gray-400 dark:text-gray-400 mt-2">※概算です。画像サイズ・解像度により変動します。<br>詳細は<a href="https://ai.google.dev/pricing" target="_blank" rel="noopener" class="text-blue-500 hover:underline">Googleの料金表</a>をご確認ください。</p>
       </div>
 
     </div>
@@ -133,7 +133,7 @@
       <!-- モーダルヘッダー -->
       <div class="flex items-center justify-between px-6 pt-6 pb-4 flex-shrink-0">
         <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">ヘルプ</h3>
-        <button id="helpClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
+        <button id="helpClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
       <!-- タブ切り替え -->
       <div class="flex border-b border-gray-200 dark:border-gray-700 px-6 flex-shrink-0">
@@ -330,7 +330,7 @@
               <span class="text-base">🖼️</span>
               <p class="font-semibold text-gray-800 dark:text-gray-100">参照画像の活用</p>
             </div>
-            <ul class="space-y-1.5 ml-6 text-gray-500">
+            <ul class="space-y-1.5 ml-6 text-gray-500 dark:text-gray-400">
               <li class="flex gap-2"><span class="flex-shrink-0 text-blue-400">•</span>「この画像のように変えて」という指示と組み合わせる</li>
               <li class="flex gap-2"><span class="flex-shrink-0 text-blue-400">•</span>ロゴの差し替え、商品の入替に効果的</li>
               <li class="flex gap-2"><span class="flex-shrink-0 text-blue-400">•</span>画像のスタイルやテイストの参考としても使える</li>
@@ -345,7 +345,7 @@
               <span class="text-base">💰</span>
               <p class="font-semibold text-gray-800 dark:text-gray-100">コスト最適化</p>
             </div>
-            <ul class="space-y-1.5 ml-6 text-gray-500">
+            <ul class="space-y-1.5 ml-6 text-gray-500 dark:text-gray-400">
               <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>小さいサイズ（1K）でテスト → 満足したら大きいサイズで再生成</li>
               <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>テキスト処理モデルは 2.5 Pro で十分なケースが多い</li>
               <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>プリセットを活用すると指示作成の手間が省ける</li>
@@ -364,7 +364,7 @@
   <!-- 左サイドバー: 履歴 -->
   <aside id="historySidebar" class="history-sidebar hidden">
     <div class="sticky top-20">
-      <h2 class="text-sm font-semibold text-gray-700 mb-3">編集履歴</h2>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">編集履歴</h2>
       <div id="historyTimeline" class="history-timeline-vertical">
         <!-- 縦型タイムラインがここに動的挿入 -->
       </div>
@@ -401,7 +401,7 @@
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path></svg>
             </div>
             <p class="text-gray-700 dark:text-gray-200 font-medium">クリックまたはドラッグ&ドロップで画像をアップロード</p>
-            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, WEBP対応</p>
+            <p class="text-sm text-gray-400 dark:text-gray-400 mt-1">JPG, PNG, WEBP対応</p>
           </div>
           <div id="imagePreview" class="hidden relative">
             <button id="removeImage" aria-label="画像を削除" class="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-9 h-9 flex items-center justify-center hover:bg-red-600 shadow-lg text-lg leading-none z-20 cursor-pointer">&times;</button>
@@ -462,22 +462,22 @@
                 <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">アスペクト比 <span class="text-xs text-purple-500 dark:text-purple-400">（AI推奨値を自動選択済み）</span></p>
                 <div id="aspectRatioList" class="flex flex-wrap gap-2">
                   <button data-ratio="1:1" class="aspect-btn selected px-3 py-1.5 text-xs rounded-lg border-2 transition-colors">1:1</button>
-                  <button data-ratio="2:3" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">2:3</button>
-                  <button data-ratio="3:2" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">3:2</button>
-                  <button data-ratio="3:4" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">3:4</button>
-                  <button data-ratio="4:3" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4:3</button>
-                  <button data-ratio="4:5" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4:5</button>
-                  <button data-ratio="5:4" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">5:4</button>
-                  <button data-ratio="9:16" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">9:16</button>
-                  <button data-ratio="16:9" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">16:9</button>
+                  <button data-ratio="2:3" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 transition-colors">2:3</button>
+                  <button data-ratio="3:2" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 transition-colors">3:2</button>
+                  <button data-ratio="3:4" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 transition-colors">3:4</button>
+                  <button data-ratio="4:3" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 transition-colors">4:3</button>
+                  <button data-ratio="4:5" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 transition-colors">4:5</button>
+                  <button data-ratio="5:4" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 transition-colors">5:4</button>
+                  <button data-ratio="9:16" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 transition-colors">9:16</button>
+                  <button data-ratio="16:9" class="aspect-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 transition-colors">16:9</button>
                 </div>
               </div>
               <div>
-                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">解像度 <span class="text-xs text-gray-400 dark:text-gray-500">（高解像度ほどコストが高くなります）</span></p>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">解像度 <span class="text-xs text-gray-400 dark:text-gray-400">（高解像度ほどコストが高くなります）</span></p>
                 <div id="imageSizeList" class="flex gap-2">
-                  <button data-size="1K" class="size-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">1K</button>
+                  <button data-size="1K" class="size-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 transition-colors">1K</button>
                   <button data-size="2K" class="size-btn selected px-3 py-1.5 text-xs rounded-lg border-2 transition-colors">2K</button>
-                  <button data-size="4K" class="size-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 text-gray-600 transition-colors">4K</button>
+                  <button data-size="4K" class="size-btn px-3 py-1.5 text-xs rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 transition-colors">4K</button>
                 </div>
               </div>
             </div>
@@ -577,30 +577,30 @@
         <div id="presetTemplates" class="hidden">
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">プリセットテンプレート</p>
           <div class="flex flex-wrap gap-2" id="presetList">
-            <button class="preset-btn px-3 py-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 rounded-full hover:bg-orange-100 transition-colors" data-preset="golden_hour">🌅 ゴールデンアワー</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors" data-preset="winter">❄️ 冬景色</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-purple-50 text-purple-700 border border-purple-200 rounded-full hover:bg-purple-100 transition-colors" data-preset="anime">🎨 アニメ風</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-gray-50 text-gray-700 border border-gray-200 rounded-full hover:bg-gray-100 transition-colors" data-preset="night">🌙 夜景</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-green-50 text-green-700 border border-green-200 rounded-full hover:bg-green-100 transition-colors" data-preset="spring">🌸 春の雰囲気</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full hover:bg-yellow-100 transition-colors" data-preset="vintage">📷 ヴィンテージ</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-full hover:bg-cyan-100 transition-colors" data-preset="minimalist">✨ ミニマリスト</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-red-50 text-red-700 border border-red-200 rounded-full hover:bg-red-100 transition-colors" data-preset="dramatic">🎭 ドラマチック</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full hover:bg-yellow-100 transition-colors" data-preset="summer">☀️ 夏</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 rounded-full hover:bg-orange-100 transition-colors" data-preset="autumn">🍂 秋</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-full hover:bg-amber-100 transition-colors" data-preset="morning">🌅 朝</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-pink-50 text-pink-700 border border-pink-200 rounded-full hover:bg-pink-100 transition-colors" data-preset="sunset">🌆 夕暮れ</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-sky-50 text-sky-700 border border-sky-200 rounded-full hover:bg-sky-100 transition-colors" data-preset="watercolor">💧 水彩画</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-full hover:bg-amber-100 transition-colors" data-preset="oil_painting">🖼️ 油絵</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-gray-50 text-gray-700 border border-gray-200 rounded-full hover:bg-gray-100 transition-colors" data-preset="pencil_sketch">✏️ 鉛筆スケッチ</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-violet-50 text-violet-700 border border-violet-200 rounded-full hover:bg-violet-100 transition-colors" data-preset="cyberpunk">🌃 サイバーパンク</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-full hover:bg-amber-100 transition-colors" data-preset="steampunk">⚙️ スチームパンク</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-rose-50 text-rose-700 border border-rose-200 rounded-full hover:bg-rose-100 transition-colors" data-preset="pop_art">🎪 ポップアート</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-slate-50 text-slate-700 border border-slate-200 rounded-full hover:bg-slate-100 transition-colors" data-preset="horror">👻 ホラー</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full hover:bg-indigo-100 transition-colors" data-preset="fantasy">🧙 ファンタジー</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-full hover:bg-cyan-100 transition-colors" data-preset="scifi">🚀 SF</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-pink-50 text-pink-700 border border-pink-200 rounded-full hover:bg-pink-100 transition-colors" data-preset="romantic">💕 ロマンチック</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors" data-preset="rain">🌧️ 雨</button>
-            <button class="preset-btn px-3 py-1.5 text-xs bg-gray-50 text-gray-700 border border-gray-200 rounded-full hover:bg-gray-100 transition-colors" data-preset="fog">🌫️ 霧</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 rounded-full hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors" data-preset="golden_hour">🌅 ゴールデンアワー</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors" data-preset="winter">❄️ 冬景色</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700 rounded-full hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors" data-preset="anime">🎨 アニメ風</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors" data-preset="night">🌙 夜景</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700 rounded-full hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors" data-preset="spring">🌸 春の雰囲気</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-colors" data-preset="vintage">📷 ヴィンテージ</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700 rounded-full hover:bg-cyan-100 dark:hover:bg-cyan-900/40 transition-colors" data-preset="minimalist">✨ ミニマリスト</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-700 rounded-full hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors" data-preset="dramatic">🎭 ドラマチック</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-colors" data-preset="summer">☀️ 夏</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 rounded-full hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors" data-preset="autumn">🍂 秋</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors" data-preset="morning">🌅 朝</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-700 rounded-full hover:bg-pink-100 dark:hover:bg-pink-900/40 transition-colors" data-preset="sunset">🌆 夕暮れ</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-700 rounded-full hover:bg-sky-100 dark:hover:bg-sky-900/40 transition-colors" data-preset="watercolor">💧 水彩画</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors" data-preset="oil_painting">🖼️ 油絵</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors" data-preset="pencil_sketch">✏️ 鉛筆スケッチ</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 rounded-full hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors" data-preset="cyberpunk">🌃 サイバーパンク</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors" data-preset="steampunk">⚙️ スチームパンク</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-700 rounded-full hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors" data-preset="pop_art">🎪 ポップアート</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900/20 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900/40 transition-colors" data-preset="horror">👻 ホラー</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors" data-preset="fantasy">🧙 ファンタジー</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700 rounded-full hover:bg-cyan-100 dark:hover:bg-cyan-900/40 transition-colors" data-preset="scifi">🚀 SF</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-700 rounded-full hover:bg-pink-100 dark:hover:bg-pink-900/40 transition-colors" data-preset="romantic">💕 ロマンチック</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors" data-preset="rain">🌧️ 雨</button>
+            <button class="preset-btn px-3 py-1.5 text-xs bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors" data-preset="fog">🌫️ 霧</button>
           </div>
         </div>
 
@@ -614,7 +614,7 @@
           <div class="flex-1">
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">参照画像（任意: オブジェクト入替・ロゴ変更等に使用）</p>
             <div id="referenceUploadArea" class="border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-300 transition-colors relative">
-              <span class="ref-prompt text-sm text-gray-400 dark:text-gray-500">クリックして参照画像を追加</span>
+              <span class="ref-prompt text-sm text-gray-400 dark:text-gray-400">クリックして参照画像を追加</span>
               <img id="referencePreview" class="hidden max-h-32 mx-auto rounded" alt="参照画像">
               <button id="removeReference" aria-label="参照画像を削除" class="hidden absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600">&times;</button>
               <input type="file" id="referenceFileInput" accept="image/*" class="hidden">
@@ -692,11 +692,11 @@
       <div class="spinner"></div>
       <div id="loadingSteps" class="w-full space-y-2 hidden">
         <div class="loading-step flex items-center gap-2" data-step="1">
-          <span class="step-icon w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">1</span>
+          <span class="step-icon w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-300">1</span>
           <span class="step-label text-sm text-gray-500 dark:text-gray-400">編集内容を準備中...</span>
         </div>
         <div class="loading-step flex items-center gap-2" data-step="2">
-          <span class="step-icon w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">2</span>
+          <span class="step-icon w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-300">2</span>
           <span class="step-label text-sm text-gray-500 dark:text-gray-400">画像生成中...</span>
         </div>
       </div>
@@ -711,7 +711,7 @@
     <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-sm mx-4">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">プロジェクトを保存</h3>
-        <button id="saveProjectClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
+        <button id="saveProjectClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">プロジェクト名</label>
       <input id="saveProjectName" type="text" placeholder="名前を入力（省略時は自動生成）" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4">
@@ -727,7 +727,7 @@
     <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">プロジェクト一覧</h3>
-        <button id="projectModalClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
+        <button id="projectModalClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
       <div class="flex gap-2 mb-4">
         <label class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer border border-blue-200">
@@ -737,7 +737,7 @@
         </label>
       </div>
       <div id="projectList" class="space-y-3">
-        <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-8">保存されたプロジェクトはありません</p>
+        <p class="text-sm text-gray-400 dark:text-gray-400 text-center py-8">保存されたプロジェクトはありません</p>
       </div>
     </div>
   </div>
@@ -820,9 +820,9 @@
   <script src="js/api.js?v=13"></script>
   <script src="js/storage.js?v=1"></script>
   <script src="js/history.js?v=13"></script>
-  <script src="js/camera-editor.js?v=4"></script>
-  <script src="js/ui.js?v=20"></script>
-  <script src="js/generate.js?v=11"></script>
+  <script src="js/camera-editor.js?v=5"></script>
+  <script src="js/ui.js?v=21"></script>
+  <script src="js/generate.js?v=12"></script>
   <script src="js/app.js?v=15"></script>
 </body>
 </html>
