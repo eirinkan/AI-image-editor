@@ -27,6 +27,7 @@ const UI = (() => {
   // Before/After比較状態
   let beforeImageData = null; // 比較用の元画像
   let hasBeforeImage = false; // Before画像が設定済みか
+  let customBeforeEntryId = null; // ユーザーが明示的に選択したBeforeエントリID
 
   // エラー/成功トーストのタイマー（競合防止）
   let errorTimer = null;
@@ -1118,6 +1119,7 @@ const UI = (() => {
 
   // --- 結果表示 ---
   function showResult(imageData, originalImageData = null) {
+    customBeforeEntryId = null; // 新規生成時はカスタム選択をリセット
     elements.resultSection.classList.remove('hidden');
     elements.resultGrid.classList.add('hidden');
     elements.compareContainer.classList.remove('hidden');
@@ -1202,9 +1204,30 @@ const UI = (() => {
   }
 
   function deactivateCompare() {
-    elements.compareContainer.classList.remove('compare-active');
-    // スライダーをアニメーションで閉じる
+    // compare-activeを外す前にtransitionを無効化してclip-pathを即座にリセット
+    elements.compareBefore.style.transition = 'none';
     updateSliderPosition(0);
+    elements.compareContainer.classList.remove('compare-active');
+    // 次フレームでインラインtransitionを除去しCSS定義に戻す
+    requestAnimationFrame(() => {
+      elements.compareBefore.style.transition = '';
+    });
+  }
+
+  // Before画像を任意の履歴エントリに切り替え
+  function setBeforeFromEntry(entry) {
+    if (!entry || !entry.image) return;
+    customBeforeEntryId = entry.id;
+    beforeImageData = entry.image;
+    hasBeforeImage = true;
+    elements.compareBeforeImg.src = `data:${entry.image.mimeType};base64,${entry.image.base64}`;
+    // スライダーの存在をアニメーションで示唆
+    activateCompare();
+    setTimeout(() => deactivateCompare(), 1000);
+    // 履歴再描画でバッジを更新
+    const allEntries = EditHistory.getAll();
+    const idx = EditHistory.getCurrentIndex();
+    renderHistory(allEntries, idx);
   }
 
   function setupCompareSlider() {
@@ -1322,11 +1345,16 @@ const UI = (() => {
       item.className = `group flex flex-col items-center gap-1 p-2 rounded-lg transition-all cursor-pointer ${isCurrent ? 'bg-blue-50 dark:bg-blue-900/30' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'}`;
 
       const thumbUrl = EditHistory.getThumbnailUrl(entry);
+      const isBefore = entry.id === customBeforeEntryId;
       item.innerHTML = `
-        <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 history-thumb ${isCurrent ? 'ring-2 ring-blue-500' : ''}">
+        <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 history-thumb ${isCurrent ? 'ring-2 ring-blue-500' : ''} ${isBefore ? 'ring-2 ring-yellow-500' : ''}">
           ${isCurrent ? '<span class="absolute top-0.5 left-0.5 z-10 px-1 py-0.5 text-[8px] font-bold bg-blue-500 text-white rounded">編集中</span>' : ''}
+          ${isBefore ? '<span class="absolute bottom-0.5 left-0.5 z-10 px-1 py-0.5 text-[8px] font-bold bg-yellow-500 text-white rounded">Before</span>' : ''}
           ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-400 text-xs">No img</div>'}
           <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <button class="history-set-before-btn text-white hover:text-yellow-300 transition-colors p-1" title="Beforeに設定">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>
             <button class="history-dl-btn text-white hover:text-blue-300 transition-colors p-1" title="ダウンロード">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             </button>
@@ -1344,6 +1372,15 @@ const UI = (() => {
           if (typeof App !== 'undefined') App.goToHistory(i);
         });
       });
+
+      // Beforeに設定ボタン
+      const setBeforeBtn = item.querySelector('.history-set-before-btn');
+      if (setBeforeBtn) {
+        setBeforeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setBeforeFromEntry(entry);
+        });
+      }
 
       // ダウンロードボタン
       item.querySelector('.history-dl-btn').addEventListener('click', (e) => {
