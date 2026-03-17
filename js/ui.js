@@ -576,6 +576,8 @@ const UI = (() => {
       elements.imagePreview.classList.remove('hidden');
       elements.removeImage.classList.remove('hidden');
       elements.uploadArea.querySelector('.upload-prompt').classList.add('hidden');
+      elements.uploadArea.classList.remove('p-12');
+      elements.uploadArea.classList.add('p-4');
       // マーカーカラムは非表示、ラベルも非表示（1枚だけなので不要）
       if (elements.markerColumn) elements.markerColumn.classList.add('hidden');
 
@@ -599,6 +601,8 @@ const UI = (() => {
     elements.imagePreview.classList.add('hidden');
     elements.removeImage.classList.add('hidden');
     elements.uploadArea.querySelector('.upload-prompt').classList.remove('hidden');
+    elements.uploadArea.classList.remove('p-4');
+    elements.uploadArea.classList.add('p-12');
     elements.analysisSection.classList.add('hidden');
     elements.elementsSection.classList.add('hidden');
     elements.editSection.classList.add('hidden');
