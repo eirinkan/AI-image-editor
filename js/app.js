@@ -21,6 +21,9 @@ const App = (() => {
   // 現在のプロジェクトID（保存済みの場合）
   let currentProjectId = null;
 
+  // 自動保存デバウンスタイマー
+  let _autoSaveTimer = null;
+
   // 初期化
   async function init() {
     UI.init();
@@ -28,6 +31,197 @@ const App = (() => {
     EditHistory.onChange(onHistoryChange);
     // IndexedDB初期化
     try { await ProjectStorage.init(); } catch (e) { console.warn('IndexedDB初期化失敗:', e); }
+    // 自動保存からの復元
+    await restoreSession();
+  }
+
+  // 自動保存（デバウンス500ms）
+  function autoSave() {
+    if (_autoSaveTimer) clearTimeout(_autoSaveTimer);
+    _autoSaveTimer = setTimeout(async () => {
+      try {
+        // 保存すべきデータがない場合はスキップ
+        if (!state.originalImage && !state.currentImage) return;
+
+        const entries = EditHistory.toSerializable();
+        const currentIndex = EditHistory.getCurrentIndex();
+
+        // アクティブタブを判定
+        const generatePanel = document.getElementById('generatePanel');
+        const tabState = (generatePanel && !generatePanel.classList.contains('hidden')) ? 'generate' : 'upload';
+
+        // 分析完了判定（タブバーが非表示なら分析済み）
+        const subTabBar = document.getElementById('subTabBar');
+        const analysisCompleted = subTabBar ? subTabBar.classList.contains('hidden') : false;
+
+        await ProjectStorage.saveSession({
+          originalImage: state.originalImage,
+          currentImage: state.currentImage,
+          currentJson: state.currentJson,
+          originalJson: state.originalJson,
+          entries: entries,
+          currentIndex: currentIndex,
+          currentProjectId: currentProjectId,
+          tabState: tabState,
+          analysisCompleted: analysisCompleted,
+        });
+      } catch (e) {
+        console.warn('自動保存に失敗:', e);
+      }
+    }, 500);
+  }
+
+  // セッション復元
+  async function restoreSession() {
+    try {
+      const session = await ProjectStorage.loadSession();
+      if (!session || (!session.originalImage && !session.currentImage)) return;
+
+      // 状態を復元
+      state.originalImage = session.originalImage || null;
+      state.currentImage = session.currentImage || null;
+      state.currentJson = session.currentJson || null;
+      state.originalJson = session.originalJson || null;
+      currentProjectId = session.currentProjectId || null;
+
+      // 履歴を復元
+      if (session.entries && session.entries.length > 0) {
+        EditHistory.fromSerializable(session.entries);
+        // currentIndexを復元
+        if (typeof session.currentIndex === 'number' && session.currentIndex >= 0) {
+          EditHistory.goTo(session.currentIndex);
+        }
+      }
+
+      // タブ状態の復元
+      const uploadPanel = document.getElementById('uploadPanel');
+      const generatePanel = document.getElementById('generatePanel');
+      const subTabBar = document.getElementById('subTabBar');
+      const uploadTab = document.getElementById('uploadTab');
+      const generateTab = document.getElementById('generateTab');
+
+      if (session.tabState === 'generate' && !session.analysisCompleted) {
+        // 生成タブを表示（分析前の場合のみ）
+        if (uploadPanel) uploadPanel.classList.add('hidden');
+        if (generatePanel) generatePanel.classList.remove('hidden');
+        if (uploadTab) { uploadTab.classList.remove('border-blue-500', 'text-blue-600'); uploadTab.classList.add('border-transparent', 'text-gray-500'); }
+        if (generateTab) { generateTab.classList.add('border-blue-500', 'text-blue-600'); generateTab.classList.remove('border-transparent', 'text-gray-500'); }
+      } else {
+        // アップロードタブ表示
+        if (uploadPanel) uploadPanel.classList.remove('hidden');
+        if (generatePanel) generatePanel.classList.add('hidden');
+      }
+
+      // 分析完了時はタブバーを非表示
+      if (session.analysisCompleted && subTabBar) {
+        subTabBar.classList.add('hidden');
+      }
+
+      // 画像プレビューの復元
+      if (state.currentImage) {
+        const dataUrl = `data:${state.currentImage.mimeType};base64,${state.currentImage.base64}`;
+        const previewImage = document.getElementById('previewImage');
+        const previewImageClean = document.getElementById('previewImageClean');
+        const imagePreview = document.getElementById('imagePreview');
+        const uploadPrompt = document.querySelector('#uploadArea .upload-prompt');
+
+        if (previewImage) previewImage.src = dataUrl;
+        if (previewImageClean) previewImageClean.src = dataUrl;
+        if (imagePreview) imagePreview.classList.remove('hidden');
+        if (uploadPrompt) uploadPrompt.classList.add('hidden');
+      }
+
+      // 分析セクション表示
+      if (state.currentImage) {
+        const analysisSection = document.getElementById('analysisSection');
+        if (analysisSection) analysisSection.classList.remove('hidden');
+      }
+
+      // 要素一覧の復元
+      if (state.currentJson && state.currentJson.scene) {
+        UI.renderElements(state.currentJson);
+      }
+
+      // 結果パネルの復元（履歴がある場合）
+      const allEntries = EditHistory.getAll();
+      if (allEntries.length > 1) {
+        const current = EditHistory.getCurrent();
+        if (current) {
+          let beforeImage = null;
+          if (current.parentId != null && current.parentId >= 0) {
+            const parent = allEntries.find(e => e.id === current.parentId);
+            if (parent) beforeImage = parent.image;
+          }
+          UI.showResultFromHistory(current.image, beforeImage);
+          UI.updateMainPreview(current.image);
+        }
+      }
+
+      console.log('セッションを復元しました');
+    } catch (e) {
+      console.warn('セッション復元に失敗:', e);
+    }
+  }
+
+  // プロジェクト全体をクリア（新規作成）
+  function clearProject() {
+    if (!confirm('現在の編集内容を破棄して新規作成しますか？')) return;
+
+    cancelCurrentOperation();
+
+    // 状態クリア
+    state.originalImage = null;
+    state.currentImage = null;
+    state.referenceImage = null;
+    state.currentJson = null;
+    state.originalJson = null;
+    state.selectedElements = [];
+    state.pendingJson = null;
+    currentProjectId = null;
+
+    // 履歴クリア
+    EditHistory.clear();
+    UI.clearSelectedElements();
+
+    // UI初期化
+    const previewImage = document.getElementById('previewImage');
+    const previewImageClean = document.getElementById('previewImageClean');
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadPrompt = document.querySelector('#uploadArea .upload-prompt');
+    const analysisSection = document.getElementById('analysisSection');
+    const elementsSection = document.getElementById('elementsSection');
+    const editSection = document.getElementById('editSection');
+    const resultSection = document.getElementById('resultSection');
+    const fileInput = document.getElementById('fileInput');
+    const markerColumn = document.getElementById('markerColumn');
+    const subTabBar = document.getElementById('subTabBar');
+    const uploadPanel = document.getElementById('uploadPanel');
+    const generatePanel = document.getElementById('generatePanel');
+    const uploadTab = document.getElementById('uploadTab');
+    const generateTab = document.getElementById('generateTab');
+
+    if (previewImage) previewImage.src = '';
+    if (previewImageClean) previewImageClean.src = '';
+    if (imagePreview) imagePreview.classList.add('hidden');
+    if (uploadPrompt) uploadPrompt.classList.remove('hidden');
+    if (analysisSection) analysisSection.classList.add('hidden');
+    if (elementsSection) elementsSection.classList.add('hidden');
+    if (editSection) editSection.classList.add('hidden');
+    if (resultSection) resultSection.classList.add('hidden');
+    if (fileInput) fileInput.value = '';
+    if (markerColumn) markerColumn.classList.add('hidden');
+
+    // タブバー復活、アップロードタブに戻す
+    if (subTabBar) subTabBar.classList.remove('hidden');
+    if (uploadPanel) uploadPanel.classList.remove('hidden');
+    if (generatePanel) generatePanel.classList.add('hidden');
+    if (uploadTab) { uploadTab.classList.add('border-blue-500', 'text-blue-600'); uploadTab.classList.remove('border-transparent', 'text-gray-500'); }
+    if (generateTab) { generateTab.classList.remove('border-blue-500', 'text-blue-600'); generateTab.classList.add('border-transparent', 'text-gray-500'); }
+
+    // 自動保存削除
+    ProjectStorage.clearSession().catch(e => console.warn('自動保存削除失敗:', e));
+
+    UI.showSuccess('新規プロジェクトを作成しました');
   }
 
   // AI生成した画像が準備完了（分析前の状態にセット）
@@ -48,6 +242,8 @@ const App = (() => {
     // 分析セクション表示
     const analysisSection = document.getElementById('analysisSection');
     if (analysisSection) analysisSection.classList.remove('hidden');
+
+    autoSave();
   }
 
   // 画像がアップロードされた
@@ -57,6 +253,7 @@ const App = (() => {
     state.currentJson = null;
     state.originalJson = null;
     EditHistory.clear();
+    autoSave();
   }
 
   // 画像が削除された
@@ -74,6 +271,9 @@ const App = (() => {
     // タブバーを復活
     const subTabBar = document.getElementById('subTabBar');
     if (subTabBar) subTabBar.classList.remove('hidden');
+
+    // 自動保存もクリア
+    ProjectStorage.clearSession().catch(e => console.warn('自動保存削除失敗:', e));
   }
 
   // 参照画像がアップロードされた
@@ -157,6 +357,7 @@ const App = (() => {
 
       UI.hideLoading();
       UI.showSuccess('画像の分析が完了しました');
+      autoSave();
     } catch (err) {
       UI.hideLoading();
       if (err.name === 'AbortError') {
@@ -249,6 +450,7 @@ const App = (() => {
 
         UI.hideLoading();
         UI.showSuccess('画像の生成が完了しました');
+        autoSave();
       } else {
         // 複数枚の場合: ループ生成
         const results = [];
@@ -280,6 +482,7 @@ const App = (() => {
 
         UI.hideLoading();
         UI.showSuccess(`${generateCount}枚の画像を生成しました。画像をクリックして採用してください。`);
+        autoSave();
       }
     } catch (err) {
       UI.hideLoading();
@@ -320,6 +523,7 @@ const App = (() => {
       );
       _multiAdoptEntryCreated = true;
     }
+    autoSave();
   }
 
   // 履歴の特定の時点に戻る
@@ -365,6 +569,7 @@ const App = (() => {
     if (entries.length > 0) {
       UI.renderHistory(entries, currentIndex);
     }
+    autoSave();
   }
 
   // MIMEタイプから拡張子を取得
@@ -537,6 +742,7 @@ const App = (() => {
     goToHistory,
     downloadCurrent,
     getState: () => state,
+    clearProject,
     saveProject,
     getCurrentProjectId,
     loadProject,

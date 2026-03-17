@@ -256,6 +256,26 @@ button {
   background: rgba(239, 68, 68, 0.9);
 }
 
+/* 要素カードのインラインバッジ */
+.element-badge-inline {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.85);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.element-card:hover .element-badge-inline,
+.element-card.highlighted .element-badge-inline {
+  background: rgba(239, 68, 68, 0.9);
+}
+
 .element-card.highlighted {
   border-color: #ef4444 !important;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;

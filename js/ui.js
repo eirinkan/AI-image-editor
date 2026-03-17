@@ -151,6 +151,14 @@ const UI = (() => {
   }
 
   function setupEventListeners() {
+    // 新規作成ボタン
+    const newProjectBtn = document.getElementById('newProjectBtn');
+    if (newProjectBtn) {
+      newProjectBtn.addEventListener('click', () => {
+        if (typeof App !== 'undefined') App.clearProject();
+      });
+    }
+
     // プロジェクト保存・一覧モーダル
     elements.saveProjectBtn.addEventListener('click', () => showSaveDialog());
     elements.saveProjectClose.addEventListener('click', () => hideSaveDialog());
@@ -641,7 +649,6 @@ const UI = (() => {
           card.className = 'element-card group-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
           card.dataset.elementId = `group_${i}`;
           card.innerHTML = `
-            <span class="group-count-badge">${group.members.length}</span>
             <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(group.name)}（${group.members.length}個）</span>
           `;
           card.addEventListener('click', () => selectElement({
@@ -729,22 +736,26 @@ const UI = (() => {
     card.dataset.elementId = id;
 
     // position_coords がある場合のみバッジを表示
-    let badgeHtml = '';
     const hasBadge = markerIndex && data.position_coords;
-    if (hasBadge) {
-      badgeHtml = `<span class="element-badge">${markerIndex}</span>`;
-      card.classList.add('pl-5'); // バッジ分のパディング
-    }
 
     // 編集可能な要素タイプか判定（atmosphere, camera, global以外）
     const isEditable = ['object', 'text', 'person'].includes(type);
 
     const subtitleHtml = subtitle ? `<span class="text-xs text-gray-500 dark:text-gray-400 leading-tight">${escapeHtml(subtitle)}</span>` : '';
-    card.innerHTML = `
-      ${badgeHtml}
-      <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(name)}</span>
-      ${subtitleHtml}
-    `;
+    if (hasBadge) {
+      card.innerHTML = `
+        <span class="inline-flex items-center gap-1.5">
+          <span class="element-badge-inline">${markerIndex}</span>
+          <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(name)}</span>
+        </span>
+        ${subtitleHtml}
+      `;
+    } else {
+      card.innerHTML = `
+        <span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(name)}</span>
+        ${subtitleHtml}
+      `;
+    }
 
     // ホバー時に画像上のマーカーと連動
     card.addEventListener('mouseenter', () => {

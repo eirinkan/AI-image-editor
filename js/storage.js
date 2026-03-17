@@ -71,6 +71,7 @@ const ProjectStorage = (() => {
   }
 
   // 一覧取得（サムネイル + メタデータのみ、画像データは除外）
+  // __autosave__ はプロジェクト一覧から除外
   function listProjects() {
     return new Promise((resolve, reject) => {
       const store = getStore('readonly');
@@ -80,20 +81,56 @@ const ProjectStorage = (() => {
         const cursor = e.target.result;
         if (cursor) {
           const p = cursor.value;
-          projects.push({
-            id: p.id,
-            name: p.name,
-            createdAt: p.createdAt,
-            updatedAt: p.updatedAt,
-            thumbnail: p.thumbnail,
-            entryCount: p.entries ? p.entries.length : 0,
-          });
+          if (p.id !== '__autosave__') {
+            projects.push({
+              id: p.id,
+              name: p.name,
+              createdAt: p.createdAt,
+              updatedAt: p.updatedAt,
+              thumbnail: p.thumbnail,
+              entryCount: p.entries ? p.entries.length : 0,
+            });
+          }
           cursor.continue();
         } else {
           resolve(projects);
         }
       };
       request.onerror = (e) => reject(new Error('プロジェクト一覧の取得に失敗しました: ' + e.target.error));
+    });
+  }
+
+  // セッション自動保存（予約ID __autosave__）
+  function saveSession(data) {
+    return new Promise((resolve, reject) => {
+      const store = getStore('readwrite');
+      const record = Object.assign({}, data, {
+        id: '__autosave__',
+        updatedAt: new Date().toISOString(),
+      });
+      const request = store.put(record);
+      request.onsuccess = () => resolve();
+      request.onerror = (e) => reject(new Error('自動保存に失敗: ' + e.target.error));
+    });
+  }
+
+  // セッション自動保存の読み込み
+  function loadSession() {
+    return new Promise((resolve, reject) => {
+      const store = getStore('readonly');
+      const request = store.get('__autosave__');
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = (e) => reject(new Error('自動保存の読み込みに失敗: ' + e.target.error));
+    });
+  }
+
+  // セッション自動保存を削除
+  function clearSession() {
+    return new Promise((resolve, reject) => {
+      const store = getStore('readwrite');
+      const request = store.delete('__autosave__');
+      request.onsuccess = () => resolve();
+      request.onerror = (e) => reject(new Error('自動保存の削除に失敗: ' + e.target.error));
     });
   }
 
@@ -165,5 +202,8 @@ const ProjectStorage = (() => {
     deleteProject,
     exportProject,
     importProject,
+    saveSession,
+    loadSession,
+    clearSession,
   };
 })();
