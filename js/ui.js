@@ -163,8 +163,12 @@ const UI = (() => {
     const zoomModal = document.getElementById('imageZoomModal');
     const zoomImg = document.getElementById('imageZoomImg');
     if (zoomModal) {
-      // クリックで閉じる
-      zoomModal.addEventListener('click', () => zoomModal.classList.add('hidden'));
+      // 背景クリックで閉じる（マーカークリック時は閉じない）
+      zoomModal.addEventListener('click', (e) => {
+        if (e.target === zoomModal || e.target.id === 'imageZoomImg') {
+          zoomModal.classList.add('hidden');
+        }
+      });
       // Escで閉じる
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !zoomModal.classList.contains('hidden')) {
@@ -188,7 +192,17 @@ const UI = (() => {
                 if (srcOverlay) {
                   Array.from(srcOverlay.children).forEach(marker => {
                     const clone = marker.cloneNode(true);
-                    clone.style.pointerEvents = 'none';
+                    clone.style.pointerEvents = 'auto';
+                    clone.style.cursor = 'pointer';
+                    // クリックで要素を選択
+                    clone.addEventListener('click', (ev) => {
+                      ev.stopPropagation();
+                      const elId = clone.dataset.elementId;
+                      const card = document.querySelector(`.element-card[data-element-id="${elId}"]`);
+                      if (card) card.click();
+                      // 選択状態をズームマーカーにも反映
+                      clone.classList.toggle('selected');
+                    });
                     zoomOverlay.appendChild(clone);
                   });
                 }
@@ -966,6 +980,8 @@ const UI = (() => {
         card.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200');
         card.classList.add('border-gray-200', 'dark:border-gray-700');
       }
+      const marker = document.querySelector(`.image-marker[data-element-id="${id}"]`);
+      if (marker) marker.classList.remove('selected');
     } else {
       // 新たに選択
       selectedElements.push({ id, type, name, data });
@@ -974,6 +990,8 @@ const UI = (() => {
         card.classList.remove('border-gray-200', 'dark:border-gray-700', 'border-gray-300');
         card.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
       }
+      const marker = document.querySelector(`.image-marker[data-element-id="${id}"]`);
+      if (marker) marker.classList.add('selected');
     }
 
     // 選択数カウンター更新
@@ -1081,6 +1099,7 @@ const UI = (() => {
   // 全選択をクリア（画像削除時等）
   function clearSelectedElements() {
     selectedElements = [];
+    document.querySelectorAll('.image-marker.selected').forEach(m => m.classList.remove('selected'));
     updateSelectionCounter();
   }
 
