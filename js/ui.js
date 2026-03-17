@@ -803,7 +803,7 @@ const UI = (() => {
         groupItems.forEach(item => {
           if (item.type === 'group') {
             const card = document.createElement('button');
-            card.className = 'element-card group-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
+            card.className = 'element-card group-card relative dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
             card.dataset.elementId = item.id;
             card.innerHTML = `<span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(item.name)}</span>`;
             card.addEventListener('click', () => selectElement(item));
@@ -831,7 +831,7 @@ const UI = (() => {
             elements.elementsList.appendChild(globalBtn);
           } else if (item.cardClass === 'region-card') {
             const card = document.createElement('button');
-            card.className = 'element-card region-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
+            card.className = 'element-card region-card relative dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
             card.dataset.elementId = item.id;
             const markerBadge = item.markerIndex ? `<span class="element-badge-inline region-badge">${item.markerIndex}</span>` : '';
             card.innerHTML = `<span class="inline-flex items-center gap-1.5">${markerBadge}<span class="element-name font-medium text-gray-800 dark:text-gray-100 text-sm leading-tight">${escapeHtml(item.name)}</span></span>`;
