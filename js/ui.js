@@ -35,9 +35,9 @@ const UI = (() => {
   // cancelBtnのイベントハンドラ（cloneNodeを使わず付け替えで管理）
   let cancelHandler = null;
 
-  // 粒度フィルタリング用の現在レベル（1-6）
-  let currentDetailLevel = 2;
-  // 現在表示中のJSON（粒度変更時に再描画するために保持）
+  // 粒度レベル: 常に全表示（6）
+  let currentDetailLevel = 6;
+  // 現在表示中のJSON（再描画用に保持）
   let currentRenderJson = null;
 
   // 初期化
@@ -289,17 +289,6 @@ const UI = (() => {
     elements.helpBtn.addEventListener('click', () => elements.helpModal.classList.remove('hidden'));
     elements.helpClose.addEventListener('click', () => elements.helpModal.classList.add('hidden'));
     elements.helpModal.addEventListener('click', (e) => { if (e.target === elements.helpModal) elements.helpModal.classList.add('hidden'); });
-
-    // 粒度プルダウン
-    const detailLevelSelect = document.getElementById('detailLevel');
-    if (detailLevelSelect) {
-      detailLevelSelect.addEventListener('change', () => {
-        currentDetailLevel = parseInt(detailLevelSelect.value);
-        if (currentRenderJson) {
-          renderElements(currentRenderJson);
-        }
-      });
-    }
 
     // APIキー（自動保存）
     elements.apiKeyToggle.addEventListener('click', toggleApiKeyVisibility);
@@ -724,12 +713,6 @@ const UI = (() => {
     const filteredPeople = filterByPriority(json.people);
     const filteredTextElements = filterByPriority(json.text_elements);
     const filteredRegions = filterByPriority(json.regions);
-
-    // 表示件数を更示
-    const totalAll = (json.objects?.length || 0) + (json.people?.length || 0) + (json.text_elements?.length || 0) + (json.regions?.length || 0);
-    const totalFiltered = filteredObjects.length + filteredPeople.length + filteredTextElements.length + filteredRegions.length;
-    const countEl = document.getElementById('detailLevelCount');
-    if (countEl) countEl.textContent = `${totalFiltered} / ${totalAll} 要素を表示中`;
 
     // マーカーインデックスカウンター（objects→text_elements→peopleの順）
     let markerIndex = 1;
