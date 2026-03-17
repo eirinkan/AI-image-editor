@@ -56,15 +56,15 @@ const TextToImage = (() => {
 
     // 「承認して生成」ボタン
     const approveBtn = document.getElementById('promptApproveBtn');
-    if (approveBtn) approveBtn.addEventListener('click', approveAndGenerate);
+    if (approveBtn) approveBtn.addEventListener('click', () => approveAndGenerate(false));
 
-    // 「新しく作成」ボタン（プロンプト入力画面に戻る）
+    // 「再度プロンプトを生成」ボタン（プロンプト入力画面に戻る）
     const newPromptBtn = document.getElementById('newPromptBtn');
     if (newPromptBtn) newPromptBtn.addEventListener('click', backToIdeaInput);
 
-    // 「再生成」ボタン
+    // 「同じプロンプトで再生成」ボタン
     const regenerateBtn = document.getElementById('regenerateBtn');
-    if (regenerateBtn) regenerateBtn.addEventListener('click', approveAndGenerate);
+    if (regenerateBtn) regenerateBtn.addEventListener('click', () => approveAndGenerate(true));
 
     // 「ダウンロード」ボタン（生成結果プレビュー用）
     const downloadGeneratedBtn = document.getElementById('downloadGeneratedBtn');
@@ -223,8 +223,15 @@ const TextToImage = (() => {
     document.getElementById('ideaInputSection').classList.remove('hidden');
   }
 
-  // プロンプトを承認して画像生成
-  async function approveAndGenerate() {
+  // 枚数を取得（ソース: 承認時 or 再生成時）
+  function getT2iCount(source) {
+    const selId = source === 'regen' ? 't2iRegenCount' : 't2iGenerateCount';
+    const sel = document.getElementById(selId);
+    return sel ? (parseInt(sel.value) || 1) : 1;
+  }
+
+  // プロンプトを承認して画像生成（isRegen: 再生成時はtrue）
+  async function approveAndGenerate(isRegen = false) {
     const promptEditArea = document.getElementById('promptEditArea');
     const prompt = promptEditArea ? promptEditArea.value.trim() : '';
     if (!prompt) {
@@ -237,6 +244,8 @@ const TextToImage = (() => {
       return;
     }
 
+    const generateCount = getT2iCount(isRegen ? 'regen' : 'approve');
+
     cancelCurrentOperation();
     currentAbortController = new AbortController();
     const signal = currentAbortController.signal;
@@ -248,30 +257,82 @@ const TextToImage = (() => {
     if (regenBtn) regenBtn.disabled = true;
 
     try {
-      UI.showLoading('画像を生成中...（20〜60秒かかります）', { showCancel: true });
+      const countLabel = generateCount > 1 ? `（${generateCount}枚）` : '';
+      UI.showLoading(`画像を生成中...${countLabel}（20〜60秒かかります）`, { showCancel: true });
       const cancelBtn = document.getElementById('cancelBtn');
       if (cancelBtn) cancelBtn.addEventListener('click', () => cancelCurrentOperation(), { once: true });
 
-      const result = await GeminiAPI.generateFromText(prompt, {
-        aspectRatio: state.aspectRatio,
-        imageSize: state.imageSize,
-      }, signal);
+      const results = [];
+      for (let i = 0; i < generateCount; i++) {
+        if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+        if (generateCount > 1) {
+          const loadingText = document.getElementById('loadingText');
+          if (loadingText) loadingText.textContent = `画像を生成中... (${i + 1}/${generateCount}枚)`;
+        }
+        const result = await GeminiAPI.generateFromText(prompt, {
+          aspectRatio: state.aspectRatio,
+          imageSize: state.imageSize,
+        }, signal);
+        results.push({ base64: result.base64, mimeType: result.mimeType });
+      }
 
-      const imageData = { base64: result.base64, mimeType: result.mimeType };
-      state.lastGeneratedImage = imageData;
+      const singleContainer = document.getElementById('t2iResultSingle');
+      const gridContainer = document.getElementById('t2iResultGrid');
 
-      // 生成結果プレビューを表示
-      const resultImg = document.getElementById('generateResultImage');
-      if (resultImg) resultImg.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+      if (generateCount === 1) {
+        // 1枚: 従来表示
+        const imageData = results[0];
+        state.lastGeneratedImage = imageData;
+
+        const resultImg = document.getElementById('generateResultImage');
+        if (resultImg) resultImg.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+
+        if (singleContainer) singleContainer.classList.remove('hidden');
+        if (gridContainer) gridContainer.classList.add('hidden');
+
+        // App に生成完了を通知
+        App.onGeneratedImageReady(imageData);
+      } else {
+        // 複数枚: グリッド表示
+        if (singleContainer) singleContainer.classList.add('hidden');
+        if (gridContainer) {
+          gridContainer.classList.remove('hidden');
+          gridContainer.innerHTML = '';
+          results.forEach((img, idx) => {
+            const div = document.createElement('div');
+            div.className = 'relative cursor-pointer group';
+            div.innerHTML = `
+              <img src="data:${img.mimeType};base64,${img.base64}" class="w-full rounded-lg shadow-md transition-transform group-hover:scale-[1.02]" alt="生成結果 ${idx + 1}">
+              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-colors flex items-center justify-center">
+                <span class="opacity-0 group-hover:opacity-100 text-white bg-black/50 px-3 py-1 rounded-lg text-sm transition-opacity">この画像を採用</span>
+              </div>
+            `;
+            div.addEventListener('click', () => {
+              state.lastGeneratedImage = img;
+              // シングル表示に切り替え
+              const resultImg = document.getElementById('generateResultImage');
+              if (resultImg) resultImg.src = `data:${img.mimeType};base64,${img.base64}`;
+              if (singleContainer) singleContainer.classList.remove('hidden');
+              gridContainer.classList.add('hidden');
+              App.onGeneratedImageReady(img);
+              UI.showSuccess('画像を採用しました');
+            });
+            gridContainer.appendChild(div);
+          });
+        }
+        // 最初の画像をデフォルトとして保持
+        state.lastGeneratedImage = results[0];
+      }
 
       document.getElementById('generateResultPreview').classList.remove('hidden');
       document.getElementById('promptReviewSection').classList.add('hidden');
 
-      // App に生成完了を通知（分析セクション表示・タブロック前の準備）
-      App.onGeneratedImageReady(imageData);
-
       UI.hideLoading();
-      UI.showSuccess('画像の生成が完了しました');
+      if (generateCount === 1) {
+        UI.showSuccess('画像の生成が完了しました');
+      } else {
+        UI.showSuccess(`${generateCount}枚の画像を生成しました。クリックして採用してください。`);
+      }
 
       // 生成結果にスクロール
       requestAnimationFrame(() => {
