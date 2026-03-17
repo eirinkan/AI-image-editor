@@ -119,6 +119,9 @@ const UI = (() => {
       textModelNote: document.getElementById('textModelNote'),
       imageModelSelect: document.getElementById('imageModelSelect'),
       imageModelNote: document.getElementById('imageModelNote'),
+      t2iModelSelect: document.getElementById('t2iModelSelect'),
+      t2iRegenModelSelect: document.getElementById('t2iRegenModelSelect'),
+      editModelSelect: document.getElementById('editModelSelect'),
       costTableContainer: document.getElementById('costTableContainer'),
 
       // 設定・ヘルプモーダル
@@ -428,6 +431,19 @@ const UI = (() => {
       elements.imageModelSelect.appendChild(opt);
     });
 
+    // インラインセレクトの初期値を同期
+    const inlineImageSelects = [elements.t2iModelSelect, elements.t2iRegenModelSelect, elements.editModelSelect];
+    inlineImageSelects.forEach(sel => { if (sel) sel.value = currentImage; });
+
+    // 全画像モデルセレクトを同期するヘルパー
+    function syncAllImageSelects(sourceValue) {
+      GeminiAPI.setImageModel(sourceValue);
+      GeminiAPI.reloadModels();
+      elements.imageModelSelect.value = sourceValue;
+      inlineImageSelects.forEach(sel => { if (sel) sel.value = sourceValue; });
+      updateModelNotes();
+    }
+
     // イベントリスナー
     elements.textModelSelect.addEventListener('change', () => {
       GeminiAPI.setTextModel(elements.textModelSelect.value);
@@ -435,9 +451,10 @@ const UI = (() => {
       updateModelNotes();
     });
     elements.imageModelSelect.addEventListener('change', () => {
-      GeminiAPI.setImageModel(elements.imageModelSelect.value);
-      GeminiAPI.reloadModels();
-      updateModelNotes();
+      syncAllImageSelects(elements.imageModelSelect.value);
+    });
+    inlineImageSelects.forEach(sel => {
+      if (sel) sel.addEventListener('change', () => syncAllImageSelects(sel.value));
     });
 
     // 初期表示
