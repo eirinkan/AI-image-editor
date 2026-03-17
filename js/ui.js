@@ -1254,7 +1254,7 @@ const UI = (() => {
             </button>
           </div>
         </div>
-        <span class="text-[10px] font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-600 dark:text-gray-300'} text-center leading-tight line-clamp-2 w-full history-thumb">${escapeHtml(entry.label)}</span>
+        <span class="text-[10px] font-medium text-gray-600 dark:text-gray-300 text-center leading-tight line-clamp-2 w-full history-thumb">${escapeHtml(entry.label)}</span>
       `;
 
       // サムネイル・ラベルクリックで履歴切り替え
