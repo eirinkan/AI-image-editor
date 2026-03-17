@@ -386,7 +386,6 @@
             <div class="flex gap-4 justify-center items-start">
               <!-- 元画像（マーカーなし） -->
               <div id="cleanColumn" class="flex flex-col items-center gap-1 flex-1 min-w-0">
-                <p id="cleanColumnLabel" class="text-xs text-gray-500 hidden">元画像</p>
                 <img id="previewImageClean" class="max-h-80 rounded-lg shadow-md block w-full object-contain" alt="元画像">
               </div>
               <!-- マーカー付き画像（分析後に表示） -->
@@ -533,8 +532,8 @@
     <!-- 要素一覧 -->
     <section id="elementsSection" class="hidden">
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">検出された要素</h2>
-      <p class="text-xs text-amber-600 mb-4 flex items-start gap-1.5 leading-relaxed">
-        <svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+      <p class="text-xs text-amber-600 mb-4 flex items-center gap-1.5 leading-relaxed">
+        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
         <span>要素名は画像生成に影響します。<br class="sm:hidden">ダブルクリックで名前を変更できます。</span>
       </p>
       <div id="elementsList" class="bg-white rounded-2xl border border-gray-200 p-5">

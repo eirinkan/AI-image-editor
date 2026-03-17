@@ -15,7 +15,7 @@ const GeminiAPI = (() => {
   ];
 
   // デフォルトモデル
-  const DEFAULT_TEXT_MODEL = 'gemini-2.5-pro';
+  const DEFAULT_TEXT_MODEL = 'gemini-3.1-pro-preview';
   const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-image-preview';
 
   // 動的モデル取得（存在しないモデルが保存されている場合はデフォルトに戻す）

@@ -132,7 +132,6 @@ const UI = (() => {
 
       // プレビューカラム
       cleanColumn: document.getElementById('cleanColumn'),
-      cleanColumnLabel: document.getElementById('cleanColumnLabel'),
       markerColumn: document.getElementById('markerColumn'),
 
       // プロジェクト保存・一覧
@@ -311,13 +310,13 @@ const UI = (() => {
   // コスト定義
   // テキスト処理: 中央値（概算 ¥/回）
   const TEXT_COST_MAP = {
-    'gemini-2.5-pro-preview-06-05': { analysis: '¥3',   edit: '¥2',   prompt: '¥2' },
-    'gemini-3.1-pro-preview':       { analysis: '¥5',   edit: '¥3',   prompt: '¥3' },
+    'gemini-2.5-pro':         { analysis: '¥3',   edit: '¥2',   prompt: '¥2' },
+    'gemini-3.1-pro-preview': { analysis: '¥5',   edit: '¥3',   prompt: '¥3' },
   };
   // 画像生成: サイズ別（概算 ¥/回）
   const IMAGE_COST_MAP = {
     'gemini-3.1-flash-image-preview': { '1K': '¥3',  '2K': '¥5',  '4K': '¥10' },
-    'gemini-3.1-pro-image-preview':   { '1K': '¥5',  '2K': '¥10', '4K': '¥20' },
+    'gemini-3-pro-image-preview':     { '1K': '¥5',  '2K': '¥10', '4K': '¥20' },
   };
 
   function initModelSelectors() {
@@ -485,7 +484,6 @@ const UI = (() => {
       elements.uploadArea.querySelector('.upload-prompt').classList.add('hidden');
       // マーカーカラムは非表示、ラベルも非表示（1枚だけなので不要）
       if (elements.markerColumn) elements.markerColumn.classList.add('hidden');
-      if (elements.cleanColumnLabel) elements.cleanColumnLabel.classList.add('hidden');
 
       // 分析セクション表示
       elements.analysisSection.classList.remove('hidden');
@@ -513,7 +511,6 @@ const UI = (() => {
     elements.fileInput.value = '';
     // マーカーカラムを再度非表示にする
     if (elements.markerColumn) elements.markerColumn.classList.add('hidden');
-    if (elements.cleanColumnLabel) elements.cleanColumnLabel.classList.add('hidden');
 
     if (typeof App !== 'undefined') App.onImageRemoved();
   }
@@ -714,7 +711,7 @@ const UI = (() => {
 
     // 画像全体への指示ボタン（環境・設定カテゴリ内）
     const globalBtn = document.createElement('button');
-    globalBtn.className = 'element-card border-2 border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-purple-400 hover:bg-purple-50 transition-colors cursor-pointer min-h-[100px]';
+    globalBtn.className = 'element-card border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-1 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer min-h-[100px]';
     globalBtn.dataset.elementId = 'global';
     globalBtn.innerHTML = `
       <span class="text-gray-400">${ICONS.globe}</span>
@@ -731,7 +728,6 @@ const UI = (() => {
     // 画像上にマーカーを描画 & マーカーカラム表示
     renderMarkers(json);
     if (elements.markerColumn) elements.markerColumn.classList.remove('hidden');
-    if (elements.cleanColumnLabel) elements.cleanColumnLabel.classList.remove('hidden');
 
     // 登録済みカスタム要素をカードとして表示
     const customElements = getRegisteredCustomElements();
