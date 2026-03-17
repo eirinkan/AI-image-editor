@@ -93,8 +93,12 @@ const EditHistory = (() => {
   // 個別エントリを削除
   function removeEntry(id) {
     if (id < 0 || id >= entries.length) return;
-    // オリジナル（id=0）は削除不可
-    if (id === 0 && entries.length > 1) return;
+    // オリジナル（id=0）削除時は全クリア
+    if (id === 0) {
+      clear();
+      if (typeof App !== 'undefined') App.onImageRemoved();
+      return;
+    }
     entries.splice(id, 1);
     // IDを振り直す
     entries.forEach((e, i) => { e.id = i; });

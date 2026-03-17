@@ -1249,9 +1249,9 @@ const UI = (() => {
             <button class="history-dl-btn text-white hover:text-blue-300 transition-colors p-1" title="ダウンロード">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             </button>
-            ${i > 0 ? `<button class="history-del-btn text-white hover:text-red-300 transition-colors p-1" title="削除">
+            <button class="history-del-btn text-white hover:text-red-300 transition-colors p-1" title="削除">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-            </button>` : ''}
+            </button>
           </div>
         </div>
         <span class="text-[10px] font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-600 dark:text-gray-300'} text-center leading-tight line-clamp-2 w-full history-thumb">${escapeHtml(entry.label)}</span>
@@ -1270,12 +1270,13 @@ const UI = (() => {
         EditHistory.downloadImage(entry);
       });
 
-      // 削除ボタン（オリジナル以外）
+      // 削除ボタン
       const delBtn = item.querySelector('.history-del-btn');
       if (delBtn) {
         delBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (!confirm('この画像を削除しますか？')) return;
+          const msg = i === 0 ? 'オリジナル画像を削除すると全履歴がクリアされます。よろしいですか？' : 'この画像を削除しますか？';
+          if (!confirm(msg)) return;
           EditHistory.removeEntry(i);
         });
       }
