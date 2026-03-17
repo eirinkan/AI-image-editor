@@ -84,7 +84,7 @@ Identify ALL elements across these categories:
 - Weather/time of day if visible
 - Camera perspective (angle, focal length estimate)
 
-IMPORTANT: List at least 40-60 objects in the "objects" array. Include parts and details of larger objects as separate entries (e.g., a sofa AND its cushions AND its legs as separate objects). Even mundane items like a power outlet, a door handle, a shadow, or a fold in a curtain should be listed. More is always better.`,
+IMPORTANT: Detect as many elements as the image warrants across all 6 priority levels. Include parts and details of larger objects as separate entries with appropriate priority (e.g., a sofa at priority 1, its cushions at priority 3, its legs at priority 3). Even mundane items like a power outlet, a door handle, a shadow, or a fold in a curtain should be listed. More is always better.`,
 
       'furniture': `Focus specifically on furniture and objects in this image. For EACH item provide extremely detailed analysis:
 - Exact name/type of furniture
@@ -231,7 +231,7 @@ IMPORTANT: All people descriptions (description, clothing, pose, position fields
   ]
 }
 
-Also identify large-area or background regions (sky, ground, walls, water, floor, ceiling, etc.) in the "regions" array. These are elements too large or diffuse to list as individual objects. Identify 3-10 regions. If none, use empty array.
+Also identify large-area or background regions (sky, ground, walls, water, floor, ceiling, etc.) in the "regions" array. These are elements too large or diffuse to list as individual objects. If none, use empty array.
 
 CRITICAL RULES:
 1. Every element in objects, text_elements, people, and regions MUST have a "priority" field (1-6). Assign priority based on:
@@ -241,7 +241,7 @@ CRITICAL RULES:
    - 4: Details/parts of priority 2 elements
    - 5: Background surfaces and large areas (walls, floor, sky)
    - 6: Tiny details of background (outlets, stains, shadows, cracks)
-2. Detect as many elements as possible (aim for 40-60 objects). Include parts of larger objects as separate entries with higher priority numbers.
+2. Detect as many elements as the image warrants. Do NOT limit to a fixed number — let the image complexity determine how many elements to report. Include parts of larger objects as separate entries with appropriate priority numbers.
 3. If no text/people/etc are found, use empty arrays.
 4. For each element, position_coords must be the approximate center as a fraction of image width (x) and height (y), 0.0 to 1.0.
 Output ONLY the JSON, no other text.`;
