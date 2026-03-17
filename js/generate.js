@@ -99,14 +99,6 @@ const TextToImage = (() => {
       subTabGenerate.classList.remove('active');
       subTabGenerate.classList.add('text-gray-500', 'dark:text-gray-400');
       subTabUpload.classList.remove('text-gray-500', 'dark:text-gray-400');
-
-      // アップロードタブに切り替えた際、生成フローの状態をリセット
-      const ideaInputSection = document.getElementById('ideaInputSection');
-      const promptReviewSection = document.getElementById('promptReviewSection');
-      const generateResultPreview = document.getElementById('generateResultPreview');
-      if (ideaInputSection) ideaInputSection.classList.remove('hidden');
-      if (promptReviewSection) promptReviewSection.classList.add('hidden');
-      if (generateResultPreview) generateResultPreview.classList.add('hidden');
     } else {
       uploadPanel.classList.add('hidden');
       generatePanel.classList.remove('hidden');
@@ -114,14 +106,6 @@ const TextToImage = (() => {
       subTabUpload.classList.remove('active');
       subTabUpload.classList.add('text-gray-500', 'dark:text-gray-400');
       subTabGenerate.classList.remove('text-gray-500', 'dark:text-gray-400');
-
-      // 生成タブに切り替えた際、フローの状態をリセット
-      const ideaInputSection = document.getElementById('ideaInputSection');
-      const promptReviewSection = document.getElementById('promptReviewSection');
-      const generateResultPreview = document.getElementById('generateResultPreview');
-      if (ideaInputSection) ideaInputSection.classList.remove('hidden');
-      if (promptReviewSection) promptReviewSection.classList.add('hidden');
-      if (generateResultPreview) generateResultPreview.classList.add('hidden');
     }
   }
 
@@ -272,10 +256,8 @@ const TextToImage = (() => {
       document.getElementById('generateResultPreview').classList.remove('hidden');
       document.getElementById('promptReviewSection').classList.add('hidden');
 
-      // 履歴に追加
-      const userInput = document.getElementById('userIdeaInput').value || prompt;
-      const label = '生成: ' + userInput.slice(0, 30) + (userInput.length > 30 ? '...' : '');
-      await EditHistory.createEntry(imageData, { prompt, mode: 'text-to-image', aspectRatio: state.aspectRatio }, label);
+      // App に生成完了を通知（分析セクション表示・タブロック前の準備）
+      App.onGeneratedImageReady(imageData);
 
       UI.hideLoading();
       UI.showSuccess('画像の生成が完了しました');

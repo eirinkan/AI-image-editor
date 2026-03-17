@@ -30,26 +30,23 @@ const App = (() => {
     try { await ProjectStorage.init(); } catch (e) { console.warn('IndexedDB初期化失敗:', e); }
   }
 
-  // AI生成した画像を編集モードで使用する
-  function onGeneratedImageEdit(imageData) {
+  // AI生成した画像が準備完了（分析前の状態にセット）
+  function onGeneratedImageReady(imageData) {
     state.originalImage = imageData;
     state.currentImage = imageData;
     state.currentJson = null;
     state.originalJson = null;
     EditHistory.clear();
 
-    // プレビュー画像を表示してanalysisSection を開く
+    // プレビュー画像を準備（分析後にuploadPanelで使用するため）
     const previewImage = document.getElementById('previewImage');
-    const imagePreview = document.getElementById('imagePreview');
-    const uploadPrompt = document.querySelector('#uploadArea .upload-prompt');
-    const analysisSection = document.getElementById('analysisSection');
-
+    const previewImageClean = document.getElementById('previewImageClean');
     const dataUrl = `data:${imageData.mimeType};base64,${imageData.base64}`;
     if (previewImage) previewImage.src = dataUrl;
-    const previewImageClean = document.getElementById('previewImageClean');
     if (previewImageClean) previewImageClean.src = dataUrl;
-    if (imagePreview) imagePreview.classList.remove('hidden');
-    if (uploadPrompt) uploadPrompt.classList.add('hidden');
+
+    // 分析セクション表示
+    const analysisSection = document.getElementById('analysisSection');
     if (analysisSection) analysisSection.classList.remove('hidden');
   }
 
@@ -73,6 +70,10 @@ const App = (() => {
     state.selectedElements = [];
     UI.clearSelectedElements();
     EditHistory.clear();
+
+    // タブバーを復活
+    const subTabBar = document.getElementById('subTabBar');
+    if (subTabBar) subTabBar.classList.remove('hidden');
   }
 
   // 参照画像がアップロードされた
@@ -139,6 +140,20 @@ const App = (() => {
       if (EditHistory.getAll().length === 0) {
         EditHistory.createEntry(state.currentImage, json);
       }
+
+      // 分析後: タブバーを非表示にし、編集モードに固定
+      const subTabBar = document.getElementById('subTabBar');
+      if (subTabBar) subTabBar.classList.add('hidden');
+
+      const uploadPanel = document.getElementById('uploadPanel');
+      const generatePanel = document.getElementById('generatePanel');
+      const imagePreview = document.getElementById('imagePreview');
+      const uploadPrompt = document.querySelector('#uploadArea .upload-prompt');
+
+      if (uploadPanel) uploadPanel.classList.remove('hidden');
+      if (generatePanel) generatePanel.classList.add('hidden');
+      if (imagePreview) imagePreview.classList.remove('hidden');
+      if (uploadPrompt) uploadPrompt.classList.add('hidden');
 
       UI.hideLoading();
       UI.showSuccess('画像の分析が完了しました');
@@ -467,6 +482,10 @@ const App = (() => {
         UI.showResultFromHistory(lastEntry.image, beforeImage);
       }
 
+      // プロジェクト読み込み時もタブバーを非表示
+      const subTabBar = document.getElementById('subTabBar');
+      if (subTabBar) subTabBar.classList.add('hidden');
+
       UI.hideProjectModal();
       UI.showSuccess(`「${project.name}」を読み込みました`);
     } catch (err) {
@@ -511,7 +530,7 @@ const App = (() => {
     onReferenceUploaded,
     onReferenceRemoved,
     onElementsSelected,
-    onGeneratedImageEdit,
+    onGeneratedImageReady,
     onImageAdopted,
     analyze,
     generate,
