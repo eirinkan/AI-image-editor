@@ -28,11 +28,11 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
           プロジェクト
         </button>
-        <button id="settingsBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+        <button id="settingsBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
           設定
         </button>
-        <button id="helpBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+        <button id="helpBtn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"></path></svg>
           ヘルプ
         </button>
@@ -331,7 +331,7 @@
   <!-- 左サイドバー: 履歴 -->
   <aside id="historySidebar" class="history-sidebar hidden">
     <div class="sticky top-20">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">編集履歴</h2>
+      <h2 class="text-sm font-semibold text-gray-700 mb-3">編集履歴</h2>
       <div id="historyTimeline" class="history-timeline-vertical">
         <!-- 縦型タイムラインがここに動的挿入 -->
       </div>
@@ -343,7 +343,10 @@
 
     <!-- Step 1: 画像を用意 -->
     <section>
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 1: 画像を用意</h2>
+      <h2 class="flex items-center gap-2 mb-3">
+        <span class="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">STEP 1</span>
+        <span class="text-sm font-semibold text-gray-700">画像を用意</span>
+      </h2>
 
       <!-- サブタブ -->
       <div class="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit mb-4">
@@ -359,13 +362,13 @@
 
       <!-- アップロードパネル -->
       <div id="uploadPanel">
-        <div id="uploadArea" class="upload-area border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all relative">
+        <div id="uploadArea" class="upload-area bg-white border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 shadow-sm transition-all relative">
           <div class="upload-prompt">
-            <div class="mb-3 text-gray-400">
-              <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path></svg>
+            <div class="mb-4 inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-2xl text-blue-400">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path></svg>
             </div>
-            <p class="text-gray-600 font-medium">クリックまたはドラッグ&ドロップで画像をアップロード</p>
-            <p class="text-sm text-gray-500 mt-1">JPG, PNG, WEBP対応</p>
+            <p class="text-gray-700 font-medium">クリックまたはドラッグ&ドロップで画像をアップロード</p>
+            <p class="text-sm text-gray-400 mt-1">JPG, PNG, WEBP対応</p>
           </div>
           <div id="imagePreview" class="hidden relative">
             <button id="removeImage" aria-label="画像を削除" class="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-9 h-9 flex items-center justify-center hover:bg-red-600 shadow-lg text-lg leading-none z-20 cursor-pointer">&times;</button>
@@ -393,8 +396,8 @@
 
         <!-- アイデア入力セクション -->
         <section id="ideaInputSection">
-          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">作りたい画像を日本語で入力</h3>
-          <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3">作りたい画像を日本語で入力</h3>
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
             <textarea id="userIdeaInput" rows="4"
               class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-none"
               placeholder="例: 白い背景にZitA SQUAREのゴミ箱を置いた商品写真。清潔感のあるスタジオ照明で、正面やや上からのアングル。"></textarea>
@@ -410,8 +413,8 @@
 
         <!-- プロンプト確認・編集セクション -->
         <section id="promptReviewSection" class="hidden">
-          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">プロンプトを確認・編集</h3>
-          <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3">プロンプトを確認・編集</h3>
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
             <!-- 英語プロンプト（編集可能） -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">英語プロンプト</label>
@@ -467,8 +470,8 @@
 
         <!-- 生成結果プレビュー -->
         <section id="generateResultPreview" class="hidden">
-          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">生成結果</h3>
-          <div class="bg-white rounded-2xl border border-gray-200 p-5">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3">生成結果</h3>
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
             <img id="generateResultImage" class="max-h-[500px] mx-auto rounded-lg shadow-md block" alt="生成結果">
             <div class="flex justify-center gap-3 mt-4">
               <button id="editGeneratedBtn" class="px-5 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1.5 cursor-pointer">
@@ -492,8 +495,11 @@
 
     <!-- Step 2: 分析フォーカス -->
     <section id="analysisSection" class="hidden">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 2: 分析フォーカスを選択</h2>
-      <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+      <h2 class="flex items-center gap-2 mb-3">
+        <span class="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">STEP 2</span>
+        <span class="text-sm font-semibold text-gray-700">分析フォーカスを選択</span>
+      </h2>
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
         <div id="focusTags" class="flex flex-wrap gap-2">
           <button data-focus="all" class="px-4 py-2 rounded-full text-sm font-medium bg-blue-500 text-white transition-colors cursor-pointer">全体</button>
           <button data-focus="furniture" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 transition-colors cursor-pointer">家具・物</button>
@@ -517,20 +523,23 @@
 
     <!-- 要素一覧 -->
     <section id="elementsSection" class="hidden">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">検出された要素</h2>
+      <h2 class="text-sm font-semibold text-gray-700 mb-1">検出された要素</h2>
       <p class="bg-amber-50 border border-amber-300 rounded-lg p-2.5 text-amber-700 font-medium text-xs mb-4 flex items-center gap-1.5 leading-relaxed">
         <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
         <span>要素名は画像生成に影響します。</span>
       </p>
-      <div id="elementsList" class="bg-white rounded-2xl border border-gray-200 p-5">
+      <div id="elementsList" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
         <!-- 要素カードがここに動的に挿入される -->
       </div>
     </section>
 
     <!-- 編集パネル -->
     <section id="editSection" class="hidden">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Step 3: 変更内容を指示（複数選択可）</h2>
-      <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+      <h2 class="flex items-center gap-2 mb-3">
+        <span class="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md">STEP 3</span>
+        <span class="text-sm font-semibold text-gray-700">変更内容を指示（複数選択可）</span>
+      </h2>
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
         <!-- プリセットテンプレート -->
         <div id="presetTemplates" class="hidden">
           <p class="text-xs text-gray-500 mb-2">プリセットテンプレート</p>
@@ -604,8 +613,11 @@
 
     <!-- 結果表示 -->
     <section id="resultSection" class="hidden">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">生成結果</h2>
-      <div class="bg-white rounded-2xl border border-gray-200 p-5">
+      <h2 class="flex items-center gap-2 mb-3">
+        <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">RESULT</span>
+        <span class="text-sm font-semibold text-gray-700">生成結果</span>
+      </h2>
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
         <!-- 複数枚グリッド表示 -->
         <div id="resultGrid" class="hidden">
           <!-- 複数枚の結果がグリッドで表示される -->
