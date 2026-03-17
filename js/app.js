@@ -111,7 +111,7 @@ const App = (() => {
       return;
     }
 
-    const focusTags = UI.getSelectedFocusTags();
+    const focusTags = ['all'];
     const customInstruction = UI.getCustomInstruction();
 
     // AbortController設定

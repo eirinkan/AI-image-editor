@@ -164,8 +164,8 @@
             <div class="flex gap-3 items-start">
               <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
               <div>
-                <p class="font-semibold text-gray-800 dark:text-gray-100">フォーカスを選んで分析</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">検出対象を選択（全体 / 家具・物 / 色・素材 / 照明・天候 / テキスト・ロゴ / カメラ / 人物）して「分析する」をクリック。追加指示の入力欄で検出精度を調整可能。</p>
+                <p class="font-semibold text-gray-800 dark:text-gray-100">分析</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">「分析する」をクリックで画像内の要素を自動検出。追加指示の入力欄で検出精度を調整可能。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
@@ -278,46 +278,6 @@
                 <div><span class="font-medium">複数要素は個別に指示</span> — 各要素カードに個別の指示を書くと精度が上がります。</div>
               </li>
             </ul>
-          </div>
-
-          <div class="border-t border-gray-100 dark:border-gray-700"></div>
-
-          <!-- フォーカスの選び方 -->
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-base">🔍</span>
-              <p class="font-semibold text-gray-800 dark:text-gray-100">フォーカスの選び方</p>
-            </div>
-            <div class="space-y-1.5 ml-6">
-              <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">全体</span>
-                <p class="text-gray-500 dark:text-gray-400">とりあえず全部検出したい時（処理はやや遅い）</p>
-              </div>
-              <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">家具・物</span>
-                <p class="text-gray-500 dark:text-gray-400">家具、車、食べ物など物を差し替えたい時</p>
-              </div>
-              <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">色・素材</span>
-                <p class="text-gray-500 dark:text-gray-400">素材感や配色を変えたい時</p>
-              </div>
-              <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">照明・天候</span>
-                <p class="text-gray-500 dark:text-gray-400">季節、時間帯、天気を変えたい時</p>
-              </div>
-              <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">テキスト</span>
-                <p class="text-gray-500 dark:text-gray-400">看板や文字を書き換えたい時</p>
-              </div>
-              <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">カメラ</span>
-                <p class="text-gray-500 dark:text-gray-400">アングルや構図を変えたい時</p>
-              </div>
-              <div class="flex gap-2 items-start">
-                <span class="flex-shrink-0 inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-mono">人物</span>
-                <p class="text-gray-500 dark:text-gray-400">服装やポーズを変えたい時</p>
-              </div>
-            </div>
           </div>
 
           <div class="border-t border-gray-100 dark:border-gray-700"></div>
@@ -547,18 +507,9 @@
     <section id="analysisSection" class="hidden">
       <h2 class="flex items-center gap-2 mb-3">
         <span class="text-xs font-bold text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md">STEP 2</span>
-        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">分析フォーカスを選択</span>
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">分析</span>
       </h2>
       <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
-        <div id="focusTags" class="flex flex-wrap gap-2">
-          <button data-focus="all" class="px-4 py-2 rounded-full text-sm font-medium bg-blue-500 text-white transition-colors cursor-pointer">全体</button>
-          <button data-focus="furniture" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">家具・物</button>
-          <button data-focus="color_material" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">色・素材</button>
-          <button data-focus="lighting" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">照明・天候</button>
-          <button data-focus="text_logo" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">テキスト・ロゴ</button>
-          <button data-focus="camera" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">カメラ</button>
-          <button data-focus="people" class="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">人物</button>
-        </div>
         <div class="flex gap-3">
           <input type="text" id="customInstruction"
             class="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent"
@@ -577,8 +528,8 @@
       <div id="elementsList" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         <!-- 要素カードがここに動的に挿入される -->
       </div>
-      <p class="text-gray-400 dark:text-gray-500 text-xs mt-2 flex items-center gap-1.5 leading-relaxed">
-        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <p class="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg p-2.5 text-amber-700 dark:text-amber-400 font-medium text-xs mt-3 flex items-center gap-1.5 leading-relaxed">
+        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
         <span>要素名は画像生成に影響します。ダブルクリックで変更可能。</span>
       </p>
     </section>
@@ -840,8 +791,8 @@
   <script src="js/storage.js?v=1"></script>
   <script src="js/history.js?v=13"></script>
   <script src="js/camera-editor.js?v=5"></script>
-  <script src="js/ui.js?v=28"></script>
+  <script src="js/ui.js?v=29"></script>
   <script src="js/generate.js?v=15"></script>
-  <script src="js/app.js?v=17"></script>
+  <script src="js/app.js?v=18"></script>
 </body>
 </html>

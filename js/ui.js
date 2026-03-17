@@ -60,7 +60,7 @@ const UI = (() => {
 
       // フォーカス選択
       analysisSection: document.getElementById('analysisSection'),
-      focusTags: document.getElementById('focusTags'),
+      // focusTags削除済み
       customInstruction: document.getElementById('customInstruction'),
       analyzeBtn: document.getElementById('analyzeBtn'),
 
@@ -212,7 +212,7 @@ const UI = (() => {
     elements.removeImage.addEventListener('click', removeUploadedImage);
 
     // フォーカスタグ
-    elements.focusTags.addEventListener('click', handleFocusTagClick);
+    // focusTags削除済み
     elements.analyzeBtn.addEventListener('click', () => {
       if (typeof App !== 'undefined') App.analyze();
     });
@@ -549,55 +549,6 @@ const UI = (() => {
     elements.referenceFileInput.value = '';
 
     if (typeof App !== 'undefined') App.onReferenceRemoved();
-  }
-
-  // --- フォーカスタグ ---
-  function handleFocusTagClick(e) {
-    const tag = e.target.closest('[data-focus]');
-    if (!tag) return;
-
-    const focus = tag.dataset.focus;
-
-    if (focus === 'all') {
-      // 「全体」選択時は他を全解除
-      elements.focusTags.querySelectorAll('[data-focus]').forEach(t => {
-        t.classList.remove('bg-blue-500', 'text-white');
-        t.classList.add('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
-      });
-      tag.classList.remove('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
-      tag.classList.add('bg-blue-500', 'text-white');
-    } else {
-      // 「全体」を解除
-      const allTag = elements.focusTags.querySelector('[data-focus="all"]');
-      allTag.classList.remove('bg-blue-500', 'text-white');
-      allTag.classList.add('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
-
-      // トグル（選択状態の判定）
-      if (tag.classList.contains('bg-blue-500')) {
-        // 選択解除
-        tag.classList.remove('bg-blue-500', 'text-white');
-        tag.classList.add('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
-      } else {
-        // 選択
-        tag.classList.remove('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
-        tag.classList.add('bg-blue-500', 'text-white');
-      }
-
-      // 何も選択されていなければ「全体」に戻す
-      const selected = elements.focusTags.querySelectorAll('.bg-blue-500');
-      if (selected.length === 0) {
-        allTag.classList.remove('bg-gray-100', 'text-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
-        allTag.classList.add('bg-blue-500', 'text-white');
-      }
-    }
-  }
-
-  function getSelectedFocusTags() {
-    const tags = [];
-    elements.focusTags.querySelectorAll('.bg-blue-500').forEach(tag => {
-      tags.push(tag.dataset.focus);
-    });
-    return tags.length > 0 ? tags : ['all'];
   }
 
   function getCustomInstruction() {
@@ -1833,7 +1784,6 @@ const UI = (() => {
     hideLoading,
     showError,
     showSuccess,
-    getSelectedFocusTags,
     getCustomInstruction,
     getEditInstructions,
     getGenerateCount,
