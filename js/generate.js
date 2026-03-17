@@ -58,9 +58,9 @@ const TextToImage = (() => {
     const approveBtn = document.getElementById('promptApproveBtn');
     if (approveBtn) approveBtn.addEventListener('click', approveAndGenerate);
 
-    // 「この画像を編集する」ボタン
-    const editGeneratedBtn = document.getElementById('editGeneratedBtn');
-    if (editGeneratedBtn) editGeneratedBtn.addEventListener('click', editGeneratedImage);
+    // 「分析する」ボタン
+    const analyzeGeneratedBtn = document.getElementById('analyzeGeneratedBtn');
+    if (analyzeGeneratedBtn) analyzeGeneratedBtn.addEventListener('click', analyzeGeneratedImage);
 
     // 「再生成」ボタン
     const regenerateBtn = document.getElementById('regenerateBtn');
@@ -302,8 +302,8 @@ const TextToImage = (() => {
     }
   }
 
-  // 生成した画像を編集モードへ渡す
-  function editGeneratedImage() {
+  // 生成した画像を分析モードへ渡す
+  function analyzeGeneratedImage() {
     if (!state.lastGeneratedImage) return;
 
     // アップロードパネルに切り替え
@@ -317,13 +317,10 @@ const TextToImage = (() => {
     // 生成結果プレビューを閉じる
     document.getElementById('generateResultPreview').classList.add('hidden');
 
-    UI.showSuccess('生成した画像を編集モードにセットしました');
-
-    // analysisSection にスクロール
-    requestAnimationFrame(() => {
-      const analysisSection = document.getElementById('analysisSection');
-      if (analysisSection) analysisSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
+    // 分析を自動開始
+    if (typeof App !== 'undefined' && typeof App.analyze === 'function') {
+      App.analyze();
+    }
   }
 
   // ========== 簡易マークダウン変換 ==========
@@ -353,6 +350,6 @@ const TextToImage = (() => {
     switchSubTab,
     hidePromptReview,
     approveAndGenerate,
-    editGeneratedImage,
+    analyzeGeneratedImage,
   };
 })();
