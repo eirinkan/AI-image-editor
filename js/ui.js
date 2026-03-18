@@ -94,6 +94,9 @@ const UI = (() => {
       // 履歴（サイドバー）
       historySidebar: document.getElementById('historySidebar'),
       historyTimeline: document.getElementById('historyTimeline'),
+      // 履歴（スマホ横スクロール）
+      historyMobile: document.getElementById('historyMobile'),
+      historyTimelineMobile: document.getElementById('historyTimelineMobile'),
 
       // 採用画像ダウンロードボタン
       adoptDownloadBtn: document.getElementById('adoptDownloadBtn'),
@@ -1568,6 +1571,29 @@ const UI = (() => {
   function renderHistory(entries, currentIndex) {
     elements.historySidebar.classList.remove('hidden');
     elements.historyTimeline.innerHTML = '';
+
+    // スマホ横スクロール履歴バーも同期表示
+    if (elements.historyMobile && elements.historyTimelineMobile) {
+      elements.historyMobile.classList.remove('hidden');
+      elements.historyTimelineMobile.innerHTML = '';
+      entries.forEach((entry, i) => {
+        const isCurrent = i === currentIndex;
+        const thumbUrl = EditHistory.getThumbnailUrl(entry);
+        const item = document.createElement('div');
+        item.className = `history-mobile-item flex flex-col items-center gap-1 p-1.5 rounded-lg cursor-pointer transition-all ${isCurrent ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'}`;
+        item.innerHTML = `
+          <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700">
+            ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-[9px]">No img</div>'}
+            ${isCurrent ? '<span class="absolute top-0.5 left-0.5 px-0.5 py-0 text-[7px] font-bold bg-blue-500 text-white rounded leading-tight">編集中</span>' : ''}
+          </div>
+          <span class="text-[9px] font-medium text-gray-600 dark:text-gray-300 text-center leading-tight line-clamp-1 w-full">${escapeHtml(entry.label)}</span>
+        `;
+        item.addEventListener('click', () => {
+          if (typeof App !== 'undefined') App.goToHistory(i);
+        });
+        elements.historyTimelineMobile.appendChild(item);
+      });
+    }
 
     entries.forEach((entry, i) => {
       const item = document.createElement('div');

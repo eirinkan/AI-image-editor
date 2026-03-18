@@ -901,3 +901,47 @@ button {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ========== スマホ向けレスポンシブ調整 (max-width: 640px) ========== */
+@media (max-width: 640px) {
+  /* 要素カードのグリッド: 最小幅を小さく */
+  #elementsList {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+  }
+
+  /* ボタン類のフォントサイズ・パディング調整 */
+  .sub-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* プリセットボタンを小さく */
+  .preset-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  /* アップロードエリアの最小高さを縮小 */
+  .upload-area {
+    min-height: 160px;
+  }
+
+  /* モバイル横スクロール履歴バーのスクロールバー */
+  #historyTimelineMobile::-webkit-scrollbar {
+    height: 3px;
+  }
+  #historyTimelineMobile::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  #historyTimelineMobile::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 2px;
+  }
+
+  /* 履歴モバイルバーの各アイテム */
+  #historyTimelineMobile .history-mobile-item {
+    flex-shrink: 0;
+    width: 72px;
+  }
+}

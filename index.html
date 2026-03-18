@@ -33,17 +33,17 @@
       darkMode: 'class'
     }
   </script>
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors">
 
   <!-- ヘッダー -->
   <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
-      <h1 class="text-lg font-bold text-gray-800 dark:text-gray-100 flex-shrink-0 tracking-tight">
+      <h1 class="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-100 flex-shrink-0 tracking-tight">
         <span class="text-blue-500 font-extrabold">AI</span> マーカーエディタ
       </h1>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 sm:gap-3">
         <button id="newProjectBtn" title="新規作成" class="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>
         </button>
@@ -362,6 +362,14 @@
   <!-- メインコンテンツ -->
   <main class="flex-1 min-w-0 space-y-8">
 
+    <!-- スマホ専用: 横スクロール履歴バー（サイドバー非表示時のフォールバック） -->
+    <div id="historyMobile" class="history-mobile hidden sm:hidden">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">編集履歴</h2>
+      <div id="historyTimelineMobile" class="flex gap-2 pb-2 overflow-x-auto">
+        <!-- JSで動的挿入 -->
+      </div>
+    </div>
+
     <!-- Step 1: 画像を用意 -->
     <section>
       <h2 class="flex items-center gap-2 mb-3">
@@ -385,7 +393,7 @@
       <div id="uploadPanel">
         <div class="relative">
           <button id="removeImage" aria-label="画像を削除" class="hidden"></button>
-        <div id="uploadArea" class="upload-area bg-white dark:bg-gray-800/50 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-2xl p-12 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/20 shadow-sm transition-all relative">
+        <div id="uploadArea" class="upload-area bg-white dark:bg-gray-800/50 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-2xl p-6 sm:p-12 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/20 shadow-sm transition-all relative">
           <div class="upload-prompt">
             <div class="mb-4 inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-2xl text-blue-400">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path></svg>
@@ -394,7 +402,7 @@
             <p class="text-sm text-gray-400 dark:text-gray-400 mt-1">JPG, PNG, WEBP対応</p>
           </div>
           <div id="imagePreview" class="hidden relative">
-            <div class="flex gap-4 justify-center items-start">
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-start">
               <!-- 元画像（マーカーなし） -->
               <div id="cleanColumn" class="flex flex-col items-center gap-1 flex-1 min-w-0">
                 <img id="previewImageClean" class="max-h-80 rounded-lg shadow-md block w-full object-contain" alt="元画像">
@@ -602,7 +610,7 @@
           <!-- 動的に挿入される -->
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex flex-wrap items-center gap-3">
           <!-- 参照画像（コンパクト） -->
           <div id="referenceUploadArea" class="border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 cursor-pointer hover:border-blue-300 transition-colors relative flex items-center gap-2 min-w-0">
             <span class="ref-prompt text-xs text-gray-400 dark:text-gray-400 whitespace-nowrap">+ 参照画像</span>
@@ -611,7 +619,7 @@
             <input type="file" id="referenceFileInput" accept="image/*" class="hidden">
           </div>
 
-          <div class="flex-1"></div>
+          <div class="hidden sm:block flex-1"></div>
 
           <!-- 生成ボタン + 枚数セレクター -->
             <div class="flex items-center gap-2">
@@ -631,7 +639,7 @@
                 <option value="gemini-3-pro-image-preview">🍌pro</option>
               </select>
             </div>
-            <button id="generateBtn" class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all font-medium text-sm shadow-lg hover:shadow-xl flex items-center gap-2 cursor-pointer">
+            <button id="generateBtn" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all font-medium text-sm shadow-lg hover:shadow-xl flex items-center justify-center gap-2 cursor-pointer">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
               画像を生成
             </button>
@@ -829,7 +837,7 @@
   <script src="js/storage.js?v=2"></script>
   <script src="js/history.js?v=14"></script>
   <script src="js/camera-editor.js?v=5"></script>
-  <script src="js/ui.js?v=60"></script>
+  <script src="js/ui.js?v=61"></script>
   <script src="js/generate.js?v=17"></script>
   <script src="js/app.js?v=21"></script>
 </body>
