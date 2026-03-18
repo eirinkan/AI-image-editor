@@ -1004,6 +1004,9 @@ const UI = (() => {
     } else if (type === 'person' && json.people) {
       const match = json.people.find((p, i) => (p.id || `person_${i}`) === id);
       if (match) match.description = newName;
+    } else if (type === 'region' && json.regions) {
+      const match = json.regions.find((r, i) => (r.id || `region_${i}`) === id);
+      if (match) { match.name = newName; if (match.name_en) match.name_en = newName; }
     }
   }
 
