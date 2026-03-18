@@ -975,6 +975,9 @@ const UI = (() => {
       const sel = selectedElements.find(el => el.id === id);
       if (sel) {
         sel.name = newName;
+      }
+      // STEP3が表示されている場合は常に再描画
+      if (selectedElements.length > 0) {
         renderEditInstructions();
       }
     };
