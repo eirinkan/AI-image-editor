@@ -721,34 +721,43 @@ const UI = (() => {
     // マーカーインデックスカウンター（objects→text_elements→peopleの順）
     let markerIndex = 1;
 
-    // オブジェクト・人物（統合表示）
-    const objectCount = filteredObjects.length + filteredPeople.length;
-    if (objectCount > 0) {
-      filteredObjects.forEach((obj, i) => {
-        const origIndex = json.objects.indexOf(obj);
-        const card = createElementCard({
-          id: obj.id || `obj_${origIndex}`,
-          type: 'object',
-          name: obj.name || obj.name_en,
-          data: obj,
-          markerIndex: markerIndex,
-        });
-        elements.elementsList.appendChild(card);
-        markerIndex++;
+    // オブジェクト → テキスト → 人物（flattenElementsと同じ順序）
+    filteredObjects.forEach((obj) => {
+      const origIndex = json.objects.indexOf(obj);
+      const card = createElementCard({
+        id: obj.id || `obj_${origIndex}`,
+        type: 'object',
+        name: obj.name || obj.name_en,
+        data: obj,
+        markerIndex: markerIndex,
       });
-      filteredPeople.forEach((p, i) => {
-        const origIndex = json.people.indexOf(p);
-        const card = createElementCard({
-          id: p.id || `person_${origIndex}`,
-          type: 'person',
-          name: p.description || `人物 ${i + 1}`,
-          data: p,
-          markerIndex: markerIndex,
-        });
-        elements.elementsList.appendChild(card);
-        markerIndex++;
+      elements.elementsList.appendChild(card);
+      markerIndex++;
+    });
+    filteredTextElements.forEach((te) => {
+      const origIndex = json.text_elements.indexOf(te);
+      const card = createElementCard({
+        id: te.id || `text_${origIndex}`,
+        type: 'text',
+        name: te.content || 'テキスト',
+        data: te,
+        markerIndex: markerIndex,
       });
-    }
+      elements.elementsList.appendChild(card);
+      markerIndex++;
+    });
+    filteredPeople.forEach((p, i) => {
+      const origIndex = json.people.indexOf(p);
+      const card = createElementCard({
+        id: p.id || `person_${origIndex}`,
+        type: 'person',
+        name: p.description || `人物 ${i + 1}`,
+        data: p,
+        markerIndex: markerIndex,
+      });
+      elements.elementsList.appendChild(card);
+      markerIndex++;
+    });
 
     // グループ（同種オブジェクト・リージョン・環境設定を統合）
     {
@@ -1009,15 +1018,18 @@ const UI = (() => {
 
     const allElements = flattenElements(json)
       .filter(({ item }) => item.position_coords)
-      .map(({ item, id, markerIndex, type }) => ({
-        index: markerIndex,
-        coords: item.position_coords,
-        id,
-        type,
-      }));
+      .map(({ item, id, markerIndex, type }) => {
+        // 要素名を取得
+        let name = '';
+        if (type === 'object') name = item.name || item.name_en || '';
+        else if (type === 'text') name = item.content || '';
+        else if (type === 'person') name = item.description || '';
+        else if (type === 'region') name = item.name || item.name_en || '';
+        return { index: markerIndex, coords: item.position_coords, id, type, name };
+      });
 
     // マーカーDOM生成
-    allElements.forEach(({ index, coords, id, type }) => {
+    allElements.forEach(({ index, coords, id, type, name }) => {
       const marker = document.createElement('div');
       marker.className = type === 'region' ? 'image-marker region-marker' : 'image-marker';
       marker.dataset.markerIndex = index;
@@ -1025,6 +1037,7 @@ const UI = (() => {
       marker.style.left = `${coords.x * 100}%`;
       marker.style.top = `${coords.y * 100}%`;
       marker.textContent = index;
+      if (name) marker.title = name;
 
       // ホバーでカード連動
       marker.addEventListener('mouseenter', () => highlightCard(id));
