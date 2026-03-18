@@ -241,7 +241,7 @@ CRITICAL RULES:
    - 4: Details/parts of priority 2 elements
    - 5: Background surfaces and large areas (walls, floor, sky)
    - 6: Tiny details of background (outlets, stains, shadows, cracks)
-2. Aim for at least 100 objects by default (unless the user specifies a different number). Include parts of larger objects as separate entries with appropriate priority numbers. Every priority-1 or priority-2 object should have at least one corresponding detail entry (priority-3 or priority-4).
+2. Include parts of larger objects as separate entries with appropriate priority numbers. Every priority-1 or priority-2 object should have at least one corresponding detail entry (priority-3 or priority-4). Be thorough — identify as many elements as possible at all priority levels.
 3. If no text/people/etc are found, use empty arrays.
 4. For each element, position_coords must be the approximate center as a fraction of image width (x) and height (y), 0.0 to 1.0.
 Output ONLY the JSON, no other text.`;
