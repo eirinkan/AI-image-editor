@@ -161,6 +161,12 @@
 
         <!-- ===== 使い方タブ ===== -->
         <div id="helpContentBasic" class="space-y-4 text-sm text-gray-700 dark:text-gray-300">
+          <!-- このアプリについて -->
+          <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
+            <p class="font-semibold text-gray-800 dark:text-gray-100 mb-1.5">AIマーカーエディタとは</p>
+            <p class="text-gray-600 dark:text-gray-300 text-xs leading-relaxed">画像内のすべての要素をAIが自動検出し、マーカーで可視化。変更したい要素を選んで日本語で指示するだけで、プロ品質の画像編集ができます。従来の画像編集ソフトの専門知識は不要 — 「この椅子を赤に」「背景を夕焼けに」のような自然な言葉で、思い通りの画像に仕上げられます。</p>
+          </div>
+
           <!-- ステップ -->
           <div class="space-y-3">
             <div class="flex gap-3 items-start">
@@ -283,6 +289,54 @@
               </div>
             </div>
           </div>
+
+          <!-- 使い方のコツ -->
+          <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">クオリティを上げるコツ</p>
+            <div class="space-y-2">
+              <div class="flex gap-2 items-start bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                <span class="text-green-500 font-bold flex-shrink-0 mt-0.5">1</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">マーカーを多く検出する</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">追加指示に「細かく検出して」「100個以上」などと書くと、より多くの要素が検出されます。マーカーが多いほど精度の高い編集が可能になります。</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                <span class="text-green-500 font-bold flex-shrink-0 mt-0.5">2</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">特定部分にフォーカスして分析を繰り返す</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">一度の分析で完璧を目指す必要はありません。「人物を詳しく」「背景の小物を検出して」など、部分にフォーカスした追加指示で再分析すると、思い通りの要素が見つかります。</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                <span class="text-green-500 font-bold flex-shrink-0 mt-0.5">3</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">少しずつ変えて理想に近づける</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">一度に大きく変更するより、少しずつ調整を重ねるほうが高品質な結果になります。編集履歴で各バージョンを比較しながら進めましょう。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- データ保存の注意 -->
+          <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">データ保存について</p>
+            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 space-y-2">
+              <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">作業データはお使いのブラウザ内（ローカル）に自動保存されます。リロードしても復元されますが、<span class="font-semibold text-amber-700 dark:text-amber-400">ブラウザのキャッシュやデータをクリアすると全て消去</span>されます。</p>
+              <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">大切な作業は、こまめに<span class="font-semibold text-blue-600 dark:text-blue-400">プロジェクト保存 → エクスポート</span>でJSONファイルとしてダウンロードしておくことをお勧めします。エクスポートしたファイルはプロジェクト一覧からいつでもインポートできます。</p>
+            </div>
+          </div>
+
+          <!-- 注意事項 -->
+          <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">知っておくと便利なこと</p>
+            <ul class="space-y-1.5 text-xs text-gray-500 dark:text-gray-400">
+              <li class="flex gap-2"><span class="flex-shrink-0 text-blue-400">*</span>生成結果はAIの特性上、毎回わずかに異なります。複数枚生成して比較するのが効果的です</li>
+              <li class="flex gap-2"><span class="flex-shrink-0 text-blue-400">*</span>テキスト（文字列）の正確な再現はAI画像生成の苦手分野です。ロゴや文字が崩れる場合があります</li>
+              <li class="flex gap-2"><span class="flex-shrink-0 text-blue-400">*</span>要素名はAIが画像を理解する手がかりになるため、ダブルクリックでより適切な名前に修正すると精度が上がります</li>
+              <li class="flex gap-2"><span class="flex-shrink-0 text-blue-400">*</span>APIキーの利用料金はGoogleに直接課金されます。設定画面の概算コスト表で目安を確認できます</li>
+            </ul>
+          </div>
         </div>
 
         <!-- ===== 運用ガイドタブ ===== -->
@@ -321,12 +375,12 @@
             <p class="text-gray-500 dark:text-gray-400 ml-6 mb-2">設定でテキスト処理モデルと画像生成モデルを別々に選択可能。詳細コストは設定画面の概算コスト表を参照。</p>
             <div class="space-y-2 ml-6">
               <div class="flex gap-3 items-start bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                <span class="flex-shrink-0 inline-block bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs px-2 py-0.5 rounded font-semibold mt-0.5">2.5 Pro</span>
-                <p class="text-gray-600 dark:text-gray-300">通常利用に十分な精度。<span class="font-medium text-blue-700 dark:text-blue-400">推奨</span></p>
+                <span class="flex-shrink-0 inline-block bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs px-2 py-0.5 rounded font-semibold mt-0.5">3.1 Pro</span>
+                <p class="text-gray-600 dark:text-gray-300">高精度な分析・生成が可能。クオリティ重視の場合に。<span class="font-medium text-blue-700 dark:text-blue-400">推奨</span></p>
               </div>
               <div class="flex gap-3 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <span class="flex-shrink-0 inline-block bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs px-2 py-0.5 rounded font-semibold mt-0.5">3.1 Pro</span>
-                <p class="text-gray-600 dark:text-gray-300">複雑な指示や高精度が必要な場合（コスト高）</p>
+                <span class="flex-shrink-0 inline-block bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs px-2 py-0.5 rounded font-semibold mt-0.5">2.5 Pro</span>
+                <p class="text-gray-600 dark:text-gray-300">コストを抑えたい場合や、シンプルな編集に</p>
               </div>
             </div>
           </div>
@@ -356,7 +410,7 @@
             </div>
             <ul class="space-y-1.5 ml-6 text-gray-500 dark:text-gray-400">
               <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>小さいサイズ（1K）でテスト → 満足したら大きいサイズで再生成</li>
-              <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>テキスト処理モデルは 2.5 Pro で十分なケースが多い</li>
+              <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>クオリティ重視なら 3.1 Pro。コストを抑えたい場合は 2.5 Pro も選択可能</li>
               <li class="flex gap-2"><span class="flex-shrink-0 text-green-400">•</span>複数枚生成で比較してから採用すると手戻りが減る</li>
             </ul>
           </div>
@@ -858,7 +912,7 @@
   <script src="js/storage.js?v=2"></script>
   <script src="js/history.js?v=14"></script>
   <script src="js/camera-editor.js?v=5"></script>
-  <script src="js/ui.js?v=61"></script>
+  <script src="js/ui.js?v=62"></script>
   <script src="js/generate.js?v=17"></script>
   <script src="js/app.js?v=21"></script>
 </body>
