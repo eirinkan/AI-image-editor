@@ -530,12 +530,12 @@ const UI = (() => {
   // --- 画像アップロード ---
   function handleDragOver(e) {
     e.preventDefault();
-    e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
+    e.currentTarget.classList.add('border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/20');
   }
 
   function handleDragLeave(e) {
     e.preventDefault();
-    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/20');
   }
 
   // 許可するMIMEタイプ
@@ -555,7 +555,7 @@ const UI = (() => {
 
   function handleDrop(e) {
     e.preventDefault();
-    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/20');
     const file = e.dataTransfer.files[0];
     const error = validateImageFile(file);
     if (error) {
@@ -630,7 +630,7 @@ const UI = (() => {
   // --- 参照画像 ---
   function handleReferenceDrop(e) {
     e.preventDefault();
-    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/20');
     const file = e.dataTransfer.files[0];
     const error = validateImageFile(file);
     if (error) {
@@ -950,7 +950,7 @@ const UI = (() => {
     const input = document.createElement('input');
     input.type = 'text';
     input.value = currentName;
-    input.className = 'w-full px-1 py-0.5 text-sm border border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-400';
+    input.className = 'w-full px-1 py-0.5 text-sm border border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-400 dark:bg-gray-700 dark:text-gray-100';
     input.style.minWidth = '60px';
 
     const originalText = nameSpan.textContent;
@@ -1223,19 +1223,19 @@ const UI = (() => {
             if (isOpen) {
               isOpen.remove();
               presetBtn.querySelector('svg').style.transform = '';
-              presetBtn.classList.remove('bg-blue-50', 'text-blue-500', 'border-blue-300');
+              presetBtn.classList.remove('bg-blue-50', 'text-blue-500', 'border-blue-300', 'dark:bg-blue-900/20', 'dark:text-blue-400', 'dark:border-blue-600');
             } else {
               document.querySelectorAll('.preset-popup').forEach(p => {
                 p.remove();
                 const otherBtn = p.closest('.edit-instruction-row')?.querySelector('.preset-toggle-btn');
                 if (otherBtn) {
                   otherBtn.querySelector('svg').style.transform = '';
-                  otherBtn.classList.remove('bg-blue-50', 'text-blue-500', 'border-blue-300');
+                  otherBtn.classList.remove('bg-blue-50', 'text-blue-500', 'border-blue-300', 'dark:bg-blue-900/20', 'dark:text-blue-400', 'dark:border-blue-600');
                 }
               });
               togglePresetPopup(row, el.id);
               presetBtn.querySelector('svg').style.transform = 'rotate(180deg)';
-              presetBtn.classList.add('bg-blue-50', 'text-blue-500', 'border-blue-300');
+              presetBtn.classList.add('bg-blue-50', 'text-blue-500', 'border-blue-300', 'dark:bg-blue-900/20', 'dark:text-blue-400', 'dark:border-blue-600');
             }
           });
           header.querySelector('.flex.items-center.gap-2').appendChild(presetBtn);
@@ -1578,21 +1578,52 @@ const UI = (() => {
       elements.historyTimelineMobile.innerHTML = '';
       entries.forEach((entry, i) => {
         const isCurrent = i === currentIndex;
+        const isBefore = entry.id === customBeforeEntryId;
         const thumbUrl = EditHistory.getThumbnailUrl(entry);
         const item = document.createElement('div');
         item.className = `history-mobile-item flex flex-col items-center gap-1 p-1.5 rounded-lg cursor-pointer transition-all ${isCurrent ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'}`;
         item.innerHTML = `
-          <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700">
+          <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 ${isBefore ? 'ring-2 ring-yellow-500' : ''}">
             ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-[9px]">No img</div>'}
             ${isCurrent ? '<span class="absolute top-0.5 left-0.5 px-0.5 py-0 text-[7px] font-bold bg-blue-500 text-white rounded leading-tight">編集中</span>' : ''}
+            ${isBefore ? '<span class="absolute bottom-0.5 left-0.5 px-0.5 py-0 text-[7px] font-bold bg-yellow-500 text-white rounded leading-tight">Before</span>' : ''}
           </div>
           <span class="text-[9px] font-medium text-gray-600 dark:text-gray-300 text-center leading-tight line-clamp-1 w-full">${escapeHtml(entry.label)}</span>
         `;
-        item.addEventListener('click', () => {
+
+        // タップ→履歴切り替え、長押し→アクションメニュー
+        let pressTimer = null;
+        let didLongPress = false;
+        item.addEventListener('touchstart', (e) => {
+          didLongPress = false;
+          pressTimer = setTimeout(() => {
+            didLongPress = true;
+            showMobileHistoryMenu(entry, i, item);
+          }, 500);
+        }, { passive: true });
+        item.addEventListener('touchend', () => {
+          clearTimeout(pressTimer);
+          if (!didLongPress) {
+            if (typeof App !== 'undefined') App.goToHistory(i);
+          }
+        });
+        item.addEventListener('touchmove', () => { clearTimeout(pressTimer); }, { passive: true });
+        // PC用クリック（モバイル横スクロールバーがPC幅でも表示される場合）
+        item.addEventListener('click', (e) => {
+          if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
           if (typeof App !== 'undefined') App.goToHistory(i);
         });
+
         elements.historyTimelineMobile.appendChild(item);
       });
+
+      // ヒントテキスト（初回のみ表示）
+      if (entries.length > 1 && !elements.historyTimelineMobile.querySelector('.mobile-history-hint')) {
+        const hint = document.createElement('p');
+        hint.className = 'mobile-history-hint text-[9px] text-gray-400 dark:text-gray-500 mt-1';
+        hint.textContent = '長押しでメニュー表示';
+        elements.historyMobile.appendChild(hint);
+      }
     }
 
     entries.forEach((entry, i) => {
@@ -1665,6 +1696,74 @@ const UI = (() => {
         elements.historyTimeline.appendChild(arrow);
       }
     });
+  }
+
+  // --- モバイル履歴アクションメニュー ---
+  function showMobileHistoryMenu(entry, index, anchorEl) {
+    document.querySelectorAll('.mobile-history-menu').forEach(m => m.remove());
+
+    const isBefore = entry.id === customBeforeEntryId;
+    const menu = document.createElement('div');
+    menu.className = 'mobile-history-menu fixed inset-0 z-50 flex items-end justify-center';
+    menu.innerHTML = `
+      <div class="mobile-history-menu-backdrop absolute inset-0 bg-black/40"></div>
+      <div class="relative w-full max-w-sm mx-4 mb-6 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+          <p class="text-sm font-semibold text-gray-800 dark:text-gray-100 text-center">${escapeHtml(entry.label)}</p>
+        </div>
+        <div class="py-1">
+          <button class="menu-before w-full px-4 py-3 text-left text-sm flex items-center gap-3 active:bg-gray-100 dark:active:bg-gray-700 transition-colors ${isBefore ? 'text-yellow-600' : 'text-gray-700 dark:text-gray-200'}">
+            <span class="w-7 h-7 rounded-full ${isBefore ? 'bg-yellow-500' : 'bg-yellow-100 dark:bg-yellow-900/30'} flex items-center justify-center text-xs font-bold ${isBefore ? 'text-white' : 'text-yellow-600'}">B</span>
+            ${isBefore ? 'Before解除' : 'Beforeに設定'}
+          </button>
+          <button class="menu-download w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 flex items-center gap-3 active:bg-gray-100 dark:active:bg-gray-700 transition-colors">
+            <span class="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            </span>
+            ダウンロード
+          </button>
+          <button class="menu-delete w-full px-4 py-3 text-left text-sm text-red-600 flex items-center gap-3 active:bg-red-50 dark:active:bg-red-900/20 transition-colors">
+            <span class="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+              <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </span>
+            削除
+          </button>
+        </div>
+        <button class="menu-cancel w-full px-4 py-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 active:bg-gray-100 dark:active:bg-gray-700 transition-colors">
+          キャンセル
+        </button>
+      </div>
+    `;
+
+    const close = () => menu.remove();
+    menu.querySelector('.mobile-history-menu-backdrop').addEventListener('click', close);
+    menu.querySelector('.menu-cancel').addEventListener('click', close);
+
+    menu.querySelector('.menu-before').addEventListener('click', () => {
+      if (isBefore) {
+        customBeforeEntryId = null;
+        beforeImageData = null;
+        hasBeforeImage = false;
+      } else {
+        setBeforeFromEntry(entry);
+      }
+      close();
+      renderHistory(EditHistory.getEntries(), EditHistory.getCurrentIndex());
+    });
+
+    menu.querySelector('.menu-download').addEventListener('click', () => {
+      EditHistory.downloadImage(entry);
+      close();
+    });
+
+    menu.querySelector('.menu-delete').addEventListener('click', () => {
+      close();
+      const msg = index === 0 ? 'オリジナル画像を削除すると全履歴がクリアされます。よろしいですか？' : 'この画像を削除しますか？';
+      if (!confirm(msg)) return;
+      EditHistory.removeEntry(index);
+    });
+
+    document.body.appendChild(menu);
   }
 
   // --- ローディング ---
@@ -1898,13 +1997,13 @@ const UI = (() => {
         // グリッド内の全カードのチェック・ボーダーをリセット
         elements.resultGrid.querySelectorAll('.relative').forEach(c => {
           c.classList.remove('border-blue-500');
-          c.classList.add('border-gray-200');
+          c.classList.add('border-gray-200', 'dark:border-gray-700');
           const cm = c.querySelector('.absolute.top-2');
           if (cm) cm.classList.add('hidden');
         });
 
         // この画像にチェックマーク+青ボーダー
-        card.classList.remove('border-gray-200');
+        card.classList.remove('border-gray-200', 'dark:border-gray-700');
         card.classList.add('border-blue-500');
         checkMark.classList.remove('hidden');
 

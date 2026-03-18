@@ -125,6 +125,14 @@ button {
   border-radius: 2px;
 }
 
+.dark .history-sidebar .sticky::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark #historyTimelineMobile::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
 /* 縦型タイムライン */
 .history-timeline-vertical {
   display: flex;
@@ -943,5 +951,10 @@ button {
   #historyTimelineMobile .history-mobile-item {
     flex-shrink: 0;
     width: 72px;
+  }
+
+  /* スマホで採用オーバーレイを常時表示 */
+  #t2iResultGrid .group .opacity-0 {
+    opacity: 1 !important;
   }
 }

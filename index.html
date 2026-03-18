@@ -33,7 +33,7 @@
       darkMode: 'class'
     }
   </script>
-  <link rel="stylesheet" href="css/style.css?v=10">
+  <link rel="stylesheet" href="css/style.css?v=11">
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors">
 
@@ -64,7 +64,7 @@
   </header>
 
   <!-- 設定モーダル -->
-  <div id="settingsModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20">
+  <div id="settingsModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-8 sm:pt-20">
     <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-5">
         <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">設定</h3>
@@ -157,7 +157,7 @@
   </div>
 
   <!-- ヘルプモーダル -->
-  <div id="helpModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 p-4">
+  <div id="helpModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-8 sm:pt-20 p-4">
     <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh]">
       <!-- モーダルヘッダー -->
       <div class="flex items-center justify-between px-6 pt-6 pb-4 flex-shrink-0">
@@ -458,7 +458,7 @@
   <main class="flex-1 min-w-0 space-y-8">
 
     <!-- スマホ専用: 横スクロール履歴バー（サイドバー非表示時のフォールバック） -->
-    <div id="historyMobile" class="history-mobile hidden sm:hidden">
+    <div id="historyMobile" class="history-mobile hidden md:hidden">
       <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">編集履歴</h2>
       <div id="historyTimelineMobile" class="flex gap-2 pb-2 overflow-x-auto">
         <!-- JSで動的挿入 -->
@@ -582,7 +582,7 @@
             </div>
 
             <!-- ボタン -->
-            <div class="flex gap-3 justify-end items-center">
+            <div class="flex gap-3 justify-end items-center flex-wrap">
               <button id="promptBackBtn" class="px-5 py-2.5 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">
                 ← 戻って修正
               </button>
@@ -627,7 +627,7 @@
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"></path></svg>
                   再度プロンプトを生成
                 </button>
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 flex-wrap">
                   <select id="t2iRegenCount" class="px-1.5 py-1.5 text-xs border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg cursor-pointer">
                     <option value="1">1枚</option>
                     <option value="2">2枚</option>
@@ -805,7 +805,7 @@
 
   <!-- エラー/成功トースト -->
   <!-- 保存ダイアログ -->
-  <div id="saveProjectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20">
+  <div id="saveProjectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-8 sm:pt-20">
     <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-sm mx-4">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">プロジェクトを保存</h3>
@@ -823,14 +823,14 @@
   </div>
 
   <!-- プロジェクト一覧モーダル -->
-  <div id="projectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20">
+  <div id="projectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-8 sm:pt-20">
     <div role="dialog" aria-modal="true" class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">プロジェクト一覧</h3>
         <button id="projectModalClose" aria-label="閉じる" class="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 text-2xl leading-none cursor-pointer">&times;</button>
       </div>
       <div class="flex gap-2 mb-4">
-        <label class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer border border-blue-200">
+        <label class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer border border-blue-200 dark:text-blue-400 dark:hover:bg-blue-900/20 dark:border-blue-700">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
           インポート
           <input id="importProjectInput" type="file" accept=".json" class="hidden">
@@ -849,7 +849,7 @@
 
   <!-- 画像拡大モーダル -->
   <div id="imageZoomModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center cursor-zoom-out" style="backdrop-filter: blur(4px);">
-    <button id="zoomMarkerToggle" class="hidden absolute top-4 right-4 z-10 bg-white/90 hover:bg-white text-gray-700 rounded-full px-3 py-1.5 text-xs font-medium shadow-lg transition-all cursor-pointer" style="pointer-events: auto;">
+    <button id="zoomMarkerToggle" class="hidden absolute top-4 right-4 z-10 bg-white/90 hover:bg-white text-gray-700 dark:bg-gray-700/90 dark:hover:bg-gray-700 dark:text-gray-200 rounded-full px-3 py-1.5 text-xs font-medium shadow-lg transition-all cursor-pointer" style="pointer-events: auto;">
       マーカー非表示
     </button>
     <div id="imageZoomWrapper" class="relative inline-block max-w-[90vw] max-h-[90vh]">
@@ -932,7 +932,7 @@
   <script src="js/storage.js?v=2"></script>
   <script src="js/history.js?v=14"></script>
   <script src="js/camera-editor.js?v=5"></script>
-  <script src="js/ui.js?v=62"></script>
+  <script src="js/ui.js?v=63"></script>
   <script src="js/generate.js?v=17"></script>
   <script src="js/app.js?v=21"></script>
 </body>
