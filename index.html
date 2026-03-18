@@ -167,21 +167,21 @@
               <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
               <div>
                 <p class="font-semibold text-gray-800 dark:text-gray-100">画像を用意</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">画像をアップロード、またはAI生成タブで日本語入力からプロンプトを自動作成して生成。アスペクト比・解像度も選択可。</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">画像をアップロード、またはAI生成タブで日本語入力からプロンプトを自動作成して生成。アスペクト比・解像度・枚数（1〜4枚）も選択可。生成後は「再度プロンプトを生成」で別の画像も作成、「同じプロンプトで再生成」でバリエーション比較ができます。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
               <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
               <div>
                 <p class="font-semibold text-gray-800 dark:text-gray-100">マーカー分析</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">「マーカー分析」をクリックで画像内の要素を自動検出。追加指示の入力欄で検出精度を調整可能。</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">「マーカー分析」をクリックで画像内の要素を自動検出。画像上に番号付きマーカーが表示されます（マーカーにホバーで要素名を確認可能）。追加指示の入力欄で検出数や精度を調整できます。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
               <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
               <div>
                 <p class="font-semibold text-gray-800 dark:text-gray-100">要素を選択</p>
-                <p class="text-gray-500 dark:text-gray-400 mt-0.5">変更したい要素カードをクリック（複数選択可）。同種オブジェクトのグループや背景リージョンも自動検出。画像全体への指示は「全体」を選択。</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-0.5">変更したい要素カードをクリック（複数選択可）。オブジェクト・テキスト・人物に加え、同種オブジェクトの自動グループや背景リージョン（紫マーカー）も検出されます。画像全体への指示は「全体」を選択。画像クリックで拡大表示も可能。</p>
               </div>
             </div>
             <div class="flex gap-3 items-start">
@@ -251,6 +251,27 @@
                 <div>
                   <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">プリセット</p>
                   <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">雰囲気・スタイルをワンクリックで指定（雰囲気/全体/リージョン選択時）</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">🔄</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">自動保存</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">作業内容を自動保存。ブラウザをリロードしても画像・分析結果・履歴が復元されます</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">📄</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">新規作成</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">ヘッダーの新規作成ボタンで全データをクリアして最初からやり直し</p>
+                </div>
+              </div>
+              <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <span class="text-base leading-none mt-0.5">🔍</span>
+                <div>
+                  <p class="font-medium text-gray-700 dark:text-gray-200 text-xs">画像拡大</p>
+                  <p class="text-gray-500 dark:text-gray-400 text-xs mt-0.5">画像クリックで全画面拡大。マーカー付き画像ではマーカー表示の切替も可能</p>
                 </div>
               </div>
               <div class="flex gap-2 items-start bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
