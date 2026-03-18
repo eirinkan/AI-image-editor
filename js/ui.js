@@ -886,6 +886,7 @@ const UI = (() => {
     const card = document.createElement('button');
     card.className = 'element-card relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
     card.dataset.elementId = id;
+    card.dataset.elementName = name;
 
     // position_coords がある場合のみバッジを表示
     const hasBadge = markerIndex && data.position_coords;
@@ -926,17 +927,17 @@ const UI = (() => {
         if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; }
         clickTimer = setTimeout(() => {
           clickTimer = null;
-          selectElement({ id, type, name, data });
+          selectElement({ id, type, name: card.dataset.elementName, data });
         }, 250);
       });
       card.addEventListener('dblclick', (e) => {
         e.preventDefault();
         e.stopPropagation();
         if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
-        startNameEdit(card, id, type, name, data);
+        startNameEdit(card, id, type, card.dataset.elementName, data);
       });
     } else {
-      card.addEventListener('click', () => selectElement({ id, type, name, data }));
+      card.addEventListener('click', () => selectElement({ id, type, name: card.dataset.elementName, data }));
     }
 
     return card;
@@ -962,6 +963,7 @@ const UI = (() => {
     const finishEdit = () => {
       const newName = input.value.trim() || originalText;
       nameSpan.textContent = newName;
+      card.dataset.elementName = newName;
 
       // currentJsonの対応する要素名を更新
       if (typeof App !== 'undefined' && App.getState) {
