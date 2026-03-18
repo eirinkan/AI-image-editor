@@ -148,7 +148,7 @@ const ProjectStorage = (() => {
   async function exportProject(id) {
     const project = await loadProject(id);
     const exportData = {
-      format: 'ai-image-editor-project',
+      format: 'ai-marker-editor-project',
       version: 1,
       project: project,
     };
@@ -171,8 +171,8 @@ const ProjectStorage = (() => {
       reader.onload = async (e) => {
         try {
           const data = JSON.parse(e.target.result);
-          if (data.format !== 'ai-image-editor-project' || !data.project) {
-            reject(new Error('無効なファイル形式です。AI画像エディタのプロジェクトファイルを選択してください。'));
+          if (data.format !== 'ai-marker-editor-project' && data.format !== 'ai-image-editor-project' || !data.project) {
+            reject(new Error('無効なファイル形式です。AIマーカーエディタのプロジェクトファイルを選択してください。'));
             return;
           }
           // 新しいIDを割り当てて重複を防ぐ
