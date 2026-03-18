@@ -100,7 +100,7 @@ button {
 
 /* 履歴サイドバー */
 .history-sidebar {
-  width: 160px;
+  width: 192px;
   flex-shrink: 0;
 }
 
@@ -212,7 +212,24 @@ button {
   transition: all 0.2s ease;
   box-shadow: 0 1px 4px rgba(0,0,0,0.3);
   z-index: 10;
-  border: 1.5px solid white;
+  border: none;
+}
+
+/* マーカーホバー時に要素名ツールチップ表示 */
+.image-marker:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  color: white;
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 100;
 }
 
 .image-marker::before {
@@ -729,8 +746,7 @@ button {
   min-height: 44px;
 }
 
-.history-dl-btn,
-.history-del-btn {
+.history-dl-btn {
   min-width: 32px;
   min-height: 32px;
   display: flex;

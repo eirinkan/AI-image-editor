@@ -254,7 +254,12 @@ Output ONLY the JSON, no other text.`;
     let changesDescription = '';
     if (Array.isArray(editInstructions)) {
       changesDescription = editInstructions.map((item, i) => {
-        const groupNote = item.isGroup ? ` (${item.memberCount} instances, apply to ALL)` : '';
+        let groupNote = '';
+        if (item.isGroup && item.memberNames?.length) {
+          groupNote = ` (Group of ${item.memberCount} instances: ${item.memberNames.map(n => `"${n}"`).join(', ')} — apply this instruction to ALL of them)`;
+        } else if (item.isGroup) {
+          groupNote = ` (${item.memberCount} instances, apply to ALL)`;
+        }
         return `${i + 1}. Element: "${item.elementName}"${groupNote} → Instruction: <user_input>${item.instruction.slice(0, 500)}</user_input>`;
       }).join('\n');
     } else {

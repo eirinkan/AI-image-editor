@@ -456,6 +456,7 @@ const App = (() => {
 
         UI.hideLoading();
         UI.showSuccess('画像の生成が完了しました');
+        UI.clearSelectedElements();
         autoSave();
       } else {
         // 複数枚の場合: ループ生成
@@ -488,6 +489,7 @@ const App = (() => {
 
         UI.hideLoading();
         UI.showSuccess(`${generateCount}枚の画像を生成しました。画像をクリックして採用してください。`);
+        UI.clearSelectedElements();
         autoSave();
       }
     } catch (err) {

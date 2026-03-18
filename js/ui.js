@@ -111,8 +111,7 @@ const UI = (() => {
       compareSlider: document.getElementById('compareSlider'),
 
       // プリセット
-      presetTemplates: document.getElementById('presetTemplates'),
-      presetList: document.getElementById('presetList'),
+      // プリセットはインラインポップアップに移行（固定セクションは廃止）
 
       // モデル選択
       textModelSelect: document.getElementById('textModelSelect'),
@@ -343,8 +342,19 @@ const UI = (() => {
     // Before/After比較スライダー（ホバー＋ドラッグ）
     setupCompareSlider();
 
-    // プリセットテンプレート
-    elements.presetList.addEventListener('click', handlePresetClick);
+    // プリセットポップアップ: 外側クリックで閉じる
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.preset-popup') && !e.target.closest('.preset-toggle-btn')) {
+        document.querySelectorAll('.preset-popup').forEach(p => {
+          const btn = p.closest('.edit-instruction-row')?.querySelector('.preset-toggle-btn');
+          if (btn) {
+            btn.querySelector('svg').style.transform = '';
+            btn.classList.remove('bg-blue-50', 'text-blue-500', 'border-blue-300');
+          }
+          p.remove();
+        });
+      }
+    });
   }
 
   // --- APIキー（自動保存） ---
@@ -853,6 +863,20 @@ const UI = (() => {
     renderMarkers(json);
     if (elements.markerColumn) elements.markerColumn.classList.remove('hidden');
 
+    // スクロールヒント表示制御
+    updateScrollHint();
+    elements.elementsList.removeEventListener('scroll', updateScrollHint);
+    elements.elementsList.addEventListener('scroll', updateScrollHint);
+  }
+
+  function updateScrollHint() {
+    const list = elements.elementsList;
+    const hint = document.getElementById('scrollHint');
+    if (!list || !hint) return;
+    const hasOverflow = list.scrollHeight > list.clientHeight;
+    const isNearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 20;
+    hint.classList.toggle('opacity-0', !hasOverflow || isNearBottom);
+    hint.classList.toggle('opacity-100', hasOverflow && !isNearBottom);
   }
 
   function createElementCard({ id, type, name, subtitle, data, markerIndex }) {
@@ -1128,17 +1152,9 @@ const UI = (() => {
     // 編集パネルの表示更新
     if (selectedElements.length > 0) {
       elements.editSection.classList.remove('hidden');
-      // 「画像全体」または「雰囲気・照明」が選択されている場合プリセットを表示
-      const hasGlobal = selectedElements.some(el => el.type === 'global' || el.type === 'atmosphere' || el.type === 'region');
-      if (hasGlobal) {
-        elements.presetTemplates.classList.remove('hidden');
-      } else {
-        elements.presetTemplates.classList.add('hidden');
-      }
       renderEditInstructions();
     } else {
       elements.editSection.classList.add('hidden');
-      elements.presetTemplates.classList.add('hidden');
     }
 
     // Appに通知
@@ -1157,17 +1173,23 @@ const UI = (() => {
 
     container.innerHTML = '';
 
-    selectedElements.forEach((el, i) => {
+    // グループメンバーはスキップ（グループの指示欄のみ表示）
+    const visibleElements = selectedElements.filter(el =>
+      !selectedElements.some(g => g.type === 'group' && g.data && g.data.memberIds && g.data.memberIds.includes(el.id))
+    );
+
+    visibleElements.forEach((el, i) => {
       const row = document.createElement('div');
       row.className = 'edit-instruction-row border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-2';
       row.dataset.instructionFor = el.id;
 
       const header = document.createElement('div');
       header.className = 'flex items-center justify-between';
+      const groupTag = el.type === 'group' ? '<span class="px-1.5 py-0.5 text-[10px] font-bold bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded">グループ</span>' : '';
       header.innerHTML = `
         <div class="flex items-center gap-2">
-          <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold">${i + 1}</span>
           <span class="font-medium text-sm text-blue-600">${escapeHtml(el.name)}</span>
+          ${groupTag}
         </div>
         <button class="remove-instruction text-gray-400 dark:text-gray-400 hover:text-red-500 text-lg leading-none" data-remove-id="${el.id}">&times;</button>
       `;
@@ -1185,6 +1207,37 @@ const UI = (() => {
         // カメラエディタを描画（DOMに追加後に実行）
         setTimeout(() => CameraEditor.render(editorContainer, el.data), 0);
       } else {
+        // プリセット対象タイプならプリセットボタンを追加
+        const presetTypes = ['global', 'atmosphere', 'region', 'group'];
+        if (presetTypes.includes(el.type)) {
+          const presetBtn = document.createElement('button');
+          presetBtn.type = 'button';
+          presetBtn.className = 'preset-toggle-btn px-2.5 py-1 text-[11px] bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-500 hover:border-blue-300 transition-all flex items-center gap-1 cursor-pointer';
+          presetBtn.innerHTML = '<svg class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>プリセット';
+          presetBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = row.querySelector('.preset-popup');
+            if (isOpen) {
+              isOpen.remove();
+              presetBtn.querySelector('svg').style.transform = '';
+              presetBtn.classList.remove('bg-blue-50', 'text-blue-500', 'border-blue-300');
+            } else {
+              document.querySelectorAll('.preset-popup').forEach(p => {
+                p.remove();
+                const otherBtn = p.closest('.edit-instruction-row')?.querySelector('.preset-toggle-btn');
+                if (otherBtn) {
+                  otherBtn.querySelector('svg').style.transform = '';
+                  otherBtn.classList.remove('bg-blue-50', 'text-blue-500', 'border-blue-300');
+                }
+              });
+              togglePresetPopup(row, el.id);
+              presetBtn.querySelector('svg').style.transform = 'rotate(180deg)';
+              presetBtn.classList.add('bg-blue-50', 'text-blue-500', 'border-blue-300');
+            }
+          });
+          header.querySelector('.flex.items-center.gap-2').appendChild(presetBtn);
+        }
+
         // 通常: テキストエリア
         const textarea = document.createElement('textarea');
         textarea.rows = 2;
@@ -1196,7 +1249,7 @@ const UI = (() => {
         container.appendChild(row);
 
         // 最後に追加された要素にフォーカス
-        if (i === selectedElements.length - 1 && !savedValues[el.id]) {
+        if (i === visibleElements.length - 1 && !savedValues[el.id]) {
           setTimeout(() => textarea.focus({ preventScroll: true }), 50);
         }
       }
@@ -1280,6 +1333,9 @@ const UI = (() => {
         setTimeout(() => deactivateCompare(), 1000);
       }, 500);
     }
+
+    // ダウンロードボタンを表示
+    showDownloadButton(imageData);
   }
 
   // 履歴復元用の結果表示（グリッド・選択状態に触れない）
@@ -1315,6 +1371,26 @@ const UI = (() => {
         setTimeout(() => deactivateCompare(), 1000);
       }, 500);
     }
+
+    // ダウンロードボタンを表示
+    showDownloadButton(imageData);
+  }
+
+  // ダウンロードボタン表示ヘルパー
+  function showDownloadButton(imageData) {
+    if (!elements.adoptDownloadBtn) return;
+    elements.adoptDownloadBtn.classList.remove('hidden');
+    const newDlBtn = elements.adoptDownloadBtn.cloneNode(true);
+    elements.adoptDownloadBtn.replaceWith(newDlBtn);
+    elements.adoptDownloadBtn = newDlBtn;
+    newDlBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.href = `data:${imageData.mimeType};base64,${imageData.base64}`;
+      link.download = `generated_image.${imageData.mimeType === 'image/png' ? 'png' : 'jpg'}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
   }
 
   // --- Before/After比較（ホバー式スライダー） ---
@@ -1501,18 +1577,20 @@ const UI = (() => {
       const thumbUrl = EditHistory.getThumbnailUrl(entry);
       const isBefore = entry.id === customBeforeEntryId;
       item.innerHTML = `
-        <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 history-thumb ${isCurrent ? 'ring-2 ring-blue-500' : ''} ${isBefore ? 'ring-2 ring-yellow-500' : ''}">
-          ${isCurrent ? '<span class="absolute top-0.5 left-0.5 z-10 px-1 py-0.5 text-[8px] font-bold bg-blue-500 text-white rounded">編集中</span>' : ''}
-          ${isBefore ? '<span class="absolute bottom-0.5 left-0.5 z-10 px-1 py-0.5 text-[8px] font-bold bg-yellow-500 text-white rounded">Before</span>' : ''}
-          ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-400 text-xs">No img</div>'}
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <button class="history-set-before-btn text-white hover:text-yellow-300 transition-colors p-1 font-bold text-sm leading-none" title="Beforeに設定">B</button>
-            <button class="history-dl-btn text-white hover:text-blue-300 transition-colors p-1" title="ダウンロード">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            </button>
-            <button class="history-del-btn text-white hover:text-red-300 transition-colors p-1" title="削除">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-            </button>
+        <div class="relative w-full aspect-[3/2]">
+          <button class="history-del-btn absolute z-20 rounded-full bg-gray-400/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:!bg-red-500 transition-all" style="width:18px;height:18px;top:-9px;right:-9px" title="削除">
+            <svg class="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+          <div class="relative w-full h-full rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 history-thumb ${isCurrent ? 'ring-2 ring-blue-500' : ''} ${isBefore ? 'ring-2 ring-yellow-500' : ''}">
+            ${isCurrent ? '<span class="absolute top-0.5 left-0.5 z-10 px-1 py-0.5 text-[8px] font-bold bg-blue-500 text-white rounded">編集中</span>' : ''}
+            ${isBefore ? '<span class="absolute bottom-0.5 left-0.5 z-10 px-1 py-0.5 text-[8px] font-bold bg-yellow-500 text-white rounded">Before</span>' : ''}
+            ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-400 text-xs">No img</div>'}
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <button class="history-dl-btn text-white/90 hover:text-blue-300 transition-colors p-1" title="ダウンロード">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              </button>
+            </div>
+            <button class="history-set-before-btn absolute bottom-0.5 left-0.5 z-10 px-1 py-0.5 text-[8px] font-bold bg-gray-500/70 text-white rounded hover:bg-yellow-500 transition-colors opacity-0 group-hover:opacity-100" title="Beforeに設定">Before</button>
           </div>
         </div>
         <span class="text-[10px] font-medium text-gray-600 dark:text-gray-300 text-center leading-tight line-clamp-2 w-full history-thumb">${escapeHtml(entry.label)}</span>
@@ -1696,23 +1774,50 @@ const UI = (() => {
     fog: '霧の中の幻想的な雰囲気に変更。霧がかかり遠景がぼやけた神秘的なシーンにする',
   };
 
-  function handlePresetClick(e) {
-    const btn = e.target.closest('[data-preset]');
-    if (!btn) return;
-    const presetKey = btn.dataset.preset;
-    const instruction = PRESETS[presetKey];
-    if (!instruction) return;
+  const PRESET_LABELS = {
+    golden_hour: 'ゴールデンアワー', winter: '冬景色', anime: 'アニメ風', night: '夜景',
+    spring: '春の雰囲気', vintage: 'ヴィンテージ', minimalist: 'ミニマリスト', dramatic: 'ドラマチック',
+    summer: '夏', autumn: '秋', morning: '朝', sunset: '夕暮れ',
+    watercolor: '水彩画', oil_painting: '油絵', pencil_sketch: '鉛筆スケッチ', cyberpunk: 'サイバーパンク',
+    steampunk: 'スチームパンク', pop_art: 'ポップアート', horror: 'ホラー', fantasy: 'ファンタジー',
+    scifi: 'SF', romantic: 'ロマンチック', rain: '雨', fog: '霧',
+  };
 
-    // 「画像全体」または「雰囲気・照明」のtextareaに指示をセット
-    const globalRow = elements.editInstructionsList.querySelector('[data-instruction-for="global"]');
-    const atmosphereRow = elements.editInstructionsList.querySelector('[data-instruction-for="atmosphere"]');
-    const targetRow = globalRow || atmosphereRow;
-    if (targetRow) {
-      const textarea = targetRow.querySelector('textarea');
-      if (textarea) {
-        textarea.value = instruction;
-        textarea.focus({ preventScroll: true });
-      }
+  function togglePresetPopup(row, elementId) {
+    // 既存のポップアップを閉じる
+    document.querySelectorAll('.preset-popup').forEach(p => p.remove());
+
+    const popup = document.createElement('div');
+    popup.className = 'preset-popup flex flex-wrap gap-1.5 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600';
+
+    Object.entries(PRESETS).forEach(([key, instruction]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'px-2.5 py-1 text-xs bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-500 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-300 dark:hover:border-blue-600 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer';
+      btn.textContent = PRESET_LABELS[key] || key;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const textarea = row.querySelector('textarea');
+        if (textarea) {
+          textarea.value = instruction;
+          textarea.focus({ preventScroll: true });
+        }
+        const toggleBtn = row.querySelector('.preset-toggle-btn');
+        if (toggleBtn) {
+          toggleBtn.querySelector('svg').style.transform = '';
+          toggleBtn.classList.remove('bg-blue-50', 'text-blue-500', 'border-blue-300');
+        }
+        popup.remove();
+      });
+      popup.appendChild(btn);
+    });
+
+    // textareaの前に挿入
+    const textarea = row.querySelector('textarea');
+    if (textarea) {
+      row.insertBefore(popup, textarea);
+    } else {
+      row.appendChild(popup);
     }
   }
 
@@ -1793,21 +1898,7 @@ const UI = (() => {
         }, 300);
 
         // 採用画像直下にDLボタン表示
-        if (elements.adoptDownloadBtn) {
-          elements.adoptDownloadBtn.classList.remove('hidden');
-          // DLボタンのクリックイベントを再設定
-          const newDlBtn = elements.adoptDownloadBtn.cloneNode(true);
-          elements.adoptDownloadBtn.replaceWith(newDlBtn);
-          elements.adoptDownloadBtn = newDlBtn;
-          newDlBtn.addEventListener('click', () => {
-            const link = document.createElement('a');
-            link.href = `data:${imgData.mimeType};base64,${imgData.base64}`;
-            link.download = `adopted_image.${imgData.mimeType === 'image/png' ? 'png' : 'jpg'}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          });
-        }
+        showDownloadButton(imgData);
 
         // Appに通知
         if (typeof App !== 'undefined' && App.onImageAdopted) {
@@ -1860,10 +1951,11 @@ const UI = (() => {
           elementName: el.name,
           instruction: textarea.value.trim(),
         };
-        // グループの場合: メンバー数を付与
+        // グループの場合: メンバー情報を付与
         if (el.type === 'group' && el.data?.members) {
           entry.isGroup = true;
           entry.memberCount = el.data.members.length;
+          entry.memberNames = el.data.members.map(m => m.name || m.name_en).filter(Boolean);
         }
         instructions.push(entry);
       }

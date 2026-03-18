@@ -6,7 +6,7 @@ const EditHistory = (() => {
   let listeners = [];
 
   // サムネイルを生成（メモリ軽量化）
-  function createThumbnail(imageData, maxSize = 128) {
+  function createThumbnail(imageData, maxSize = 256) {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
@@ -27,7 +27,7 @@ const EditHistory = (() => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.6));
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
       };
       img.onerror = () => resolve('');
       img.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
