@@ -86,26 +86,20 @@
           </button>
         </div>
         <p id="apiKeyStatus" class="text-xs text-gray-400 dark:text-gray-400"></p>
-        <details class="text-xs text-gray-500 dark:text-gray-400">
-          <summary class="cursor-pointer hover:text-blue-500 dark:hover:text-blue-400 transition-colors">APIキーの取得方法がわからない方はこちら</summary>
-          <div class="mt-2 bg-gray-50 dark:bg-gray-700 rounded-lg p-3 space-y-2">
-            <p class="text-gray-600 dark:text-gray-300">以下のプロンプトをChatGPT・Claude・Geminiなどに貼り付けて聞いてください：</p>
-            <div class="relative">
-              <pre id="apiKeyPrompt" class="bg-gray-100 dark:bg-gray-600 rounded p-2.5 text-[11px] text-gray-700 dark:text-gray-200 whitespace-pre-wrap leading-relaxed select-all">Google AI Studio（https://aistudio.google.com/）でGemini APIキーを取得する方法を、初心者向けにステップバイステップで教えてください。
-
-以下を含めてください：
-1. Google AI Studioへのアクセス方法
-2. Googleアカウントでのログイン
-3. APIキーの作成手順（「Get API key」→「Create API key」）
-4. 作成したAPIキーのコピー方法
-5. 無料枠の説明（1日あたりの制限）
-6. APIキーの安全な管理方法（他人に共有しない等）
-
-※ このAPIキーは「AIマーカーエディタ」というWebアプリで画像のAI分析・生成に使用します。</pre>
-              <button onclick="navigator.clipboard.writeText(document.getElementById('apiKeyPrompt').textContent).then(()=>{this.textContent='コピーしました';setTimeout(()=>{this.textContent='コピー'},2000)})" class="absolute top-1.5 right-1.5 px-2 py-0.5 text-[10px] bg-white dark:bg-gray-500 text-gray-600 dark:text-gray-200 rounded border border-gray-200 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-400 transition-colors cursor-pointer">コピー</button>
-            </div>
-          </div>
-        </details>
+        <div class="flex items-center gap-2 mt-1">
+          <p class="text-xs text-gray-500 dark:text-gray-400">APIキーの取得方法がわからない方 →</p>
+          <button id="copyApiKeyPrompt" class="px-3 py-1 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors cursor-pointer">AIに聞くためのプロンプトをコピー</button>
+        </div>
+        <script>
+          document.getElementById('copyApiKeyPrompt').addEventListener('click', function() {
+            var prompt = 'Google Gemini APIキーの取得方法を、初心者向けにステップバイステップで教えてください。\nこのAPIキーは画像生成機能を使うWebアプリで利用します。画像生成には有料プラン（Tier 1以上）が必須です。\n\n以下の手順をすべて含めてください：\n\n【1. APIキーを作成する】\n- Google AI Studio（https://aistudio.google.com/apikey）にGoogleアカウントでログイン\n- 「Create API key」をクリックしてキーを作成\n- 作成されたキーをコピー\n\n【2. 有料プラン（Tier 1）を有効にする（必須）】\n- AI StudioのAPIキーページ（https://aistudio.google.com/api-keys）を開く\n- 対象プロジェクトの「Set up Billing」をクリック\n- 国の選択と利用規約への同意\n- クレジットカード等の支払い情報を登録\n- 「Finish account setup」をクリックして完了\n※ Google Cloud Consoleに行かなくてもAI Studio内で完結します\n※ 支払いは使った分だけの従量課金です（月額固定費なし）\n\n【3. APIキーの安全な管理】\n- 他人と共有しない\n- 不要になったらAI StudioまたはGoogle Cloud Consoleから削除する\n\n各ステップでクリックするボタン名や画面の見え方も具体的に説明してください。\n無料プランでは画像生成ができないため、必ずBilling設定まで完了する必要がある点を強調してください。';
+            var btn = this;
+            navigator.clipboard.writeText(prompt).then(function() {
+              btn.textContent = 'コピーしました';
+              setTimeout(function() { btn.textContent = 'AIに聞くためのプロンプトをコピー'; }, 2000);
+            });
+          });
+        </script>
       </div>
 
       <!-- テーマ設定 -->
