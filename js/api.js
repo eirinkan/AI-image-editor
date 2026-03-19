@@ -62,29 +62,35 @@ const GeminiAPI = (() => {
       'all': `Analyze this image exhaustively. Your goal is to detect AS MANY elements as possible at multiple levels of detail. The user needs a comprehensive, hierarchical inventory of everything visible.
 
 Each element MUST have a "priority" field (integer 1-6) indicating its detail level:
-  1 = Main elements: Large, prominent objects that dominate the scene (large furniture, vehicles, main subjects, people)
-  2 = Sub elements: Supporting objects, smaller items, accessories (cushions, books, cups, plants, decorative items, small furniture)
+  1 = Main elements: Large, prominent objects that dominate the scene (people, characters, animals, vehicles, buildings, large furniture, machines)
+  2 = Sub elements: Supporting objects, smaller items, accessories (cushions, books, cups, plants, tools, small animals, decorative items, small furniture)
   3 = Main element details: Parts/details OF main elements (table legs, sofa cushion seams, chair armrests, clothing buttons, shoe laces)
   4 = Sub element details: Parts/details OF sub elements (vase patterns, book spines, plant leaves, label text on bottles)
   5 = Background elements: Walls, floors, ceilings, sky, distant scenery, large architectural surfaces, windows as openings
   6 = Background element details: Wall stains, cracks, power outlets, light switches, shadows on walls, reflections, dust, subtle textures
 
 Identify ALL elements across these categories:
-- Large furniture & major objects (tables, chairs, sofas, beds, shelves, cabinets, appliances)
-- Small objects & accessories (cups, books, plants, vases, remote controls, cushions, frames, candles, bottles, bags)
-- Decorative elements (artwork, posters, wall hangings, ornaments, figurines, fabric patterns)
-- Architectural elements (doors, windows, columns, stairs, railings, moldings, ceiling fixtures, outlets, switches)
-- Surfaces & materials (flooring, wall finish, countertop material, rug/carpet, curtains/blinds)
-- Background elements (items partially visible, objects through windows, reflections in mirrors)
-- Lighting fixtures (lamps, ceiling lights, sconces, candles, LED strips, natural light)
-- Parts and details of ALL above elements (legs, handles, knobs, seams, patterns, labels, screws)
+- Large objects & main subjects (furniture, vehicles, buildings, structures, machines, large animals)
+- Vehicles & transportation (cars, trucks, bicycles, motorcycles, airplanes, boats, trains, ships, helicopters)
+- Buildings & structures (houses, towers, castles, bridges, ruins, fences, walls, gates, temples, churches)
+- Characters & people (clothing, pose, position, accessories, expressions)
+- Animals & creatures (species, color, pose, size, distinguishing features)
+- Small objects & accessories (cups, books, plants, vases, tools, weapons, instruments, bags, food items)
+- Natural elements (trees, rocks, mountains, rivers, lakes, flowers, grass, clouds, snow, ice)
+- Decorative elements (artwork, posters, ornaments, figurines, patterns, symbols)
+- Architectural details (doors, windows, columns, stairs, railings, moldings, fixtures)
+- Surfaces & materials (ground, flooring, wall finish, water surface, snow cover, road)
+- Background elements (distant scenery, items partially visible, horizon, sky features)
+- Lighting fixtures & light sources (lamps, ceiling lights, natural light, fire, glow)
+- Parts and details of ALL above elements (legs, handles, wings, wheels, patterns, labels, textures)
 - Text, logos, signage, labels on any object
-- People (clothing, pose, position, accessories) if present
-- Scene type (indoor/outdoor), style, atmosphere
+- Scene type (indoor/outdoor/fantasy/sci-fi), style, atmosphere
 - Weather/time of day if visible
 - Camera perspective (angle, focal length estimate)
 
-IMPORTANT: You MUST detect a large number of elements — aim for at least 50 objects by default (unless the user specifies otherwise). Cover all 6 priority levels thoroughly. For every priority-1 object, also list its parts as priority-3 entries. For every priority-2 object, also list its details as priority-4 entries. Include background surfaces as priority-5 and their tiny details (outlets, stains, shadows) as priority-6. Even mundane items like a power outlet, a door handle, a shadow, or a fold in a curtain should be listed. More is always better.`,
+IMPORTANT: Before listing details, first scan the ENTIRE image and ensure every visually significant object is captured as priority 1 or 2. Do NOT skip large objects like vehicles (cars, planes, boats), buildings, structures, or animals just because they are in the background or partially occluded. If it occupies a meaningful area of the image, it MUST be listed.
+
+Then aim for at least 50 objects total by default (unless the user specifies otherwise). Cover all 6 priority levels thoroughly. For every priority-1 object, also list its parts as priority-3 entries. For every priority-2 object, also list its details as priority-4 entries. Include background surfaces as priority-5 and their tiny details (outlets, stains, shadows) as priority-6. Even mundane items like a power outlet, a door handle, a shadow, or a fold in a curtain should be listed. More is always better.`,
 
       'furniture': `Focus specifically on furniture and objects in this image. For EACH item provide extremely detailed analysis:
 - Exact name/type of furniture
@@ -235,8 +241,8 @@ Also identify large-area or background regions (sky, ground, walls, water, floor
 
 CRITICAL RULES:
 1. Every element in objects, text_elements, people, and regions MUST have a "priority" field (1-6). Assign priority based on:
-   - 1: Main scene elements (large, prominent, focal point)
-   - 2: Sub elements (smaller, supporting, accessory)
+   - 1: Main scene elements (large, prominent, focal point — characters, animals, vehicles, buildings, major objects)
+   - 2: Sub elements (smaller, supporting, accessory — small objects, tools, minor animals, decorative items)
    - 3: Details/parts of priority 1 elements
    - 4: Details/parts of priority 2 elements
    - 5: Background surfaces and large areas (walls, floor, sky)
