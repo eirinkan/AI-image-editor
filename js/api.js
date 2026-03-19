@@ -387,11 +387,16 @@ Output ONLY the updated JSON, no other text.`;
       if (spec.camera) {
         const cam = spec.camera;
         if (cam.angle) parts.push(`Camera angle: ${cam.angle}`);
-        if (cam.shot_type) parts.push(`Shot type: ${cam.shot_type}`);
+        // shot_typeフィールド、またはcompositionに含まれるショットタイプ情報を抽出
+        const shotTypePattern = /\b(close-up|close up|medium|full body|full shot|wide|establishing|long shot|extreme close|macro)\b/i;
+        const compositionIsShot = cam.composition && shotTypePattern.test(cam.composition);
+        const shotType = cam.shot_type || (compositionIsShot ? cam.composition : null);
+        if (shotType) parts.push(`Shot type: ${shotType}`);
         if (cam.focal_length) parts.push(`Focal length: ${cam.focal_length}`);
         if (cam.depth_of_field) parts.push(`Depth of field: ${cam.depth_of_field}`);
         if (cam.perspective) parts.push(`Perspective: ${cam.perspective}`);
-        if (cam.composition) parts.push(`Composition: ${cam.composition}`);
+        // compositionがshot typeとして使われた場合は重複出力しない
+        if (cam.composition && !compositionIsShot) parts.push(`Composition: ${cam.composition}`);
       }
       return parts.join('\n');
     }
