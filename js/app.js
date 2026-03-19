@@ -440,6 +440,7 @@ const App = (() => {
         state.originalJson = JSON.parse(JSON.stringify(updatedJson));
         state.pendingJson = null;
 
+        UI.renderElements(updatedJson);
         UI.showResult(newImageData, imageBeforeGeneration);
         UI.updateMainPreview(newImageData);
 
@@ -479,6 +480,8 @@ const App = (() => {
         state.currentJson = updatedJson;
         state.originalJson = JSON.parse(JSON.stringify(updatedJson));
         state.pendingJson = null;
+
+        UI.renderElements(updatedJson);
 
         // 複数枚グリッド表示（履歴ラベル用に指示内容を渡す）
         const historyLabel = editInstructions

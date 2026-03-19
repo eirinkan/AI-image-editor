@@ -361,7 +361,20 @@ Output ONLY the updated JSON, no other text.`;
       }
       if (spec.atmosphere) {
         const atm = spec.atmosphere;
-        if (atm.lighting) parts.push(`Lighting: ${atm.lighting}`);
+        if (atm.lighting) {
+          if (typeof atm.lighting === 'object') {
+            const l = atm.lighting;
+            const lp = [];
+            if (l.type) lp.push(l.type);
+            if (l.direction) lp.push(`direction: ${l.direction}`);
+            if (l.color_temperature) lp.push(`${l.color_temperature} temperature`);
+            if (l.intensity) lp.push(l.intensity);
+            if (l.shadows) lp.push(`shadows: ${l.shadows}`);
+            parts.push(`Lighting: ${lp.join(', ')}`);
+          } else {
+            parts.push(`Lighting: ${atm.lighting}`);
+          }
+        }
         if (atm.weather) parts.push(`Weather: ${atm.weather}`);
         if (atm.time_of_day) parts.push(`Time: ${atm.time_of_day}`);
         if (atm.mood) parts.push(`Mood: ${atm.mood}`);
@@ -375,6 +388,10 @@ Output ONLY the updated JSON, no other text.`;
         const cam = spec.camera;
         if (cam.angle) parts.push(`Camera angle: ${cam.angle}`);
         if (cam.shot_type) parts.push(`Shot type: ${cam.shot_type}`);
+        if (cam.focal_length) parts.push(`Focal length: ${cam.focal_length}`);
+        if (cam.depth_of_field) parts.push(`Depth of field: ${cam.depth_of_field}`);
+        if (cam.perspective) parts.push(`Perspective: ${cam.perspective}`);
+        if (cam.composition) parts.push(`Composition: ${cam.composition}`);
       }
       return parts.join('\n');
     }

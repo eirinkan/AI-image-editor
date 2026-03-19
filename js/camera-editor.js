@@ -81,25 +81,44 @@ const CameraEditor = (() => {
       if (angle) {
         if (angle.includes('low')) values.angle = 'low';
         else if (angle.includes('high')) values.angle = 'high';
-        else if (angle.includes('bird')) values.angle = 'birds-eye';
+        else if (angle.includes('bird') || angle.includes('overhead') || angle.includes('top-down')) values.angle = 'birds-eye';
         else if (angle.includes('worm')) values.angle = 'worms-eye';
         else values.angle = 'eye-level';
       }
 
-      const fl = cameraJson.focal_length || '';
+      // ショットタイプ推論（perspective, angle, shot_typeから）
+      const shotInfo = (String(cameraJson.perspective || '') + ' ' + String(cameraJson.angle || '') + ' ' + String(cameraJson.shot_type || '')).toLowerCase();
+      if (shotInfo.trim()) {
+        if (shotInfo.includes('extreme close') || shotInfo.includes('macro')) values.shotType = 'extreme-close';
+        else if (shotInfo.includes('close-up') || shotInfo.includes('close up')) values.shotType = 'close-up';
+        else if (shotInfo.includes('medium') || shotInfo.includes('waist')) values.shotType = 'medium';
+        else if (shotInfo.includes('full body') || shotInfo.includes('full shot') || shotInfo.includes('full length')) values.shotType = 'full';
+        else if (shotInfo.includes('wide') || shotInfo.includes('establishing') || shotInfo.includes('long shot')) values.shotType = 'wide';
+      }
+
+      // 焦点距離（数値型にも対応、スライダー範囲にクランプ）
+      const fl = String(cameraJson.focal_length || '');
       if (fl) {
-        const flMatch = fl.match(/(\d+)\s*mm/i);
-        if (flMatch) values.focalLength = parseInt(flMatch[1]);
+        const flMatch = fl.match(/(\d+)/);
+        if (flMatch) values.focalLength = Math.max(14, Math.min(200, parseInt(flMatch[1])));
         else if (fl.includes('wide')) values.focalLength = 24;
-        else if (fl.includes('telephoto')) values.focalLength = 135;
+        else if (fl.includes('telephoto') || fl.includes('tele')) values.focalLength = 135;
         else values.focalLength = 50;
       }
 
-      const dof = (cameraJson.depth_of_field || '').toLowerCase();
+      // 被写界深度（f値パースにも対応）
+      const dof = String(cameraJson.depth_of_field || '').toLowerCase();
       if (dof) {
         if (dof.includes('shallow')) values.depthOfField = 2.0;
         else if (dof.includes('deep')) values.depthOfField = 11;
-        else values.depthOfField = 5.6;
+        else {
+          const fMatch = dof.match(/f\/?(\d+\.?\d*)/);
+          if (fMatch) {
+            values.depthOfField = Math.max(1.4, Math.min(16, parseFloat(fMatch[1])));
+          } else {
+            values.depthOfField = 5.6;
+          }
+        }
       }
 
       values.composition = [];
@@ -109,6 +128,7 @@ const CameraEditor = (() => {
         if (comp.includes('symmetr')) values.composition.push('symmetry');
         if (comp.includes('leading')) values.composition.push('leading-lines');
         if (comp.includes('center')) values.composition.push('center');
+        if (comp.includes('negative space') || comp.includes('余白')) values.composition.push('negative-space');
       }
     }
 
@@ -374,7 +394,7 @@ const CameraEditor = (() => {
     wrap.className = 'space-y-1';
 
     const val = currentValues[key] ?? ctrl.default;
-    if (!keepFlags[key]) currentValues[key] = val;
+    currentValues[key] = val;
 
     // 「今までと同じ」チェックボックス
     const keepRow = document.createElement('label');
@@ -492,7 +512,7 @@ const CameraEditor = (() => {
     wrap.className = 'space-y-1';
 
     const val = currentValues[key] ?? ctrl.default;
-    if (!keepFlags[key]) currentValues[key] = val;
+    currentValues[key] = val;
 
     // 「今までと同じ」チェックボックス
     const keepRow = document.createElement('label');
