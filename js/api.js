@@ -345,6 +345,23 @@ Output ONLY the updated JSON, no other text.`;
     return diff;
   }
 
+  // カメラのみ変更時の画像生成プロンプト（JSON差分を経由せず、直接記述を渡す）
+  function buildCameraOnlyPrompt(cameraDescription) {
+    return `Change ONLY the camera angle/perspective of this image.
+
+New camera: ${cameraDescription}
+
+CRITICAL RULES:
+- Change ONLY the camera viewpoint. Everything else must stay EXACTLY as it is.
+- Every person, object, and element must remain in the SAME position relative to each other.
+- If element A is to the left of element B, A must STILL be to the left of B.
+- Every person and animal must face the SAME direction as in the original.
+- Do NOT move, add, remove, rearrange, or resize any elements.
+- Do NOT change the art style, colors, character designs, poses, or clothing.
+- Do NOT orbit the camera horizontally (left/right). Only change the vertical angle (up/down).
+Generate the edited image.`;
+  }
+
   // 画像生成用のプロンプトを構築（差分ベース・自然言語）
   function buildGenerationPrompt(originalJson, updatedJson) {
     const diff = computeJsonDiff(originalJson, updatedJson);
@@ -443,25 +460,6 @@ Output ONLY the updated JSON, no other text.`;
       const changeDesc = diffToNaturalLanguage(diff);
       // カメラ変更が含まれるか判定
       const hasCameraDiff = diff.camera !== undefined;
-      // カメラのみの変更か（他の差分がない）
-      const isCameraOnly = hasCameraDiff && Object.keys(diff).length === 1;
-
-      if (isCameraOnly) {
-        // カメラのみ変更: 要素の位置関係を保護するため、最小限のプロンプト
-        return `Change ONLY the camera angle/perspective of this image.
-
-Camera change:
-${changeDesc}
-
-CRITICAL RULES:
-- Change ONLY the camera viewpoint. Everything else must stay EXACTLY as it is.
-- Every person, object, and element must remain in the SAME position relative to each other.
-- Do NOT move, add, remove, or rearrange any elements in the scene.
-- Do NOT change the art style, colors, character designs, poses, or clothing.
-- The spatial layout and composition of elements must be preserved — only the viewing angle changes.
-- Do NOT orbit the camera horizontally (left/right). Only change the vertical angle (up/down).
-Generate the edited image.`;
-      }
 
       const fullDesc = specToDescription(updatedJson);
       const cameraImageRules = hasCameraDiff ? `
@@ -701,8 +699,10 @@ Generate the edited image.`;
   }
 
   // 画像生成
-  async function generateImage(imageData, originalJson, updatedJson, referenceImageData = null, signal = null) {
-    const prompt = buildGenerationPrompt(originalJson, updatedJson);
+  async function generateImage(imageData, originalJson, updatedJson, referenceImageData = null, signal = null, cameraPromptText = null) {
+    const prompt = cameraPromptText
+      ? buildCameraOnlyPrompt(cameraPromptText)
+      : buildGenerationPrompt(originalJson, updatedJson);
 
     const parts = [
       {

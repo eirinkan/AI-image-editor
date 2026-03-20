@@ -417,16 +417,12 @@ const App = (() => {
       UI.updateLoadingStep(1);
       let updatedJson;
 
-      // カメラ要素のみの場合: cameraフィールドだけLLMで更新し、他は保護
+      // カメラ要素のみの場合: LLM不要で確定的にJSON更新
       const cameraOnly = editInstructions.length === 1 && editInstructions[0].instruction.startsWith('Change camera to:');
       if (cameraOnly) {
-        // JSONをdeepcopy（他フィールドを保護）
         const safeCopy = JSON.parse(JSON.stringify(state.currentJson));
-        // cameraフィールドだけ抽出してLLMに更新させる
-        const cameraOnlyJson = { camera: safeCopy.camera || {} };
-        const cameraUpdated = await GeminiAPI.updateJson(cameraOnlyJson, editInstructions, signal);
-        // cameraフィールドだけ上書き、他は元のまま
-        safeCopy.camera = cameraUpdated.camera || cameraOnlyJson.camera;
+        // CameraEditorの値から直接camera JSONを構築（LLM呼び出し不要）
+        safeCopy.camera = CameraEditor.buildCameraJson(safeCopy.camera);
         updatedJson = safeCopy;
       } else {
         updatedJson = await GeminiAPI.updateJson(state.currentJson, editInstructions, signal);
@@ -439,6 +435,9 @@ const App = (() => {
       // Step 2: 画像を生成（枚数分ループ）
       UI.updateLoadingStep(2);
 
+      // カメラのみの場合: プロンプトを直接渡す（JSON差分を経由しない）
+      const cameraPromptText = cameraOnly ? CameraEditor.getImagePrompt() : null;
+
       if (generateCount === 1) {
         // 1枚の場合: 従来通り
         const result = await GeminiAPI.generateImage(
@@ -446,7 +445,8 @@ const App = (() => {
           state.currentJson,
           updatedJson,
           state.referenceImage,
-          signal
+          signal,
+          cameraPromptText
         );
 
         const newImageData = { base64: result.base64, mimeType: result.mimeType };
@@ -487,7 +487,8 @@ const App = (() => {
             state.currentJson,
             updatedJson,
             state.referenceImage,
-            signal
+            signal,
+            cameraPromptText
           );
           results.push({ base64: result.base64, mimeType: result.mimeType });
         }

@@ -1031,6 +1031,40 @@ const CameraEditor = (() => {
     return { ...currentValues };
   }
 
+  // 既存のcamera JSONを確定的に更新（LLM不要）
+  function buildCameraJson(existingCamera) {
+    const cam = { ...(existingCamera || {}) };
+    if (!keepFlags.angle && currentValues.angle) {
+      const opt = CONTROLS.angle.options.find(o => o.value === currentValues.angle);
+      cam.angle = opt ? opt.prompt : currentValues.angle;
+    }
+    if (!keepFlags.shotType && currentValues.shotType) {
+      const opt = CONTROLS.shotType.options.find(o => o.value === currentValues.shotType);
+      cam.shot_type = opt ? opt.prompt : currentValues.shotType;
+    }
+    if (!keepFlags.focalLength && currentValues.focalLength) {
+      cam.focal_length = `${currentValues.focalLength}mm`;
+    }
+    if (!keepFlags.depthOfField && currentValues.depthOfField) {
+      cam.depth_of_field = `f/${parseFloat(currentValues.depthOfField).toFixed(1)}`;
+    }
+    return cam;
+  }
+
+  // 画像生成AI向けの直接プロンプト（JSON差分を経由しない）
+  function getImagePrompt() {
+    const parts = [];
+    if (!keepFlags.angle && currentValues.angle) {
+      const opt = CONTROLS.angle.options.find(o => o.value === currentValues.angle);
+      if (opt) parts.push(opt.prompt);
+    }
+    if (!keepFlags.shotType && currentValues.shotType) {
+      const opt = CONTROLS.shotType.options.find(o => o.value === currentValues.shotType);
+      if (opt) parts.push(opt.prompt);
+    }
+    return parts.join(', ');
+  }
+
   // 変更コールバック設定
   function onChange(cb) {
     onChangeCallback = cb;
@@ -1039,6 +1073,8 @@ const CameraEditor = (() => {
   return {
     render,
     getPromptText,
+    getImagePrompt,
+    buildCameraJson,
     getValues,
     onChange,
   };
