@@ -111,6 +111,29 @@ button {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+#elementsList::-webkit-scrollbar {
+  width: 6px;
+}
+
+#elementsList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#elementsList::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.dark #elementsList {
+  scrollbar-color: #4b5563 transparent;
+}
+
+.dark #elementsList::-webkit-scrollbar-thumb {
+  background: #4b5563;
 }
 
 /* 履歴サイドバー */
