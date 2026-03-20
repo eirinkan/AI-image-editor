@@ -187,15 +187,6 @@ const CameraEditor = (() => {
       container.appendChild(section);
     });
 
-    // プロンプトプレビュー
-    const preview = document.createElement('div');
-    preview.className = 'camera-prompt-preview bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-3 mt-3';
-    preview.innerHTML = `
-      <p class="text-[10px] text-purple-400 dark:text-purple-300 mb-1">生成されるカメラ指示</p>
-      <p id="cameraPromptPreview" class="text-xs text-purple-700 dark:text-purple-300 font-mono leading-relaxed"></p>
-    `;
-    container.appendChild(preview);
-
     updatePreview();
   }
 
