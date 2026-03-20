@@ -248,6 +248,12 @@ CRITICAL RULES:
    - 5: Background surfaces and large areas (walls, floor, sky)
    - 6: Tiny details of background (outlets, stains, shadows, cracks)
 2. Include parts of larger objects as separate entries with appropriate priority numbers. Every priority-1 or priority-2 object should have at least one corresponding detail entry (priority-3 or priority-4). Be thorough — identify as many elements as possible at all priority levels. For example, if there are multiple strawberries on a cake, mark EACH strawberry individually, not just "strawberries" as a group. The same applies to any repeated elements (e.g., each chair around a table, each window on a building, each person in a crowd).
+   NAMING RULE FOR PARTS (CRITICAL): When naming detail/part entries (priority 3-4), their "name" field MUST start with the EXACT full "name" of their parent object followed by "の".
+   - If the parent is "複葉機", parts must be "複葉機の翼", "複葉機のプロペラ" (NOT "飛行機の翼" — use the same name)
+   - If the parent is "金髪の少女", parts must be "金髪の少女のドレス", "金髪の少女のブーツ" (NOT just "少女のドレス" — include the full parent name to distinguish from other characters)
+   - If the parent is "廃墟", parts must be "廃墟の塔", "廃墟のアーチ" (NOT "左の塔" or "中央の塔")
+   - The same rule applies to name_en: if parent is "biplane", parts should be "biplane upper wing", "biplane propeller" (NOT "airplane wing")
+   This consistent naming is critical for automatic grouping. NEVER use a synonym or abbreviation — always reuse the exact parent name.
 3. If no text/people/etc are found, use empty arrays.
 4. For each element, position_coords must be the approximate center as a fraction of image width (x) and height (y), 0.0 to 1.0.
 Output ONLY the JSON, no other text.`;

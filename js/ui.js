@@ -689,12 +689,12 @@ const UI = (() => {
     return header;
   }
 
-  // 同名オブジェクトを自動グループ化（name_en正規化で2個以上）
+  // 同名オブジェクト＋親子関係を自動グループ化
   function computeAutoGroups(objects) {
+    // --- Step 1: 同名グループ化（既存ロジック） ---
     const nameMap = {};
     objects.forEach(obj => {
       let key = (obj.name_en || obj.name || '').toLowerCase();
-      // 末尾の数字、括弧付き修飾語（left/right/front/back等）、日本語の括弧修飾を除去して正規化
       key = key
         .replace(/\s*\(.*?\)\s*/g, '')      // (left), (右) など括弧内を除去
         .replace(/\s*（.*?）\s*/g, '')       // 全角括弧も除去
@@ -702,13 +702,107 @@ const UI = (() => {
         .trim();
       if (!key) return;
       if (!nameMap[key]) {
-        // グループ名は正規化した名前を使う（括弧修飾なし）
         const cleanName = (obj.name || '').replace(/\s*\(.*?\)\s*/g, '').replace(/\s*（.*?）\s*/g, '').replace(/\s*[\d]+$/, '').trim();
         nameMap[key] = { name: cleanName || obj.name, name_en: key, members: [] };
       }
       nameMap[key].members.push(obj);
     });
-    return Object.values(nameMap).filter(g => g.members.length >= 2);
+    const sameNameGroups = Object.values(nameMap).filter(g => g.members.length >= 2);
+
+    // --- Step 2: 親子関係グループ化（ボトムアップ: 「Xの Y」パターンから親を推定） ---
+    const parentChildGroups = [];
+    const usedInParentChild = new Set();
+
+    // ボトムアップ: 「Xの Y」パターンの子要素から親キーを抽出してグループ化
+    const childPrefixMap = {}; // { prefixKey: [child objects] }
+    // 位置・方向を表す短い接頭辞は除外（「左の塔」→「左」は親名ではない）
+    const positionalPrefixes = new Set(['左', '右', '上', '下', '中央', '前', '後', '奥', '手前', '大', '小']);
+    objects.forEach(obj => {
+      const name = (obj.name || '').trim();
+      // 日本語: 「Xの Y」パターンからXを抽出（2文字以上かつ位置語でないもの）
+      const jaMatch = name.match(/^(.+?)の/);
+      if (jaMatch) {
+        const prefix = jaMatch[1];
+        if (prefix.length >= 2 && !positionalPrefixes.has(prefix)) {
+          if (!childPrefixMap[prefix]) childPrefixMap[prefix] = [];
+          childPrefixMap[prefix].push(obj);
+        }
+      }
+    });
+
+    // 各接頭辞グループに対して、最適な親（priority 1-2）を探す
+    const parentCandidates = objects.filter(obj => obj.priority && obj.priority <= 2);
+
+    Object.entries(childPrefixMap).forEach(([prefix, children]) => {
+      if (children.length < 1) return;
+
+      // 親を探す: (1) 名前が接頭辞と完全一致 (2) 名前が接頭辞を含む/含まれる (3) name_enの先頭単語が一致
+      let parent = parentCandidates.find(p => {
+        const pName = (p.name || '').trim();
+        return !usedInParentChild.has(p.id || p.name) && pName === prefix;
+      });
+      if (!parent) {
+        parent = parentCandidates.find(p => {
+          const pName = (p.name || '').trim();
+          return !usedInParentChild.has(p.id || p.name) && (pName.includes(prefix) || prefix.includes(pName));
+        });
+      }
+      if (!parent) {
+        // name_enフォールバック: 子のname_enの先頭単語と親のname_enが一致するか
+        const sampleChild = children[0];
+        const childEnFirstWord = ((sampleChild.name_en || '').toLowerCase().split(' ')[0] || '').trim();
+        if (childEnFirstWord && childEnFirstWord.length >= 3) {
+          parent = parentCandidates.find(p => {
+            const pNameEn = (p.name_en || '').toLowerCase();
+            return !usedInParentChild.has(p.id || p.name) && (pNameEn.includes(childEnFirstWord) || childEnFirstWord.includes(pNameEn));
+          });
+        }
+      }
+
+      if (parent) {
+        const parentId = parent.id || parent.name;
+        const filteredChildren = children.filter(c => c !== parent);
+        if (filteredChildren.length < 1) return;
+
+        const allMembers = [parent, ...filteredChildren];
+        parentChildGroups.push({
+          name: (parent.name || '').trim(),
+          name_en: (parent.name_en || '').toLowerCase().trim(),
+          members: allMembers,
+          isParentChild: true
+        });
+        allMembers.forEach(m => usedInParentChild.add(m.id || m.name));
+      } else if (children.length >= 2) {
+        // 親が見つからないが子が2つ以上ある場合、子だけでグループ化
+        const allUsed = children.some(c => usedInParentChild.has(c.id || c.name));
+        if (!allUsed) {
+          parentChildGroups.push({
+            name: prefix,
+            name_en: prefix,
+            members: children,
+            isParentChild: true
+          });
+          children.forEach(m => usedInParentChild.add(m.id || m.name));
+        }
+      }
+    });
+
+    // --- Step 3: 統合（重複排除） ---
+    // 親子グループに含まれるメンバーが同名グループにもいる場合、親子グループを優先
+    const result = [...parentChildGroups];
+    sameNameGroups.forEach(sg => {
+      // 同名グループのメンバーが全て親子グループに含まれていたらスキップ
+      const allCovered = sg.members.every(m => usedInParentChild.has(m.id || m.name));
+      if (!allCovered) {
+        // 親子グループに含まれていないメンバーだけ残す
+        const remaining = sg.members.filter(m => !usedInParentChild.has(m.id || m.name));
+        if (remaining.length >= 2) {
+          result.push({ ...sg, members: remaining });
+        }
+      }
+    });
+
+    return result;
   }
 
   // priority値に基づいてフィルタリング（priorityがない要素はレベル2として扱う）
