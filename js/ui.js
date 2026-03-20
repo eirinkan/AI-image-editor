@@ -251,22 +251,27 @@ const UI = (() => {
                     const elId = card.dataset.elementId;
                     if (elId === 'camera' || elId === 'global') return;
                     const clone = card.cloneNode(true);
-                    // 白背景・黒文字のコンパクトボタン
-                    clone.className = 'text-gray-800 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-gray-100 transition-all cursor-pointer shadow-sm';
+                    // 元のelement-cardスタイルを維持しつつコンパクトに
                     clone.style.pointerEvents = 'auto';
+                    // グループ・リージョンカードはCSS上background:transparentなので明示的に白背景
+                    clone.style.background = '#fff';
+                    // サイズをコンパクトに調整
+                    clone.classList.remove('min-h-0', 'px-3', 'py-2.5');
+                    clone.classList.add('px-2.5', 'py-1.5', 'text-xs');
+                    // 元カードが選択済みならクローンにも反映
+                    if (card.classList.contains('border-blue-500')) {
+                      clone.classList.add('border-blue-500');
+                      clone.classList.remove('border-gray-200', 'dark:border-gray-700');
+                    }
                     clone.addEventListener('click', (ev) => {
                       ev.stopPropagation();
-                      // 選択状態をトグル
-                      clone.classList.toggle('zoom-group-selected');
+                      // 通常画面と同じ選択UIをトグル
+                      clone.classList.toggle('border-blue-500');
+                      clone.classList.toggle('border-gray-200');
                       card.click();
                     });
                     zoomGroupList.appendChild(clone);
                   });
-                }
-                // 画像の横幅に合わせる
-                const wrapperEl = document.getElementById('imageZoomWrapper');
-                if (wrapperEl) {
-                  zoomGroupList.style.width = wrapperEl.offsetWidth + 'px';
                 }
                 zoomGroupList.classList.remove('hidden');
               } else {
@@ -274,6 +279,15 @@ const UI = (() => {
               }
             }
             zoomModal.classList.remove('hidden');
+            // モーダル表示後に画像の横幅に合わせる（hidden中はoffsetWidthが0のため）
+            if (zoomGroupList && !zoomGroupList.classList.contains('hidden')) {
+              requestAnimationFrame(() => {
+                const wrapperEl = document.getElementById('imageZoomWrapper');
+                if (wrapperEl) {
+                  zoomGroupList.style.width = wrapperEl.offsetWidth + 'px';
+                }
+              });
+            }
           });
         }
       });
@@ -729,7 +743,7 @@ const UI = (() => {
   function createCategoryHeader(icon, label) {
     const header = document.createElement('div');
     header.className = 'category-header';
-    header.innerHTML = `<span class="text-gray-500">${icon}</span> ${escapeHtml(label)}`;
+    header.innerHTML = icon ? `<span class="text-gray-500">${icon}</span> ${escapeHtml(label)}` : escapeHtml(label);
     return header;
   }
 
@@ -956,7 +970,7 @@ const UI = (() => {
       groupItems.push({ id: 'global', type: 'global', name: '全体', data: json });
 
       if (groupItems.length > 0) {
-        elements.elementsList.appendChild(createCategoryHeader(ICONS.group, `グループ (${groupItems.length})`));
+        elements.elementsList.appendChild(createCategoryHeader('', `グループ (${groupItems.length})`));
         groupItems.forEach(item => {
           if (item.type === 'group') {
             const card = document.createElement('button');
@@ -981,7 +995,7 @@ const UI = (() => {
             elements.elementsList.appendChild(card);
           } else if (item.type === 'global') {
             const globalBtn = document.createElement('button');
-            globalBtn.className = 'element-card border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer min-h-0';
+            globalBtn.className = 'element-card border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 flex flex-col items-start gap-0.5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer text-left min-h-0';
             globalBtn.dataset.elementId = 'global';
             globalBtn.innerHTML = `<span class="text-sm text-gray-600 dark:text-gray-300 font-medium">全体</span>`;
             globalBtn.addEventListener('click', () => selectElement(item));
@@ -1013,7 +1027,7 @@ const UI = (() => {
     // 個別要素を後に表示（グループの下）
     const individualCount = filteredObjects.length + filteredTextElements.length + filteredPeople.length;
     if (individualCount > 0) {
-      elements.elementsList.appendChild(createCategoryHeader(ICONS.cube, `個別 (${individualCount})`));
+      elements.elementsList.appendChild(createCategoryHeader('', `個別 (${individualCount})`));
       elements.elementsList.appendChild(individualCards);
     }
 
@@ -1354,8 +1368,6 @@ const UI = (() => {
       const typeLabels = {
         group: { text: 'グループ', bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400' },
         region: { text: 'リージョン', bg: 'bg-green-100 dark:bg-green-900/30', color: 'text-green-600 dark:text-green-400' },
-        global: { text: '全体', bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
-        camera: { text: 'カメラ', bg: 'bg-gray-100 dark:bg-gray-700', color: 'text-gray-600 dark:text-gray-400' },
       };
       const labelInfo = typeLabels[el.type];
       const groupTag = labelInfo ? `<span class="px-1.5 py-0.5 text-[10px] font-bold ${labelInfo.bg} ${labelInfo.color} rounded">${labelInfo.text}</span>` : '';

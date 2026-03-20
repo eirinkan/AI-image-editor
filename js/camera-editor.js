@@ -1,6 +1,37 @@
 // ビジュアルカメラエディタモジュール
 
 const CameraEditor = (() => {
+  // プリセット定義
+  const PRESETS = [
+    // 人物系
+    { name: 'ポートレート', category: 'people', desc: '人物を美しく撮る定番', values: { angle: 'eye-level', shotType: 'medium', focalLength: 85, depthOfField: 2.0, composition: ['rule-of-thirds'] } },
+    { name: '全身スナップ', category: 'people', desc: '人物全体をバランスよく', values: { angle: 'eye-level', shotType: 'full', focalLength: 50, depthOfField: 5.6, composition: ['center'] } },
+    { name: '顔アップ', category: 'people', desc: '表情にフォーカス', values: { angle: 'eye-level', shotType: 'close-up', focalLength: 85, depthOfField: 1.8, composition: ['center'] } },
+    { name: '見上げ迫力', category: 'people', desc: '被写体を大きく力強く', values: { angle: 'low', shotType: 'full', focalLength: 24, depthOfField: 8.0, composition: ['center'] } },
+    { name: 'シネマティック', category: 'people', desc: '映画的な雰囲気', values: { angle: 'eye-level', shotType: 'medium', focalLength: 35, depthOfField: 2.0, composition: ['negative-space'] } },
+    { name: 'ドラマチック', category: 'people', desc: '視線誘導で印象的に', values: { angle: 'high', shotType: 'medium', focalLength: 85, depthOfField: 2.8, composition: ['leading-lines'] } },
+    // 商品系
+    { name: '商品クローズアップ', category: 'product', desc: '商品ディテールを美しく', values: { angle: 'eye-level', shotType: 'close-up', focalLength: 100, depthOfField: 2.8, composition: ['center'] } },
+    { name: 'フラットレイ', category: 'product', desc: '物を並べて真上から', values: { angle: 'birds-eye', shotType: 'wide', focalLength: 35, depthOfField: 11, composition: ['symmetry'] } },
+    { name: '雰囲気商品', category: 'product', desc: '生活感のある商品写真', values: { angle: 'high', shotType: 'medium', focalLength: 50, depthOfField: 2.0, composition: ['rule-of-thirds'] } },
+    // 風景・建物系
+    { name: '風景パノラマ', category: 'landscape', desc: '広大な風景をくっきり', values: { angle: 'eye-level', shotType: 'wide', focalLength: 24, depthOfField: 11, composition: ['rule-of-thirds'] } },
+    { name: '建物見上げ', category: 'landscape', desc: '建物を迫力ある構図で', values: { angle: 'low', shotType: 'wide', focalLength: 24, depthOfField: 8.0, composition: ['leading-lines'] } },
+    { name: '街並みスナップ', category: 'landscape', desc: '奥行きのある街並み', values: { angle: 'eye-level', shotType: 'wide', focalLength: 35, depthOfField: 5.6, composition: ['leading-lines'] } },
+    { name: 'ミニチュア風', category: 'landscape', desc: 'ジオラマ風のかわいい俯瞰', values: { angle: 'birds-eye', shotType: 'wide', focalLength: 200, depthOfField: 2.0, composition: ['center'] } },
+  ];
+
+  const PRESET_CATEGORIES = [
+    { key: 'people', label: '人物' },
+    { key: 'product', label: '商品' },
+    { key: 'landscape', label: '風景' },
+  ];
+
+  let currentPresetCategory = 'people';
+  let currentContainer = null;
+  let currentCameraJson = null;
+  let presetApplied = false; // プリセット適用時にinferFromJsonをスキップするフラグ
+
   // コントロール定義
   const CONTROLS = {
     angle: {
@@ -164,10 +195,283 @@ const CameraEditor = (() => {
     return { keepRow, keepCheck };
   }
 
+  // プリセットUIを描画
+  function renderPresetUI(container) {
+    const presetSection = document.createElement('div');
+    presetSection.className = 'camera-preset-section';
+
+    // タイトル
+    const title = document.createElement('p');
+    title.className = 'text-xs font-medium text-gray-500 dark:text-gray-400 mb-2';
+    title.textContent = 'プリセット（ワンタップで設定）';
+    presetSection.appendChild(title);
+
+    // カテゴリタブ
+    const tabRow = document.createElement('div');
+    tabRow.className = 'preset-tab-row';
+    PRESET_CATEGORIES.forEach(cat => {
+      const tab = document.createElement('button');
+      tab.className = `preset-tab${currentPresetCategory === cat.key ? ' active' : ''}`;
+      tab.textContent = cat.label;
+      tab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        currentPresetCategory = cat.key;
+        renderPresetButtons(btnContainer);
+        tabRow.querySelectorAll('.preset-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+      tabRow.appendChild(tab);
+    });
+    presetSection.appendChild(tabRow);
+
+    // プリセットボタンコンテナ
+    const btnContainer = document.createElement('div');
+    btnContainer.className = 'preset-btn-container';
+    renderPresetButtons(btnContainer);
+    presetSection.appendChild(btnContainer);
+
+    container.appendChild(presetSection);
+  }
+
+  // プリセットボタンを描画
+  function renderPresetButtons(container) {
+    container.innerHTML = '';
+    const filtered = PRESETS.filter(p => p.category === currentPresetCategory);
+    filtered.forEach(preset => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn';
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'preset-btn-name';
+      nameSpan.textContent = preset.name;
+      const descSpan = document.createElement('span');
+      descSpan.className = 'preset-btn-desc';
+      descSpan.textContent = preset.desc;
+      btn.appendChild(nameSpan);
+      btn.appendChild(descSpan);
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        applyPreset(preset);
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  // プリセットを適用
+  function applyPreset(preset) {
+    // 値を適用
+    currentValues = {
+      angle: preset.values.angle,
+      shotType: preset.values.shotType,
+      focalLength: preset.values.focalLength,
+      depthOfField: preset.values.depthOfField,
+      composition: [...preset.values.composition],
+    };
+    // 全てのkeepフラグを外す
+    keepFlags = {
+      angle: false,
+      shotType: false,
+      focalLength: false,
+      depthOfField: false,
+      composition: false,
+    };
+    // 全体を再描画（inferFromJsonをスキップ）
+    presetApplied = true;
+    if (currentContainer) {
+      render(currentContainer, currentCameraJson);
+    }
+  }
+
+  // 組み合わせプレビューSVGを描画
+  function renderCombinedPreview(container) {
+    const section = document.createElement('div');
+    section.className = 'camera-control-section';
+
+    const title = document.createElement('p');
+    title.className = 'text-xs font-medium text-gray-500 dark:text-gray-400 mb-2';
+    title.textContent = '組み合わせプレビュー';
+    section.appendChild(title);
+
+    const previewWrap = document.createElement('div');
+    previewWrap.id = 'cameraCombinedPreview';
+    previewWrap.className = 'combined-preview-container';
+    updateCombinedPreviewSvg(previewWrap);
+    section.appendChild(previewWrap);
+
+    container.appendChild(section);
+  }
+
+  // 組み合わせプレビューSVGを更新
+  function updateCombinedPreviewSvg(container) {
+    if (!container) container = document.getElementById('cameraCombinedPreview');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const W = 240, H = 160;
+    const svg = svgEl('svg', { width: '100%', height: '100%', viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'xMidYMid meet' });
+
+    // 背景（空 + 地面）
+    const bgG = svgEl('g');
+    bgG.appendChild(svgEl('rect', { x: '0', y: '0', width: String(W), height: String(H), fill: '#e0f2fe', rx: '8' }));
+    // 建物
+    bgG.appendChild(svgEl('rect', { x: '10', y: '30', width: '30', height: '100', fill: '#cbd5e1', rx: '2' }));
+    bgG.appendChild(svgEl('rect', { x: '45', y: '50', width: '25', height: '80', fill: '#94a3b8', rx: '2' }));
+    bgG.appendChild(svgEl('rect', { x: '170', y: '35', width: '28', height: '95', fill: '#cbd5e1', rx: '2' }));
+    bgG.appendChild(svgEl('rect', { x: '205', y: '55', width: '25', height: '75', fill: '#94a3b8', rx: '2' }));
+    // 地面
+    bgG.appendChild(svgEl('rect', { x: '0', y: '120', width: String(W), height: '40', fill: '#86efac', rx: '0' }));
+    svg.appendChild(bgG);
+
+    // 被写体（人物） — ショットタイプで表示範囲を変える
+    const shotType = currentValues.shotType || 'medium';
+    const angle = currentValues.angle || 'eye-level';
+
+    // 人物のスケールと位置をショットタイプで調整
+    const shotScales = {
+      'extreme-close': { scale: 4.0, personY: -40 },
+      'close-up': { scale: 2.5, personY: -10 },
+      'medium': { scale: 1.5, personY: 20 },
+      'full': { scale: 1.0, personY: 40 },
+      'wide': { scale: 0.6, personY: 60 },
+    };
+    const shotDef = shotScales[shotType] || shotScales['medium'];
+
+    // アングルによる人物のY位置調整
+    const angleOffsets = {
+      'worms-eye': -15,
+      'low': -8,
+      'eye-level': 0,
+      'high': 8,
+      'birds-eye': 20,
+    };
+    const angleOffset = angleOffsets[angle] || 0;
+
+    // 人物描画
+    const personG = svgEl('g', {
+      transform: `translate(120, ${shotDef.personY + angleOffset}) scale(${shotDef.scale})`,
+    });
+    personG.appendChild(svgEl('path', {
+      d: 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5',
+      fill: '#6d28d9',
+    }));
+    svg.appendChild(personG);
+
+    // ボケ効果（背景にぼかし）
+    const dof = currentValues.depthOfField;
+    if (dof && !keepFlags.depthOfField) {
+      const maxBlur = 3;
+      const ratio = 1 - (dof - 1.4) / (16 - 1.4);
+      const blurPx = Math.max(0, ratio * maxBlur);
+      if (blurPx > 0.3) {
+        // SVG filterでぼかし
+        const filterId = 'combinedDofBlur';
+        const defs = svgEl('defs');
+        const filter = svgEl('filter', { id: filterId, x: '-10%', y: '-10%', width: '120%', height: '120%' });
+        filter.appendChild(svgEl('feGaussianBlur', { stdDeviation: String(blurPx.toFixed(1)) }));
+        defs.appendChild(filter);
+        svg.insertBefore(defs, svg.firstChild);
+        bgG.setAttribute('filter', `url(#${filterId})`);
+      }
+    }
+
+    // 構図ガイドライン（オーバーレイ）
+    const compositions = (!keepFlags.composition && currentValues.composition) ? currentValues.composition : [];
+    const guideG = svgEl('g', { opacity: '0.6' });
+
+    compositions.forEach(comp => {
+      if (comp === 'rule-of-thirds') {
+        // 三分割線
+        for (let i = 1; i <= 2; i++) {
+          const x = (i / 3) * W;
+          const y = (i / 3) * H;
+          guideG.appendChild(svgEl('line', { x1: String(x), y1: '0', x2: String(x), y2: String(H), stroke: '#f59e0b', 'stroke-width': '1', 'stroke-dasharray': '6,3' }));
+          guideG.appendChild(svgEl('line', { x1: '0', y1: String(y), x2: String(W), y2: String(y), stroke: '#f59e0b', 'stroke-width': '1', 'stroke-dasharray': '6,3' }));
+        }
+        // 交点
+        for (let i = 1; i <= 2; i++) {
+          for (let j = 1; j <= 2; j++) {
+            guideG.appendChild(svgEl('circle', { cx: String((i / 3) * W), cy: String((j / 3) * H), r: '4', fill: 'rgba(245,158,11,0.5)', stroke: '#f59e0b', 'stroke-width': '1' }));
+          }
+        }
+      } else if (comp === 'symmetry') {
+        // 中央対称線
+        guideG.appendChild(svgEl('line', { x1: String(W / 2), y1: '0', x2: String(W / 2), y2: String(H), stroke: '#3b82f6', 'stroke-width': '1.5', 'stroke-dasharray': '8,4' }));
+        guideG.appendChild(svgEl('line', { x1: '0', y1: String(H / 2), x2: String(W), y2: String(H / 2), stroke: '#3b82f6', 'stroke-width': '1.5', 'stroke-dasharray': '8,4' }));
+      } else if (comp === 'leading-lines') {
+        // 消失点に向かう導線
+        const vpX = W / 2, vpY = H * 0.35;
+        [[0, H], [W, H], [0, 0], [W, 0]].forEach(([sx, sy]) => {
+          guideG.appendChild(svgEl('line', { x1: String(sx), y1: String(sy), x2: String(vpX), y2: String(vpY), stroke: '#10b981', 'stroke-width': '1', 'stroke-dasharray': '5,3' }));
+        });
+        guideG.appendChild(svgEl('circle', { cx: String(vpX), cy: String(vpY), r: '5', fill: 'rgba(16,185,129,0.4)', stroke: '#10b981', 'stroke-width': '1.5' }));
+      } else if (comp === 'center') {
+        // 中央十字 + 円
+        guideG.appendChild(svgEl('line', { x1: String(W / 2), y1: String(H * 0.15), x2: String(W / 2), y2: String(H * 0.85), stroke: '#ef4444', 'stroke-width': '1', 'stroke-dasharray': '5,3' }));
+        guideG.appendChild(svgEl('line', { x1: String(W * 0.15), y1: String(H / 2), x2: String(W * 0.85), y2: String(H / 2), stroke: '#ef4444', 'stroke-width': '1', 'stroke-dasharray': '5,3' }));
+        guideG.appendChild(svgEl('circle', { cx: String(W / 2), cy: String(H / 2), r: '25', fill: 'none', stroke: '#ef4444', 'stroke-width': '1.5', 'stroke-dasharray': '5,3' }));
+      } else if (comp === 'negative-space') {
+        // 余白エリアを示す半透明の枠
+        guideG.appendChild(svgEl('rect', { x: '8', y: '8', width: String(W - 16), height: String(H - 16), fill: 'none', stroke: '#8b5cf6', 'stroke-width': '1.5', 'stroke-dasharray': '8,4', rx: '4' }));
+        // 被写体は小さいことを示すマーク
+        guideG.appendChild(svgEl('circle', { cx: String(W * 0.7), cy: String(H * 0.65), r: '12', fill: 'none', stroke: '#8b5cf6', 'stroke-width': '1', 'stroke-dasharray': '3,2' }));
+      }
+    });
+    svg.appendChild(guideG);
+
+    // アングルインジケーター（右下）
+    if (!keepFlags.angle && currentValues.angle) {
+      const indG = svgEl('g', { transform: `translate(${W - 35}, 12)` });
+      const angleLabelMap = { 'worms-eye': '地面', 'low': '低い', 'eye-level': '目線', 'high': '斜め上', 'birds-eye': '真上' };
+      indG.appendChild(svgEl('rect', { x: '0', y: '0', width: '30', height: '16', rx: '4', fill: 'rgba(139,92,246,0.85)' }));
+      const txt = svgEl('text', { x: '15', y: '12', 'text-anchor': 'middle', 'font-size': '8', fill: 'white', 'font-weight': 'bold' });
+      txt.textContent = angleLabelMap[currentValues.angle] || '';
+      indG.appendChild(txt);
+      svg.appendChild(indG);
+    }
+
+    // レンズ情報（左下）
+    if (!keepFlags.focalLength && currentValues.focalLength) {
+      const lensG = svgEl('g', { transform: `translate(5, 12)` });
+      lensG.appendChild(svgEl('rect', { x: '0', y: '0', width: '34', height: '16', rx: '4', fill: 'rgba(59,130,246,0.85)' }));
+      const txt = svgEl('text', { x: '17', y: '12', 'text-anchor': 'middle', 'font-size': '8', fill: 'white', 'font-weight': 'bold' });
+      txt.textContent = `${currentValues.focalLength}mm`;
+      lensG.appendChild(txt);
+      svg.appendChild(lensG);
+    }
+
+    // 何も設定されていない場合のメッセージ
+    const hasAny = !keepFlags.angle || !keepFlags.shotType || !keepFlags.focalLength || !keepFlags.depthOfField || !keepFlags.composition;
+    if (!hasAny) {
+      const msgG = svgEl('g');
+      msgG.appendChild(svgEl('rect', { x: String(W / 2 - 70), y: String(H / 2 - 12), width: '140', height: '24', rx: '6', fill: 'rgba(0,0,0,0.4)' }));
+      const msg = svgEl('text', { x: String(W / 2), y: String(H / 2 + 4), 'text-anchor': 'middle', 'font-size': '11', fill: 'white' });
+      msg.textContent = '設定を変更するとプレビュー表示';
+      msgG.appendChild(msg);
+      svg.appendChild(msgG);
+    }
+
+    container.appendChild(svg);
+  }
+
   // コンテナにビジュアルコントロールを描画
   function render(container, cameraJson) {
-    currentValues = inferFromJson(cameraJson);
+    currentContainer = container;
+    currentCameraJson = cameraJson;
+    // プリセット適用時は値を上書きしない
+    if (!presetApplied) {
+      currentValues = inferFromJson(cameraJson);
+    }
+    presetApplied = false;
     container.innerHTML = '';
+
+    // プリセットUI
+    renderPresetUI(container);
+
+    // 区切り線
+    const divider = document.createElement('div');
+    divider.className = 'camera-divider';
+    container.appendChild(divider);
 
     Object.entries(CONTROLS).forEach(([key, ctrl]) => {
       const section = document.createElement('div');
@@ -186,6 +490,9 @@ const CameraEditor = (() => {
 
       container.appendChild(section);
     });
+
+    // 組み合わせプレビュー
+    renderCombinedPreview(container);
 
     updatePreview();
   }
@@ -793,6 +1100,8 @@ const CameraEditor = (() => {
     const el = document.getElementById('cameraPromptPreview');
     const text = getPromptText();
     if (el) el.textContent = text || '(カメラ設定は変更しません)';
+    // 組み合わせプレビューも更新
+    updateCombinedPreviewSvg();
     if (onChangeCallback) onChangeCallback();
   }
 
