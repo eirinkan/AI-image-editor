@@ -441,18 +441,37 @@ Output ONLY the updated JSON, no other text.`;
 
     if (hasDiff) {
       const changeDesc = diffToNaturalLanguage(diff);
-      const fullDesc = specToDescription(updatedJson);
       // カメラ変更が含まれるか判定
       const hasCameraDiff = diff.camera !== undefined;
+      // カメラのみの変更か（他の差分がない）
+      const isCameraOnly = hasCameraDiff && Object.keys(diff).length === 1;
+
+      if (isCameraOnly) {
+        // カメラのみ変更: 要素の位置関係を保護するため、最小限のプロンプト
+        return `Change ONLY the camera angle/perspective of this image.
+
+Camera change:
+${changeDesc}
+
+CRITICAL RULES:
+- Change ONLY the camera viewpoint. Everything else must stay EXACTLY as it is.
+- Every person, object, and element must remain in the SAME position relative to each other.
+- Do NOT move, add, remove, or rearrange any elements in the scene.
+- Do NOT change the art style, colors, character designs, poses, or clothing.
+- The spatial layout and composition of elements must be preserved — only the viewing angle changes.
+- Do NOT orbit the camera horizontally (left/right). Only change the vertical angle (up/down).
+Generate the edited image.`;
+      }
+
+      const fullDesc = specToDescription(updatedJson);
       const cameraImageRules = hasCameraDiff ? `
 
 CRITICAL - Camera change rules:
 - NEVER change the art style or visual aesthetic. Keep the same illustration/animation/photo style as the original.
 - Existing characters and objects must keep their exact same design, clothing, colors, and features.
-- When the shot becomes wider: new background areas may appear naturally, but do NOT alter existing subjects.
-- When the shot becomes closer: background may be cropped, but visible subjects must remain identical.
-- When the angle changes: show the same scene from the new perspective. Do NOT redesign any characters or objects.
-- CRITICAL: Characters must maintain their original pose and position (e.g. standing, sitting). Do NOT change their posture, do NOT bury them in the ground or snow, do NOT make them float. Only the camera viewpoint changes, not the subjects themselves.` : '';
+- Characters must maintain their original pose and position. Do NOT change their posture. Only the camera viewpoint changes.
+- Do NOT orbit the camera horizontally. Only change the vertical angle.
+- All elements must remain in the same position relative to each other.` : '';
 
       return `Modify this image based on the following changes.
 
