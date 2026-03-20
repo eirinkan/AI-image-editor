@@ -91,6 +91,12 @@ button {
   justify-content: center;
 }
 
+/* 画像表示時（upload-promptが非表示）はパディング・高さを縮小 */
+.upload-area:has(.upload-prompt.hidden) {
+  padding: 12px !important;
+  min-height: auto;
+}
+
 /* 要素カードのグリッド */
 #elementsList {
   display: grid;
