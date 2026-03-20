@@ -972,7 +972,11 @@ const UI = (() => {
     }
 
     // 個別要素を後に表示（グループの下）
-    elements.elementsList.appendChild(individualCards);
+    const individualCount = filteredObjects.length + filteredTextElements.length + filteredPeople.length;
+    if (individualCount > 0) {
+      elements.elementsList.appendChild(createCategoryHeader(ICONS.cube, `個別 (${individualCount})`));
+      elements.elementsList.appendChild(individualCards);
+    }
 
     // 画像上にマーカーを描画 & マーカーカラム表示
     renderMarkers(json);
