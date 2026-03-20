@@ -320,23 +320,33 @@ const CameraEditor = (() => {
     bgG.appendChild(svgEl('rect', { x: '0', y: '0', width: String(W), height: String(H), fill: '#e0f2fe', rx: '4' }));
 
     if (category === 'landscape') {
-      // 風景: 山を地平線に合わせて描画
-      const mh = groundY; // 山の底辺
-      bgG.appendChild(svgEl('path', { d: `M0,${mh} L40,${mh - 50} L80,${mh - 10} L120,${mh - 60} L160,${mh - 20} L200,${mh - 40} L240,${mh} Z`, fill: '#94a3b8' }));
-      bgG.appendChild(svgEl('path', { d: `M0,${mh} L60,${mh - 35} L100,${mh - 5} L140,${mh - 40} L180,${mh - 15} L240,${mh - 25} L240,${mh} Z`, fill: '#64748b' }));
+      // 風景: 山の高さを地平線に合わせてスケーリング（負の座標防止）
+      const mh = groundY;
+      const skyH = Math.max(mh, 20); // 空の高さ（最低20px確保）
+      const mScale = Math.min(1, skyH / 70); // 山の高さスケール
+      bgG.appendChild(svgEl('path', { d: `M0,${mh} L40,${mh - 50 * mScale} L80,${mh - 10 * mScale} L120,${mh - 60 * mScale} L160,${mh - 20 * mScale} L200,${mh - 40 * mScale} L240,${mh} Z`, fill: '#94a3b8' }));
+      bgG.appendChild(svgEl('path', { d: `M0,${mh} L60,${mh - 35 * mScale} L100,${mh - 5 * mScale} L140,${mh - 40 * mScale} L180,${mh - 15 * mScale} L240,${mh - 25 * mScale} L240,${mh} Z`, fill: '#64748b' }));
       bgG.appendChild(svgEl('rect', { x: '0', y: String(groundY), width: String(W), height: String(H - groundY), fill: '#86efac' }));
-      // 木
-      if (groundY < H - 10) {
-        bgG.appendChild(svgEl('rect', { x: '35', y: String(groundY - 16), width: '4', height: '16', fill: '#92400e' }));
-        bgG.appendChild(svgEl('ellipse', { cx: '37', cy: String(groundY - 20), rx: '10', ry: '12', fill: '#22c55e' }));
-        bgG.appendChild(svgEl('rect', { x: '190', y: String(groundY - 20), width: '4', height: '20', fill: '#92400e' }));
-        bgG.appendChild(svgEl('ellipse', { cx: '192', cy: String(groundY - 24), rx: '12', ry: '14', fill: '#16a34a' }));
+      // 木（地面に余裕がある場合のみ）
+      if (groundY > 40 && groundY < H - 10) {
+        const treeH = Math.min(16, groundY * 0.2);
+        bgG.appendChild(svgEl('rect', { x: '35', y: String(groundY - treeH), width: '4', height: String(treeH), fill: '#92400e' }));
+        bgG.appendChild(svgEl('ellipse', { cx: '37', cy: String(groundY - treeH - 4), rx: '10', ry: '12', fill: '#22c55e' }));
+        bgG.appendChild(svgEl('rect', { x: '190', y: String(groundY - treeH - 4), width: '4', height: String(treeH + 4), fill: '#92400e' }));
+        bgG.appendChild(svgEl('ellipse', { cx: '192', cy: String(groundY - treeH - 8), rx: '12', ry: '14', fill: '#16a34a' }));
       }
     } else if (category === 'product') {
-      // 商品: スタジオ背景
+      // 商品: スタジオ背景（アングルに応じてテーブル形状を変更）
       bgG.appendChild(svgEl('rect', { x: '0', y: '0', width: String(W), height: String(H), fill: '#f1f5f9', rx: '4' }));
-      const tableY = Math.round(H * 0.7);
-      bgG.appendChild(svgEl('ellipse', { cx: String(W / 2), cy: String(tableY), rx: '80', ry: '12', fill: '#e2e8f0' }));
+      if (angle === 'birds-eye') {
+        // 真上: テーブルを真円で表示（俯瞰）
+        bgG.appendChild(svgEl('circle', { cx: String(W / 2), cy: String(H / 2), r: '60', fill: '#e2e8f0' }));
+      } else {
+        // 横・斜めから: テーブルを楕円で
+        const tableY = Math.round(H * (angle === 'high' ? 0.6 : 0.72));
+        const ry = angle === 'high' ? 18 : 12;
+        bgG.appendChild(svgEl('ellipse', { cx: String(W / 2), cy: String(tableY), rx: '80', ry: String(ry), fill: '#e2e8f0' }));
+      }
     } else {
       // 人物: 建物 + 地面（地平線に合わせる）
       const bldgH = Math.min(80, groundY - 5);
@@ -350,42 +360,43 @@ const CameraEditor = (() => {
     }
     svg.appendChild(bgG);
 
-    // 被写体（ショットタイプ＝被写体の大きさ、常にフレーム内に収まる）
+    // 被写体（常にフレーム内に収まるように配置）
     const shotType = currentValues.shotType || 'medium';
-    // 被写体の高さ（フレーム高さに対する比率）
+    // 被写体の高さ（フレーム高さに対する比率、最大0.85で収まるように制限）
     const shotSizeMap = {
-      'extreme-close': 1.8,  // 顔のアップ（はみ出す）
-      'close-up': 1.2,       // 肩上
-      'medium': 0.7,         // 上半身
-      'full': 0.5,           // 全身
-      'wide': 0.3,           // 全身+周囲
+      'extreme-close': 0.85, // フレームいっぱい
+      'close-up': 0.75,      // 肩上
+      'medium': 0.6,         // 上半身
+      'full': 0.45,          // 全身
+      'wide': 0.28,          // 全身+周囲
     };
-    const subjectRatio = shotSizeMap[shotType] || 0.7;
+    const subjectRatio = shotSizeMap[shotType] || 0.6;
     const subjectH = H * subjectRatio;
-    // 被写体の底辺 = 地平線（地面に立っている）
-    const subjectBottom = groundY;
     const subjectCenterX = W / 2;
+    // 被写体中心Y: フレーム中央を基準に、アングルで少しずらす
+    // 低いアングル→被写体がやや上、高いアングル→被写体がやや下
+    const angleCenterMap = {
+      'worms-eye': H * 0.38,
+      'low': H * 0.42,
+      'eye-level': H * 0.48,
+      'high': H * 0.52,
+      'birds-eye': H * 0.50,
+    };
+    const subjectCenterY = angleCenterMap[angle] || H * 0.48;
 
     if (category === 'people') {
-      // 人物シルエット（頭頂=-16, 足元=+19 → 高さ35単位）
       const personNativeH = 35;
       const scale = subjectH / personNativeH;
-      const personTopY = subjectBottom - subjectH;
-      const personCenterY = subjectBottom - subjectH / 2;
-      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${personCenterY}) scale(${scale})` });
+      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(subjectCenterY)}) scale(${scale.toFixed(2)})` });
       g.appendChild(svgEl('path', { d: 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5', fill: '#6d28d9' }));
       svg.appendChild(g);
     } else if (category === 'product') {
-      // 商品シルエット
-      const prodH = subjectH * 0.6;
+      const prodH = subjectH * 0.7;
       const prodW = prodH * 1.2;
-      const prodY = Math.round(H * 0.7) - prodH;
-      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${prodY + prodH / 2})` });
-      // メイン箱
+      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(subjectCenterY)})` });
       const bw = prodW * 0.6, bh = prodH;
       g.appendChild(svgEl('rect', { x: String(-bw / 2), y: String(-bh / 2), width: String(bw), height: String(bh), rx: '3', fill: '#6d28d9' }));
       g.appendChild(svgEl('rect', { x: String(-bw / 2 + 2), y: String(-bh / 2 + 2), width: String(bw - 4), height: String(bh * 0.15), rx: '1', fill: '#8b5cf6' }));
-      // 小瓶
       const vw = prodW * 0.2, vh = prodH * 0.7;
       g.appendChild(svgEl('rect', { x: String(bw / 2 + 4), y: String(-vh / 2 + bh * 0.15), width: String(vw), height: String(vh), rx: '2', fill: '#7c3aed' }));
       g.appendChild(svgEl('rect', { x: String(bw / 2 + 5), y: String(-vh / 2 + bh * 0.15 - 4), width: String(vw - 2), height: '5', rx: '1', fill: '#a78bfa' }));
