@@ -247,6 +247,9 @@ const UI = (() => {
                     el = el.nextElementSibling;
                   }
                   cards.forEach(card => {
+                    // カメラ・構図と全体は拡大表示では不要
+                    const elId = card.dataset.elementId;
+                    if (elId === 'camera' || elId === 'global') return;
                     const clone = card.cloneNode(true);
                     clone.style.pointerEvents = 'auto';
                     clone.style.cursor = 'pointer';
