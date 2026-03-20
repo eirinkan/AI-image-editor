@@ -93,8 +93,10 @@ button {
 
 /* 画像表示時（upload-promptが非表示）はパディング・高さを縮小 */
 .upload-area:has(.upload-prompt.hidden) {
-  padding: 12px !important;
+  padding: 0 !important;
   min-height: auto;
+  border: none;
+  box-shadow: none;
 }
 
 /* 要素カードのグリッド */
