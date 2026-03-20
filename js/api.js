@@ -279,12 +279,30 @@ Output ONLY the JSON, no other text.`;
       changesDescription = `1. Element: "${editInstructions.elementName}" → Instruction: "${editInstructions.instruction}"`;
     }
 
+    // カメラ変更が含まれるか判定
+    const hasCameraChange = Array.isArray(editInstructions)
+      ? editInstructions.some(item => item.instruction && item.instruction.startsWith('Change camera to:'))
+      : (editInstructions.instruction || '').startsWith('Change camera to:');
+
+    const cameraRules = hasCameraChange ? `
+
+## Camera change rules (CRITICAL):
+- When changing camera angle/distance/composition, ONLY modify the "camera" field
+- NEVER change the art style, rendering style, or visual aesthetic
+- When zooming out (wider shot): existing subjects MUST remain unchanged, new background elements may naturally appear
+- When zooming in (closer shot): existing subjects MUST remain unchanged, some background may be cropped
+- When changing angle: same subjects from different perspective, do NOT alter subject designs
+- When changing composition: subjects may reposition, but their appearance MUST NOT change
+- Do NOT add or remove focal_length or depth_of_field values (these are handled separately)
+- All objects, people, atmosphere, and regions that are NOT part of the camera instruction MUST remain EXACTLY as they are` : '';
+
     return `You have the following JSON description of an image:
 
 ${JSON.stringify(currentJson, null, 2)}
 
 The user wants to apply the following changes:
 ${changesDescription}
+${cameraRules}
 
 Update the JSON to reflect ALL of these changes simultaneously. Only modify the relevant parts for each change.
 If any instruction implies adding new properties or changing the structure, do so.
@@ -423,6 +441,17 @@ Output ONLY the updated JSON, no other text.`;
     if (hasDiff) {
       const changeDesc = diffToNaturalLanguage(diff);
       const fullDesc = specToDescription(updatedJson);
+      // カメラ変更が含まれるか判定
+      const hasCameraDiff = diff.camera !== undefined;
+      const cameraImageRules = hasCameraDiff ? `
+
+CRITICAL - Camera change rules:
+- NEVER change the art style or visual aesthetic. Keep the same illustration/animation/photo style as the original.
+- Existing characters and objects must keep their exact same design, clothing, colors, and features.
+- When the shot becomes wider: new background areas may appear naturally, but do NOT alter existing subjects.
+- When the shot becomes closer: background may be cropped, but visible subjects must remain identical.
+- When the angle changes: show the same scene from the new perspective. Do NOT redesign any characters or objects.` : '';
+
       return `Modify this image based on the following changes.
 
 Changes to apply:
@@ -432,7 +461,7 @@ Full updated description for reference:
 ${fullDesc}
 
 Apply ONLY the specified changes.
-Keep everything else identical to the original image - same composition, same perspective, same objects that weren't changed.
+Keep everything else identical to the original image - same objects, same characters, same style that weren't changed.${cameraImageRules}
 Generate the edited image.`;
     }
 

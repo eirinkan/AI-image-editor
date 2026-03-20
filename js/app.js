@@ -415,37 +415,7 @@ const App = (() => {
 
       // Step 1: JSONを一括更新
       UI.updateLoadingStep(1);
-      let updatedJson;
-
-      // カメラ要素のみの場合: LLMを通さずcameraフィールドを直接更新（他要素の消失防止）
-      const cameraOnly = editInstructions.length === 1 && editInstructions[0].instruction.startsWith('Change camera to:');
-      if (cameraOnly && state.currentJson.camera) {
-        updatedJson = JSON.parse(JSON.stringify(state.currentJson)); // deep copy
-        // カメラ指示からフィールドを更新
-        const camInstruction = editInstructions[0].instruction;
-        const cam = updatedJson.camera || {};
-        // アングル
-        if (camInstruction.includes('low-angle shot')) cam.angle = 'low-angle shot';
-        else if (camInstruction.includes("worm's eye")) cam.angle = "worm's eye view";
-        else if (camInstruction.includes('eye-level shot')) cam.angle = 'eye-level';
-        else if (camInstruction.includes('elevated shot') || camInstruction.includes('high-angle')) cam.angle = 'high-angle shot';
-        else if (camInstruction.includes("bird's eye")) cam.angle = "bird's eye view";
-        // ショットタイプ
-        if (camInstruction.includes('extreme close-up')) cam.shot_type = 'extreme close-up';
-        else if (camInstruction.includes('close-up shot')) cam.shot_type = 'close-up';
-        else if (camInstruction.includes('medium shot')) cam.shot_type = 'medium shot';
-        else if (camInstruction.includes('full body shot')) cam.shot_type = 'full body shot';
-        else if (camInstruction.includes('wide shot')) cam.shot_type = 'wide shot';
-        // 構図
-        if (camInstruction.includes('rule of thirds')) cam.composition = 'rule of thirds';
-        else if (camInstruction.includes('symmetrical')) cam.composition = 'symmetrical';
-        else if (camInstruction.includes('leading lines')) cam.composition = 'leading lines';
-        else if (camInstruction.includes('centered subject')) cam.composition = 'centered';
-        else if (camInstruction.includes('negative space')) cam.composition = 'negative space';
-        updatedJson.camera = cam;
-      } else {
-        updatedJson = await GeminiAPI.updateJson(state.currentJson, editInstructions, signal);
-      }
+      const updatedJson = await GeminiAPI.updateJson(state.currentJson, editInstructions, signal);
       state.pendingJson = updatedJson; // リカバリ用に保持
 
       // 少し間を空けてから画像生成に入る
