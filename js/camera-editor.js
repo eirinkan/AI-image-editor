@@ -350,21 +350,21 @@ const CameraEditor = (() => {
     } else {
       // 人物: 建物 + 地面（地平線・焦点距離に合わせる）
       // 焦点距離による圧縮効果: 望遠→建物が大きく中央寄り、広角→建物が小さく端に
+      // 焦点距離による画角効果（50mm基準）
       const fl = currentValues.focalLength || 50;
-      const compress = Math.min(2.0, Math.max(0.5, fl / 50)); // 50mm基準で0.5〜2.0倍
-      const bldgH = Math.min(80, groundY - 5) * Math.min(1.3, Math.max(0.7, compress * 0.8));
-      const bldgW = Math.round(24 * Math.min(1.5, compress));
-      // 広角: 建物が端に広がる、望遠: 建物が中央に寄る
-      const spread = Math.max(0.3, 1.2 - compress * 0.3); // 広角=1.0, 望遠=0.6
-      const lx1 = Math.round(10 * spread);
-      const lx2 = Math.round(42 * spread);
-      const rx1 = W - Math.round((W - 170) * spread) - bldgW;
-      const rx2 = W - Math.round((W - 200) * spread) - bldgW;
-      if (bldgH > 10) {
-        bgG.appendChild(svgEl('rect', { x: String(lx1), y: String(groundY - bldgH), width: String(bldgW), height: String(bldgH), fill: '#cbd5e1', rx: '2' }));
-        bgG.appendChild(svgEl('rect', { x: String(lx2), y: String(groundY - bldgH * 0.7), width: String(Math.round(bldgW * 0.8)), height: String(bldgH * 0.7), fill: '#94a3b8', rx: '2' }));
-        bgG.appendChild(svgEl('rect', { x: String(rx1), y: String(groundY - bldgH * 0.9), width: String(bldgW), height: String(bldgH * 0.9), fill: '#cbd5e1', rx: '2' }));
-        bgG.appendChild(svgEl('rect', { x: String(rx2), y: String(groundY - bldgH * 0.6), width: String(Math.round(bldgW * 0.8)), height: String(bldgH * 0.6), fill: '#94a3b8', rx: '2' }));
+      const zoom = Math.min(2.5, Math.max(0.4, fl / 50)); // 望遠=大きく、広角=小さく
+      // 建物: 望遠→大きく中央寄り、広角→小さく端に広がる
+      const baseBldgH = Math.min(70, Math.max(10, groundY - 10));
+      const bldgH = baseBldgH * Math.min(1.4, Math.max(0.5, zoom * 0.7));
+      const bldgW = Math.round(22 * Math.min(1.6, Math.max(0.7, zoom * 0.8)));
+      // 建物の左右位置: 望遠→中央寄り、広角→端
+      const cx = W / 2;
+      const bldgSpread = Math.round(90 / Math.max(0.5, zoom * 0.7)); // 望遠→狭い、広角→広い
+      if (bldgH > 8) {
+        bgG.appendChild(svgEl('rect', { x: String(cx - bldgSpread - bldgW), y: String(groundY - bldgH), width: String(bldgW), height: String(bldgH), fill: '#cbd5e1', rx: '2' }));
+        bgG.appendChild(svgEl('rect', { x: String(cx - bldgSpread * 0.5 - bldgW), y: String(groundY - bldgH * 0.7), width: String(Math.round(bldgW * 0.8)), height: String(bldgH * 0.7), fill: '#94a3b8', rx: '2' }));
+        bgG.appendChild(svgEl('rect', { x: String(cx + bldgSpread), y: String(groundY - bldgH * 0.9), width: String(bldgW), height: String(bldgH * 0.9), fill: '#cbd5e1', rx: '2' }));
+        bgG.appendChild(svgEl('rect', { x: String(cx + bldgSpread * 0.5), y: String(groundY - bldgH * 0.6), width: String(Math.round(bldgW * 0.8)), height: String(bldgH * 0.6), fill: '#94a3b8', rx: '2' }));
       }
       bgG.appendChild(svgEl('rect', { x: '0', y: String(groundY), width: String(W), height: String(H - groundY), fill: '#86efac' }));
     }
@@ -381,7 +381,10 @@ const CameraEditor = (() => {
       'wide': 0.28,          // 全身+周囲
     };
     const subjectRatio = shotSizeMap[shotType] || 0.6;
-    const subjectH = H * subjectRatio;
+    // 焦点距離による被写体サイズ変化（望遠=大きく、広角=小さく）
+    const flForSubject = currentValues.focalLength || 50;
+    const focalZoom = Math.min(1.3, Math.max(0.7, flForSubject / 70)); // 70mm基準で0.7〜1.3倍
+    const subjectH = Math.min(H * 0.9, H * subjectRatio * focalZoom);
     const subjectCenterX = W / 2;
     // 被写体中心Y: フレーム中央を基準に、アングルで少しずらす
     // 低いアングル→被写体がやや上、高いアングル→被写体がやや下
