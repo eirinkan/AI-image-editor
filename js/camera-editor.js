@@ -50,7 +50,7 @@ const CameraEditor = (() => {
       label: '距離（ショットタイプ）',
       type: 'select',
       options: [
-        { value: 'extreme-close', label: '超接写', icon: '🔍', prompt: 'extreme close-up macro shot, filling the frame with fine detail' },
+        { value: 'extreme-close', label: '超接写', icon: '🔍', prompt: 'extreme close-up of the main subject, tightly cropped to show fine details of the subject' },
         { value: 'close-up', label: '接写', icon: '👤', prompt: 'close-up shot, subject fills frame from face to shoulders' },
         { value: 'medium', label: '上半身', icon: '🧑', prompt: 'medium shot, waist-up framing of subject' },
         { value: 'full', label: '全身', icon: '🧍', prompt: 'full body shot, entire figure visible from head to toe' },
