@@ -327,13 +327,18 @@ const CameraEditor = (() => {
       bgG.appendChild(svgEl('path', { d: `M0,${mh} L40,${mh - 50 * mScale} L80,${mh - 10 * mScale} L120,${mh - 60 * mScale} L160,${mh - 20 * mScale} L200,${mh - 40 * mScale} L240,${mh} Z`, fill: '#94a3b8' }));
       bgG.appendChild(svgEl('path', { d: `M0,${mh} L60,${mh - 35 * mScale} L100,${mh - 5 * mScale} L140,${mh - 40 * mScale} L180,${mh - 15 * mScale} L240,${mh - 25 * mScale} L240,${mh} Z`, fill: '#64748b' }));
       bgG.appendChild(svgEl('rect', { x: '0', y: String(groundY), width: String(W), height: String(H - groundY), fill: '#86efac' }));
-      // 木（地面に余裕がある場合のみ）
-      if (groundY > 40 && groundY < H - 10) {
-        const treeH = Math.min(16, groundY * 0.2);
-        bgG.appendChild(svgEl('rect', { x: '35', y: String(groundY - treeH), width: '4', height: String(treeH), fill: '#92400e' }));
-        bgG.appendChild(svgEl('ellipse', { cx: '37', cy: String(groundY - treeH - 4), rx: '10', ry: '12', fill: '#22c55e' }));
-        bgG.appendChild(svgEl('rect', { x: '190', y: String(groundY - treeH - 4), width: '4', height: String(treeH + 4), fill: '#92400e' }));
-        bgG.appendChild(svgEl('ellipse', { cx: '192', cy: String(groundY - treeH - 8), rx: '12', ry: '14', fill: '#16a34a' }));
+      // 木: 広角ほど多く見える
+      const flLand = currentValues.focalLength || 50;
+      const numTrees = Math.max(1, Math.round(6 / Math.max(0.3, flLand / 50)));
+      if (groundY > 30 && groundY < H - 5) {
+        const treeH = Math.min(20, groundY * 0.2);
+        const treeColors = ['#22c55e', '#16a34a', '#15803d'];
+        for (let i = 0; i < numTrees; i++) {
+          const tx = 20 + (W - 40) * i / Math.max(1, numTrees - 1);
+          const th = treeH * (0.6 + Math.sin(i * 2.3) * 0.4);
+          bgG.appendChild(svgEl('rect', { x: String(Math.round(tx - 2)), y: String(Math.round(groundY - th)), width: '4', height: String(Math.round(th)), fill: '#92400e' }));
+          bgG.appendChild(svgEl('ellipse', { cx: String(Math.round(tx)), cy: String(Math.round(groundY - th - 5)), rx: String(Math.round(6 + i % 3 * 3)), ry: String(Math.round(8 + i % 2 * 4)), fill: treeColors[i % 3] }));
+        }
       }
     } else if (category === 'product') {
       // 商品: スタジオ背景（アングルに応じてテーブル形状を変更）
@@ -349,22 +354,39 @@ const CameraEditor = (() => {
       }
     } else {
       // 人物: 建物 + 地面（地平線・焦点距離に合わせる）
-      // 焦点距離による圧縮効果: 望遠→建物が大きく中央寄り、広角→建物が小さく端に
-      // 焦点距離による画角効果（50mm基準）
+      // 焦点距離による画角: 広角→多くの建物が見える、望遠→少数が大きく
       const fl = currentValues.focalLength || 50;
-      const zoom = Math.min(2.5, Math.max(0.4, fl / 50)); // 望遠=大きく、広角=小さく
-      // 建物: 望遠→大きく中央寄り、広角→小さく端に広がる
-      const baseBldgH = Math.min(70, Math.max(10, groundY - 10));
-      const bldgH = baseBldgH * Math.min(1.4, Math.max(0.5, zoom * 0.7));
-      const bldgW = Math.round(22 * Math.min(1.6, Math.max(0.7, zoom * 0.8)));
-      // 建物の左右位置: 望遠→中央寄り、広角→端
+      const zoom = fl / 50;
+      // 見える建物の数: 広角(14mm)=8棟、標準(50mm)=4棟、望遠(200mm)=2棟
+      const numBuildings = Math.max(2, Math.round(8 / Math.max(0.5, zoom)));
+      const baseBldgH = Math.min(60, Math.max(8, groundY - 8));
+      // 建物サイズ: 望遠→大きく、広角→小さく
+      const bldgScale = Math.min(1.8, Math.max(0.4, Math.pow(zoom, 0.5)));
+      const bldgH = baseBldgH * bldgScale;
+      const bldgW = Math.round(18 * bldgScale);
+      // 建物を均等に配置
       const cx = W / 2;
-      const bldgSpread = Math.round(90 / Math.max(0.5, zoom * 0.7)); // 望遠→狭い、広角→広い
-      if (bldgH > 8) {
-        bgG.appendChild(svgEl('rect', { x: String(cx - bldgSpread - bldgW), y: String(groundY - bldgH), width: String(bldgW), height: String(bldgH), fill: '#cbd5e1', rx: '2' }));
-        bgG.appendChild(svgEl('rect', { x: String(cx - bldgSpread * 0.5 - bldgW), y: String(groundY - bldgH * 0.7), width: String(Math.round(bldgW * 0.8)), height: String(bldgH * 0.7), fill: '#94a3b8', rx: '2' }));
-        bgG.appendChild(svgEl('rect', { x: String(cx + bldgSpread), y: String(groundY - bldgH * 0.9), width: String(bldgW), height: String(bldgH * 0.9), fill: '#cbd5e1', rx: '2' }));
-        bgG.appendChild(svgEl('rect', { x: String(cx + bldgSpread * 0.5), y: String(groundY - bldgH * 0.6), width: String(Math.round(bldgW * 0.8)), height: String(bldgH * 0.6), fill: '#94a3b8', rx: '2' }));
+      const colors = ['#cbd5e1', '#94a3b8', '#b0bec5', '#a1a1aa'];
+      const heightRatios = [1.0, 0.7, 0.85, 0.6, 0.9, 0.55, 0.75, 0.65];
+      if (bldgH > 6) {
+        for (let i = 0; i < numBuildings; i++) {
+          // 被写体(中央)を避けて左右に配置
+          const side = i % 2 === 0 ? -1 : 1;
+          const idx = Math.floor(i / 2);
+          const spacing = W / (numBuildings + 2); // 均等間隔
+          const x = cx + side * (spacing * (idx + 1));
+          if (x < -bldgW || x > W) continue; // フレーム外はスキップ
+          const h = bldgH * heightRatios[i % heightRatios.length];
+          const w = bldgW * (0.7 + Math.random() * 0.3);
+          bgG.appendChild(svgEl('rect', {
+            x: String(Math.round(x - w / 2)),
+            y: String(Math.round(groundY - h)),
+            width: String(Math.round(w)),
+            height: String(Math.round(h)),
+            fill: colors[i % colors.length],
+            rx: '2'
+          }));
+        }
       }
       bgG.appendChild(svgEl('rect', { x: '0', y: String(groundY), width: String(W), height: String(H - groundY), fill: '#86efac' }));
     }
