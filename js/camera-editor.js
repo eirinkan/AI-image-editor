@@ -376,24 +376,24 @@ const CameraEditor = (() => {
     const shotType = currentValues.shotType || 'medium';
     // ショットタイプ = カメラのズーム倍率（顔中心でどこまで写すか）
     const shotZoomMap = {
-      'extreme-close': 4.0,  // 顔のパーツ
-      'close-up': 2.8,       // 顔全体
-      'medium': 1.6,         // 上半身
+      'extreme-close': 3.5,  // 顔のパーツ
+      'close-up': 2.5,       // 顔全体
+      'medium': 1.5,         // 上半身
       'full': 1.0,           // 全身ちょうど
       'wide': 0.65,          // 全身+周囲
     };
     const shotZoom = shotZoomMap[shotType] || 1.0;
-    // 焦点距離によるズーム（50mm基準でリニア）
+    // 焦点距離によるズーム（50mm基準、対数スケールで自然な変化）
     const flForSubject = currentValues.focalLength || 50;
-    const focalZoom = flForSubject / 50;
+    const focalZoom = Math.pow(flForSubject / 50, 0.6); // 対数的: 14mm→0.56, 50mm→1.0, 200mm→2.0
     // アングルによる近接効果
-    const angleScaleMap = { 'worms-eye': 1.5, 'low': 1.2, 'eye-level': 1.0, 'high': 0.9, 'birds-eye': 0.5 };
+    const angleScaleMap = { 'worms-eye': 1.4, 'low': 1.15, 'eye-level': 1.0, 'high': 0.9, 'birds-eye': 0.5 };
     const angleScale = angleScaleMap[angle] || 1.0;
     // 総合ズーム倍率
     const totalZoom = shotZoom * focalZoom * angleScale;
     // 人物の基本サイズ（全身がフレームにちょうど収まるサイズ = zoom 1.0時）
-    const basePersonH = H * 0.85; // 全身時のフレーム比率
-    const subjectH = Math.min(H * 3, basePersonH * totalZoom); // 上限3倍（はみ出し許容）
+    const basePersonH = H * 0.85;
+    const subjectH = Math.min(H * 4, basePersonH * totalZoom);
     const subjectCenterX = W / 2;
     // 被写体の足元 = 地面に固定
     const subjectBottom = groundY;
@@ -414,10 +414,25 @@ const CameraEditor = (() => {
         svg.appendChild(g);
       } else {
         // 正面シルエット（全身を常に描画）
-        // 顔中心(パス内y=-13)がフレーム中央付近に来るよう配置
-        // 足元がgroundYに来るよう計算
-        const feetY = groundY;
-        const personOriginY = feetY - 19 * personScale; // 原点(0,0)のY座標
+        // 顔の中心 = パス内 y=-13
+        // 接写系: 顔をフレーム中央に配置。全身/広い: 足元を地面に合わせる
+        const faceLocalY = -13; // パス座標での顔中心
+        const faceCenterTarget = H * 0.42; // 顔をフレームのやや上に
+        const feetTarget = groundY; // 足元を地面に
+        // ズーム倍率が高い(接写)ほど顔中心基準、低い(全身/広い)ほど足元基準
+        // 顔中心基準: 顔がfaceCenterTargetに来る
+        const originY_face = faceCenterTarget - faceLocalY * personScale;
+        // 足元基準: 足元(+19)がfeetTargetに来る
+        const originY_feet = feetTarget - 19 * personScale;
+        // 全身以下(zoom<=1.0): 足元基準。それ以上: 顔中心に寄せる
+        // 上半身(1.5)で顔が上1/3、接写(2.5+)で顔が中央
+        const faceWeight = Math.min(1, Math.max(0, (totalZoom - 0.8) / 1.0)); // 0.8以下=0, 1.8以上=1
+        // さらに、足元基準でも顔がフレーム内に収まるよう補正
+        const personOriginY_raw = originY_face * faceWeight + originY_feet * (1 - faceWeight);
+        // 顔がフレーム上端より上に行かないよう補正（最低でも顔がy=10に来る）
+        const minOriginY = 10 - faceLocalY * personScale;
+        const personOriginY = Math.max(minOriginY, personOriginY_raw);
+
         const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(personOriginY)}) scale(${personScale.toFixed(2)})` });
         const basePath = 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5';
         g.appendChild(svgEl('path', { d: basePath, fill: '#6d28d9' }));
