@@ -91,10 +91,10 @@ const CameraEditor = (() => {
 
   // 現在の値
   let currentValues = {};
-  let keepFlags = {}; // 「今までと同じ」フラグ
+  let keepFlags = {}; // 「変更しない」フラグ
   let onChangeCallback = null;
 
-  // JSON値から初期状態を推測（全項目「今までと同じ」をデフォルトに）
+  // JSON値から初期状態を推測（全項目「変更しない」をデフォルトに）
   function inferFromJson(cameraJson) {
     const values = {};
     const keeps = {
@@ -105,7 +105,7 @@ const CameraEditor = (() => {
       composition: true,
     };
 
-    // カメラ情報がある場合でも、デフォルトは「今までと同じ」
+    // カメラ情報がある場合でも、デフォルトは「変更しない」
     // ユーザーが明示的に変更する形にする
     if (cameraJson) {
       // 推論値は保持するが、keepフラグはオンのまま
@@ -180,7 +180,7 @@ const CameraEditor = (() => {
   // 人物シルエットパス（共通）
   const PERSON_PATH = 'M20,8 a4,4 0 1,0 0.01,0 M16,14 h8 q4,0 4,4 v8 h-4 v10 h-3 v-10 h-2 v10 h-3 v-10 h-4 v-8 q0,-4 4,-4';
 
-  // 「今までと同じ」チェックボックス行を作成するヘルパー
+  // 「変更しない」チェックボックス行を作成するヘルパー
   function createKeepCheckboxRow(key, onKeepChange) {
     const keepRow = document.createElement('label');
     keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500 dark:text-gray-400';
@@ -189,7 +189,7 @@ const CameraEditor = (() => {
     keepCheck.checked = !!keepFlags[key];
     keepCheck.className = 'rounded border-gray-300';
     keepRow.appendChild(keepCheck);
-    keepRow.appendChild(document.createTextNode('今までと同じ'));
+    keepRow.appendChild(document.createTextNode('変更しない'));
     keepCheck.addEventListener('change', () => {
       onKeepChange(keepCheck.checked);
     });
@@ -499,7 +499,7 @@ const CameraEditor = (() => {
     const cardsContainer = document.createElement('div');
     cardsContainer.className = 'flex flex-wrap gap-2';
 
-    // 「今までと同じ」チェックボックス
+    // 「変更しない」チェックボックス
     const { keepRow, keepCheck } = createKeepCheckboxRow(key, (isKeep) => {
       keepFlags[key] = isKeep;
       if (isKeep) {
@@ -589,7 +589,7 @@ const CameraEditor = (() => {
     const cardsContainer = document.createElement('div');
     cardsContainer.className = 'flex flex-wrap gap-2';
 
-    // 「今までと同じ」チェックボックス
+    // 「変更しない」チェックボックス
     const { keepRow, keepCheck } = createKeepCheckboxRow(key, (isKeep) => {
       keepFlags[key] = isKeep;
       if (isKeep) {
@@ -687,7 +687,7 @@ const CameraEditor = (() => {
     const val = currentValues[key] ?? ctrl.default;
     currentValues[key] = val;
 
-    // 「今までと同じ」チェックボックス
+    // 「変更しない」チェックボックス
     const keepRow = document.createElement('label');
     keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500 dark:text-gray-400';
     const keepCheck = document.createElement('input');
@@ -695,7 +695,7 @@ const CameraEditor = (() => {
     keepCheck.checked = !!keepFlags[key];
     keepCheck.className = 'rounded border-gray-300';
     keepRow.appendChild(keepCheck);
-    keepRow.appendChild(document.createTextNode('今までと同じ'));
+    keepRow.appendChild(document.createTextNode('変更しない'));
     wrap.appendChild(keepRow);
 
     // スライダー行
@@ -790,7 +790,7 @@ const CameraEditor = (() => {
     const val = currentValues[key] ?? ctrl.default;
     currentValues[key] = val;
 
-    // 「今までと同じ」チェックボックス
+    // 「変更しない」チェックボックス
     const keepRow = document.createElement('label');
     keepRow.className = 'flex items-center gap-2 mb-1 cursor-pointer text-xs text-gray-500 dark:text-gray-400';
     const keepCheck = document.createElement('input');
@@ -798,7 +798,7 @@ const CameraEditor = (() => {
     keepCheck.checked = !!keepFlags[key];
     keepCheck.className = 'rounded border-gray-300';
     keepRow.appendChild(keepCheck);
-    keepRow.appendChild(document.createTextNode('今までと同じ'));
+    keepRow.appendChild(document.createTextNode('変更しない'));
     wrap.appendChild(keepRow);
 
     // スライダー行
@@ -868,7 +868,7 @@ const CameraEditor = (() => {
     const cardsContainer = document.createElement('div');
     cardsContainer.className = 'comp-card-container';
 
-    // 「今までと同じ」チェックボックス
+    // 「変更しない」チェックボックス
     const { keepRow, keepCheck } = createKeepCheckboxRow(key, (isKeep) => {
       keepFlags[key] = isKeep;
       if (isKeep) {
