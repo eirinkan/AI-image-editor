@@ -292,6 +292,7 @@ Output ONLY the JSON, no other text.`;
 - When zooming out (wider shot): existing subjects MUST remain unchanged, new background elements may naturally appear
 - When zooming in (closer shot): existing subjects MUST remain unchanged, some background may be cropped
 - When changing angle: same subjects from different perspective, do NOT alter subject designs
+- CRITICAL: Characters must keep their original pose and position (standing, sitting, etc). Do NOT bury them, sink them, or change their posture. Only change the camera viewpoint.
 - When changing composition: subjects may reposition, but their appearance MUST NOT change
 - Do NOT add or remove focal_length or depth_of_field values (these are handled separately)
 - All objects, people, atmosphere, and regions that are NOT part of the camera instruction MUST remain EXACTLY as they are` : '';
@@ -450,7 +451,8 @@ CRITICAL - Camera change rules:
 - Existing characters and objects must keep their exact same design, clothing, colors, and features.
 - When the shot becomes wider: new background areas may appear naturally, but do NOT alter existing subjects.
 - When the shot becomes closer: background may be cropped, but visible subjects must remain identical.
-- When the angle changes: show the same scene from the new perspective. Do NOT redesign any characters or objects.` : '';
+- When the angle changes: show the same scene from the new perspective. Do NOT redesign any characters or objects.
+- CRITICAL: Characters must maintain their original pose and position (e.g. standing, sitting). Do NOT change their posture, do NOT bury them in the ground or snow, do NOT make them float. Only the camera viewpoint changes, not the subjects themselves.` : '';
 
       return `Modify this image based on the following changes.
 
