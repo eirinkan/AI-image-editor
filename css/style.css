@@ -91,6 +91,13 @@ button {
   justify-content: center;
 }
 
+/* 拡大モーダルのグループ選択状態 */
+.zoom-group-selected {
+  background: rgba(59, 130, 246, 0.7) !important;
+  border-color: rgba(59, 130, 246, 1) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
 /* 画像表示時（upload-promptが非表示）はパディング・高さを縮小 */
 .upload-area:has(.upload-prompt.hidden) {
   padding: 0 !important;

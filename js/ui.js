@@ -1341,7 +1341,7 @@ const UI = (() => {
 
     visibleElements.forEach((el, i) => {
       const row = document.createElement('div');
-      row.className = 'edit-instruction-row py-3 space-y-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0';
+      row.className = 'edit-instruction-row py-3 space-y-2 border-b border-gray-100 dark:border-gray-700/50 last:border-b-0';
       row.dataset.instructionFor = el.id;
 
       const header = document.createElement('div');
