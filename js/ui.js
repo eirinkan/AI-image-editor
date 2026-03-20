@@ -903,18 +903,13 @@ const UI = (() => {
         });
       }
 
-      // 雰囲気・照明
-      if (json.atmosphere) {
-        groupItems.push({ id: 'atmosphere', type: 'atmosphere', name: '雰囲気・照明', data: json.atmosphere });
-      }
-
       // カメラ・構図
       if (json.camera) {
         groupItems.push({ id: 'camera', type: 'camera', name: 'カメラ・構図', data: json.camera });
       }
 
-      // 全体
-      groupItems.push({ id: 'global', type: 'global', name: '全体', data: json });
+      // 全体・雰囲気（統合）
+      groupItems.push({ id: 'global', type: 'global', name: '全体・雰囲気', data: json });
 
       if (groupItems.length > 0) {
         elements.elementsList.appendChild(createCategoryHeader(ICONS.group, `グループ (${groupItems.length})`));
@@ -1335,7 +1330,7 @@ const UI = (() => {
         setTimeout(() => CameraEditor.render(editorContainer, el.data), 0);
       } else {
         // プリセット対象タイプならプリセットボタンを追加
-        const presetTypes = ['global', 'atmosphere', 'region', 'group'];
+        const presetTypes = ['global', 'region', 'group'];
         if (presetTypes.includes(el.type)) {
           const presetBtn = document.createElement('button');
           presetBtn.type = 'button';
@@ -1416,10 +1411,9 @@ const UI = (() => {
       object: '例: 青いベルベット素材に変更 / モダンなデザインに入替 / 削除する',
       text: '例: テキストを「Hello World」に変更 / フォントをゴシック体に',
       person: '例: 赤いジャケットに変更 / ポーズを変える',
-      atmosphere: '例: 雨の日の雰囲気に / ゴールデンアワーの照明に / 夜景に変更',
       camera: '例: 魚眼レンズで撮影したように / もっと引きの構図に',
       scene: '例: ミニマリストスタイルに / 北欧風のインテリアに',
-      global: '例: 全体的にもっと暖かい色調に / 季節を冬に変更 / アニメ風にする',
+      global: '例: アニメ風にする / 季節を冬に変更 / ゴールデンアワーの照明に',
       group: '例: 全ての雲を消す / すべて白い雲に変更',
       region: '例: 青空をオレンジの夕焼けに / 地面を雪景色に',
     };
