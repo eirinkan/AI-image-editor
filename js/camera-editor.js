@@ -291,279 +291,152 @@ const CameraEditor = (() => {
     return currentValues._presetCategory || 'people';
   }
 
-  // 組み合わせプレビューSVGを更新
+  // 組み合わせプレビューSVG — ダイアグラム方式（カメラと被写体の位置関係図）
   function updateCombinedPreviewSvg(container) {
     if (!container) container = document.getElementById('cameraCombinedPreview');
     if (!container) return;
     container.innerHTML = '';
 
-    // 何も設定されていない場合はプレースホルダー
     const hasAny = !keepFlags.angle || !keepFlags.shotType || !keepFlags.focalLength || !keepFlags.depthOfField || !keepFlags.composition;
     if (!hasAny) {
       container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#9ca3af;font-size:11px;text-align:center;padding:12px;">設定を変更すると<br>プレビュー表示</div>';
       return;
     }
 
+    // ダイアグラム方式: 横から見た断面図でカメラと被写体の位置関係を表示
+    // 各パラメータが独立した要素を制御（掛け算の影響なし）
     const W = 240, H = 160;
     const svg = svgEl('svg', { width: '100%', height: '100%', viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'xMidYMid meet' });
-    const category = getSubjectCategory();
 
-    // アングル → 地平線の高さ（低いアングル＝地平線が下、高いアングル＝地平線が上）
+    // 背景（薄いグレー）
+    svg.appendChild(svgEl('rect', { x: '0', y: '0', width: String(W), height: String(H), fill: '#f8fafc', rx: '4' }));
+    // 地面線
+    const groundY = H - 20;
+    svg.appendChild(svgEl('line', { x1: '0', y1: String(groundY), x2: String(W), y2: String(groundY), stroke: '#d1d5db', 'stroke-width': '1' }));
+    svg.appendChild(svgEl('rect', { x: '0', y: String(groundY), width: String(W), height: String(H - groundY), fill: '#f0fdf4', rx: '0' }));
+
+    // === 1. 被写体（右側に固定、常に同じサイズ） ===
+    const subjectX = W - 50;
+    const personH = 70; // 固定サイズ
+    const personBottom = groundY;
+    const personG = svgEl('g', { transform: `translate(${subjectX}, ${personBottom - personH / 2}) scale(${(personH / 35).toFixed(2)})` });
+    personG.appendChild(svgEl('path', { d: 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5', fill: '#6d28d9' }));
+    svg.appendChild(personG);
+
+    // === 2. カメラアイコン（アングルで高さが変わる、距離で左右位置が変わる） ===
     const angle = currentValues.angle || 'eye-level';
-    const horizonMap = { 'worms-eye': 0.92, 'low': 0.78, 'eye-level': 0.65, 'high': 0.45, 'birds-eye': 0.15 };
-    const horizonRatio = horizonMap[angle] || 0.65;
-    const groundY = Math.round(H * horizonRatio);
-
-    // 背景描画
-    const bgG = svgEl('g');
-    // 空
-    bgG.appendChild(svgEl('rect', { x: '0', y: '0', width: String(W), height: String(H), fill: '#e0f2fe', rx: '4' }));
-
-    if (category === 'landscape') {
-      // 風景: 山の高さを地平線に合わせてスケーリング（負の座標防止）
-      const mh = groundY;
-      const skyH = Math.max(mh, 20); // 空の高さ（最低20px確保）
-      const mScale = Math.min(1, skyH / 70); // 山の高さスケール
-      bgG.appendChild(svgEl('path', { d: `M0,${mh} L40,${mh - 50 * mScale} L80,${mh - 10 * mScale} L120,${mh - 60 * mScale} L160,${mh - 20 * mScale} L200,${mh - 40 * mScale} L240,${mh} Z`, fill: '#94a3b8' }));
-      bgG.appendChild(svgEl('path', { d: `M0,${mh} L60,${mh - 35 * mScale} L100,${mh - 5 * mScale} L140,${mh - 40 * mScale} L180,${mh - 15 * mScale} L240,${mh - 25 * mScale} L240,${mh} Z`, fill: '#64748b' }));
-      bgG.appendChild(svgEl('rect', { x: '0', y: String(groundY), width: String(W), height: String(H - groundY), fill: '#86efac' }));
-      // 木: 広角ほど多く見える
-      const flLand = currentValues.focalLength || 50;
-      const numTrees = Math.max(1, Math.round(6 / Math.max(0.3, flLand / 50)));
-      if (groundY > 30 && groundY < H - 5) {
-        const treeH = Math.min(20, groundY * 0.2);
-        const treeColors = ['#22c55e', '#16a34a', '#15803d'];
-        for (let i = 0; i < numTrees; i++) {
-          const tx = 20 + (W - 40) * i / Math.max(1, numTrees - 1);
-          const th = treeH * (0.6 + Math.sin(i * 2.3) * 0.4);
-          bgG.appendChild(svgEl('rect', { x: String(Math.round(tx - 2)), y: String(Math.round(groundY - th)), width: '4', height: String(Math.round(th)), fill: '#92400e' }));
-          bgG.appendChild(svgEl('ellipse', { cx: String(Math.round(tx)), cy: String(Math.round(groundY - th - 5)), rx: String(Math.round(6 + i % 3 * 3)), ry: String(Math.round(8 + i % 2 * 4)), fill: treeColors[i % 3] }));
-        }
-      }
-    } else if (category === 'product') {
-      // 商品: スタジオ背景（アングルに応じてテーブル形状を変更）
-      bgG.appendChild(svgEl('rect', { x: '0', y: '0', width: String(W), height: String(H), fill: '#f1f5f9', rx: '4' }));
-      if (angle === 'birds-eye') {
-        // 真上: テーブルを真円で表示（俯瞰）
-        bgG.appendChild(svgEl('circle', { cx: String(W / 2), cy: String(H / 2), r: '60', fill: '#e2e8f0' }));
-      } else {
-        // 横・斜めから: テーブルを楕円で
-        const tableY = Math.round(H * (angle === 'high' ? 0.6 : 0.72));
-        const ry = angle === 'high' ? 18 : 12;
-        bgG.appendChild(svgEl('ellipse', { cx: String(W / 2), cy: String(tableY), rx: '80', ry: String(ry), fill: '#e2e8f0' }));
-      }
-    } else {
-      // 人物: 建物 + 地面（地平線・焦点距離に合わせる）
-      // 焦点距離による画角: 広角→多くの建物が見える、望遠→少数が大きく
-      const fl = currentValues.focalLength || 50;
-      const zoom = fl / 50;
-      // 見える建物の数: 広角(14mm)=8棟、標準(50mm)=4棟、望遠(200mm)=2棟
-      const numBuildings = Math.max(2, Math.round(8 / Math.max(0.5, zoom)));
-      const baseBldgH = Math.min(60, Math.max(8, groundY - 8));
-      // 建物サイズ: 望遠→大きく、広角→小さく
-      const bldgScale = Math.min(1.8, Math.max(0.4, Math.pow(zoom, 0.5)));
-      const bldgH = baseBldgH * bldgScale;
-      const bldgW = Math.round(18 * bldgScale);
-      // 建物を均等に配置
-      const cx = W / 2;
-      const colors = ['#cbd5e1', '#94a3b8', '#b0bec5', '#a1a1aa'];
-      const heightRatios = [1.0, 0.7, 0.85, 0.6, 0.9, 0.55, 0.75, 0.65];
-      if (bldgH > 6) {
-        for (let i = 0; i < numBuildings; i++) {
-          // 被写体(中央)を避けて左右に配置
-          const side = i % 2 === 0 ? -1 : 1;
-          const idx = Math.floor(i / 2);
-          const spacing = W / (numBuildings + 2); // 均等間隔
-          const x = cx + side * (spacing * (idx + 1));
-          if (x < -bldgW || x > W) continue; // フレーム外はスキップ
-          const h = bldgH * heightRatios[i % heightRatios.length];
-          const w = bldgW * (0.7 + Math.random() * 0.3);
-          bgG.appendChild(svgEl('rect', {
-            x: String(Math.round(x - w / 2)),
-            y: String(Math.round(groundY - h)),
-            width: String(Math.round(w)),
-            height: String(Math.round(h)),
-            fill: colors[i % colors.length],
-            rx: '2'
-          }));
-        }
-      }
-      bgG.appendChild(svgEl('rect', { x: '0', y: String(groundY), width: String(W), height: String(H - groundY), fill: '#86efac' }));
-    }
-    svg.appendChild(bgG);
-
-    // 被写体のフレーミング
-    // 考え方: 人物は常に全身を描画。ショットタイプ・レンズ・アングルで
-    // 「カメラのズーム倍率」を決め、顔を中心にフレーミングする。
     const shotType = currentValues.shotType || 'medium';
-    // ショットタイプ = カメラのズーム倍率（顔中心でどこまで写すか）
-    const shotZoomMap = {
-      'extreme-close': 3.5,  // 顔のパーツ
-      'close-up': 2.5,       // 顔全体
-      'medium': 1.5,         // 上半身
-      'full': 1.0,           // 全身ちょうど
-      'wide': 0.65,          // 全身+周囲
+
+    // アングル → カメラの高さ（独立）
+    const camYMap = {
+      'worms-eye': groundY - 5,
+      'low': groundY - 20,
+      'eye-level': personBottom - personH * 0.6,
+      'high': personBottom - personH - 15,
+      'birds-eye': 15,
     };
-    const shotZoom = shotZoomMap[shotType] || 1.0;
-    // 焦点距離によるズーム（50mm基準、対数スケールで自然な変化）
-    const flForSubject = currentValues.focalLength || 50;
-    const focalZoom = Math.pow(flForSubject / 50, 0.6); // 対数的: 14mm→0.56, 50mm→1.0, 200mm→2.0
-    // アングルによる近接効果
-    const angleScaleMap = { 'worms-eye': 1.4, 'low': 1.15, 'eye-level': 1.0, 'high': 0.9, 'birds-eye': 0.5 };
-    const angleScale = angleScaleMap[angle] || 1.0;
-    // 総合ズーム倍率
-    const totalZoom = shotZoom * focalZoom * angleScale;
-    // 人物の基本サイズ（全身がフレームにちょうど収まるサイズ = zoom 1.0時）
-    const basePersonH = H * 0.85;
-    const subjectH = Math.min(H * 4, basePersonH * totalZoom);
-    const subjectCenterX = W / 2;
-    // 被写体の足元 = 地面に固定
-    const subjectBottom = groundY;
+    const camY = camYMap[angle] || (personBottom - personH * 0.6);
 
-    if (category === 'people') {
-      // 人物パスの座標: 頭頂=-16, 顔中心=-13, 足元=+19, 全高=35単位
-      const personScale = subjectH / 35;
+    // 距離（ショットタイプ）→ カメラのX位置（独立）
+    const camXMap = {
+      'extreme-close': subjectX - 35,
+      'close-up': subjectX - 55,
+      'medium': subjectX - 80,
+      'full': subjectX - 110,
+      'wide': subjectX - 140,
+    };
+    const camX = Math.max(15, camXMap[shotType] || (subjectX - 80));
 
-      if (angle === 'birds-eye') {
-        // 真上から: 人物を上から見た形
-        const topScale = personScale * 0.7;
-        const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(H * 0.45)}) scale(${topScale.toFixed(2)})` });
-        g.appendChild(svgEl('ellipse', { cx: '0', cy: '4', rx: '6', ry: '14', fill: '#7c3aed' })); // 体
-        g.appendChild(svgEl('ellipse', { cx: '0', cy: '-4', rx: '13', ry: '5', fill: '#7c3aed' })); // 肩
-        g.appendChild(svgEl('circle', { cx: '0', cy: '-10', r: '7', fill: '#6d28d9' })); // 頭頂
-        g.appendChild(svgEl('ellipse', { cx: '-3', cy: '18', rx: '3', ry: '2', fill: '#5b21b6' })); // 左足
-        g.appendChild(svgEl('ellipse', { cx: '3', cy: '18', rx: '3', ry: '2', fill: '#5b21b6' })); // 右足
-        svg.appendChild(g);
-      } else {
-        // 正面シルエット（全身を常に描画）
-        // 顔の中心 = パス内 y=-13
-        // 接写系: 顔をフレーム中央に配置。全身/広い: 足元を地面に合わせる
-        const faceLocalY = -13; // パス座標での顔中心
-        const faceCenterTarget = H * 0.42; // 顔をフレームのやや上に
-        const feetTarget = groundY; // 足元を地面に
-        // ズーム倍率が高い(接写)ほど顔中心基準、低い(全身/広い)ほど足元基準
-        // 顔中心基準: 顔がfaceCenterTargetに来る
-        const originY_face = faceCenterTarget - faceLocalY * personScale;
-        // 足元基準: 足元(+19)がfeetTargetに来る
-        const originY_feet = feetTarget - 19 * personScale;
-        // 全身以下(zoom<=1.0): 足元基準。それ以上: 顔中心に寄せる
-        // 上半身(1.5)で顔が上1/3、接写(2.5+)で顔が中央
-        const faceWeight = Math.min(1, Math.max(0, (totalZoom - 0.8) / 1.0)); // 0.8以下=0, 1.8以上=1
-        // さらに、足元基準でも顔がフレーム内に収まるよう補正
-        const personOriginY_raw = originY_face * faceWeight + originY_feet * (1 - faceWeight);
-        // 顔がフレーム上端より上に行かないよう補正（最低でも顔がy=10に来る）
-        const minOriginY = 10 - faceLocalY * personScale;
-        const personOriginY = Math.max(minOriginY, personOriginY_raw);
+    // カメラアイコン描画
+    const camG = svgEl('g', { transform: `translate(${camX}, ${Math.round(camY)})` });
+    camG.appendChild(svgEl('rect', { x: '-8', y: '-5', width: '16', height: '10', rx: '3', fill: '#8b5cf6' }));
+    camG.appendChild(svgEl('rect', { x: '6', y: '-3', width: '6', height: '6', rx: '1', fill: '#7c3aed' }));
+    svg.appendChild(camG);
 
-        const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(personOriginY)}) scale(${personScale.toFixed(2)})` });
-        const basePath = 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5';
-        g.appendChild(svgEl('path', { d: basePath, fill: '#6d28d9' }));
-        svg.appendChild(g);
-      }
-    } else if (category === 'product') {
-      const prodH = subjectH * 0.7;
-      const prodW = prodH * 1.2;
-      const prodCenterY = subjectBottom - prodH / 2;
-      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(prodCenterY)})` });
-      const bw = prodW * 0.6, bh = prodH;
-
-      if (angle === 'birds-eye') {
-        // 真上: 商品を上から見た形（長方形の上面）
-        g.appendChild(svgEl('rect', { x: String(-bw / 2), y: String(-bw / 2), width: String(bw), height: String(bw), rx: '3', fill: '#6d28d9' }));
-        g.appendChild(svgEl('rect', { x: String(-bw / 2 + 3), y: String(-bw / 2 + 3), width: String(bw - 6), height: String(bw - 6), rx: '1', fill: '#8b5cf6', opacity: '0.3' }));
-      } else if (angle === 'high') {
-        // 斜め上: 上面が少し見える（台形）
-        const topW = bw * 0.7;
-        g.appendChild(svgEl('path', { d: `M${-topW / 2},${-bh / 2} L${topW / 2},${-bh / 2} L${bw / 2},${bh / 2} L${-bw / 2},${bh / 2} Z`, fill: '#6d28d9' }));
-        g.appendChild(svgEl('rect', { x: String(-topW / 2 + 2), y: String(-bh / 2 + 2), width: String(topW - 4), height: String(bh * 0.12), rx: '1', fill: '#8b5cf6' }));
-      } else {
-        // 目線・低い: 正面から
-        g.appendChild(svgEl('rect', { x: String(-bw / 2), y: String(-bh / 2), width: String(bw), height: String(bh), rx: '3', fill: '#6d28d9' }));
-        g.appendChild(svgEl('rect', { x: String(-bw / 2 + 2), y: String(-bh / 2 + 2), width: String(bw - 4), height: String(bh * 0.15), rx: '1', fill: '#8b5cf6' }));
-      }
-      // 小瓶（真上以外）
-      if (angle !== 'birds-eye') {
-        const vw = prodW * 0.2, vh = prodH * 0.7;
-        g.appendChild(svgEl('rect', { x: String(bw / 2 + 4), y: String(-vh / 2 + bh * 0.15), width: String(vw), height: String(vh), rx: '2', fill: '#7c3aed' }));
-      }
-      svg.appendChild(g);
+    // === 3. レンズ（焦点距離）→ 画角の扇形（独立） ===
+    const fl = currentValues.focalLength || 50;
+    if (!keepFlags.focalLength) {
+      const fovDeg = 2 * Math.atan(18 / fl) * 180 / Math.PI; // 35mm換算画角
+      const halfRad = (fovDeg / 2) * Math.PI / 180;
+      const fovLen = Math.min(subjectX - camX - 10, 120); // 扇形の長さ
+      // カメラから被写体方向への扇形
+      const dx = subjectX - camX;
+      const dy = (personBottom - personH * 0.5) - camY;
+      const baseAngle = Math.atan2(dy, dx);
+      const topAngle = baseAngle - halfRad;
+      const botAngle = baseAngle + halfRad;
+      const topX = camX + 12 + Math.cos(topAngle) * fovLen;
+      const topY = camY + Math.sin(topAngle) * fovLen;
+      const botX = camX + 12 + Math.cos(botAngle) * fovLen;
+      const botY = camY + Math.sin(botAngle) * fovLen;
+      svg.appendChild(svgEl('path', {
+        d: `M${camX + 12},${Math.round(camY)} L${Math.round(topX)},${Math.round(topY)} L${Math.round(botX)},${Math.round(botY)} Z`,
+        fill: 'rgba(139, 92, 246, 0.08)', stroke: '#c4b5fd', 'stroke-width': '0.8'
+      }));
     }
-    // 風景: 被写体なし
 
-    // ボケ効果
+    // === 4. 視線（カメラ→被写体、破線） ===
+    const targetY = personBottom - personH * 0.5;
+    svg.appendChild(svgEl('line', {
+      x1: String(camX + 12), y1: String(Math.round(camY)),
+      x2: String(subjectX), y2: String(Math.round(targetY)),
+      stroke: '#c4b5fd', 'stroke-width': '1', 'stroke-dasharray': '4,3'
+    }));
+
+    // === 5. ボケ感 → テキスト表示（独立） ===
     const dof = currentValues.depthOfField;
     if (dof && !keepFlags.depthOfField) {
-      const maxBlur = 3;
-      const ratio = 1 - (dof - 1.4) / (16 - 1.4);
-      const blurPx = Math.max(0, ratio * maxBlur);
-      if (blurPx > 0.3) {
-        const filterId = 'combinedDofBlur';
-        const defs = svgEl('defs');
-        const filter = svgEl('filter', { id: filterId, x: '-10%', y: '-10%', width: '120%', height: '120%' });
-        filter.appendChild(svgEl('feGaussianBlur', { stdDeviation: String(blurPx.toFixed(1)) }));
-        defs.appendChild(filter);
-        svg.insertBefore(defs, svg.firstChild);
-        bgG.setAttribute('filter', `url(#${filterId})`);
-      }
+      const dofLabel = dof <= 2.8 ? 'ボケ強' : dof >= 11 ? 'くっきり' : '適度';
+      const t = svgEl('text', { x: String(W / 2), y: String(H - 5), 'text-anchor': 'middle', 'font-size': '8', fill: '#9ca3af', 'font-family': 'system-ui,sans-serif' });
+      t.textContent = `f/${parseFloat(dof).toFixed(1)} ${dofLabel}`;
+      svg.appendChild(t);
     }
 
-    // 構図ガイドライン
+    // === 6. 構図 → 小さなフレーム内にガイドライン（独立） ===
     const compositions = (!keepFlags.composition && currentValues.composition) ? currentValues.composition : [];
     if (compositions.length > 0) {
-      const guideG = svgEl('g', { opacity: '0.5' });
+      // 右上に小さな写真フレームを表示してガイドラインを描画
+      const fx = W - 65, fy = 5, fw = 58, fh = 38;
+      svg.appendChild(svgEl('rect', { x: String(fx), y: String(fy), width: String(fw), height: String(fh), fill: 'white', stroke: '#e5e7eb', 'stroke-width': '1', rx: '2' }));
+      const guideG = svgEl('g', { opacity: '0.6' });
       compositions.forEach(comp => {
         if (comp === 'rule-of-thirds') {
           for (let i = 1; i <= 2; i++) {
-            guideG.appendChild(svgEl('line', { x1: String((i / 3) * W), y1: '0', x2: String((i / 3) * W), y2: String(H), stroke: '#f59e0b', 'stroke-width': '0.8', 'stroke-dasharray': '4,2' }));
-            guideG.appendChild(svgEl('line', { x1: '0', y1: String((i / 3) * H), x2: String(W), y2: String((i / 3) * H), stroke: '#f59e0b', 'stroke-width': '0.8', 'stroke-dasharray': '4,2' }));
-          }
-          for (let i = 1; i <= 2; i++) for (let j = 1; j <= 2; j++) {
-            guideG.appendChild(svgEl('circle', { cx: String((i / 3) * W), cy: String((j / 3) * H), r: '3', fill: 'rgba(245,158,11,0.4)', stroke: '#f59e0b', 'stroke-width': '0.8' }));
+            guideG.appendChild(svgEl('line', { x1: String(fx + (i / 3) * fw), y1: String(fy), x2: String(fx + (i / 3) * fw), y2: String(fy + fh), stroke: '#f59e0b', 'stroke-width': '0.6' }));
+            guideG.appendChild(svgEl('line', { x1: String(fx), y1: String(fy + (i / 3) * fh), x2: String(fx + fw), y2: String(fy + (i / 3) * fh), stroke: '#f59e0b', 'stroke-width': '0.6' }));
           }
         } else if (comp === 'symmetry') {
-          guideG.appendChild(svgEl('line', { x1: String(W / 2), y1: '0', x2: String(W / 2), y2: String(H), stroke: '#3b82f6', 'stroke-width': '1', 'stroke-dasharray': '6,3' }));
+          guideG.appendChild(svgEl('line', { x1: String(fx + fw / 2), y1: String(fy), x2: String(fx + fw / 2), y2: String(fy + fh), stroke: '#3b82f6', 'stroke-width': '0.8', 'stroke-dasharray': '3,2' }));
         } else if (comp === 'leading-lines') {
-          const vpX = W / 2, vpY = H * 0.35;
-          [[0, H], [W, H], [0, 0], [W, 0]].forEach(([sx, sy]) => {
-            guideG.appendChild(svgEl('line', { x1: String(sx), y1: String(sy), x2: String(vpX), y2: String(vpY), stroke: '#10b981', 'stroke-width': '0.8', 'stroke-dasharray': '4,2' }));
-          });
-          guideG.appendChild(svgEl('circle', { cx: String(vpX), cy: String(vpY), r: '4', fill: 'rgba(16,185,129,0.3)', stroke: '#10b981', 'stroke-width': '1' }));
+          guideG.appendChild(svgEl('line', { x1: String(fx), y1: String(fy + fh), x2: String(fx + fw / 2), y2: String(fy + fh * 0.3), stroke: '#10b981', 'stroke-width': '0.6' }));
+          guideG.appendChild(svgEl('line', { x1: String(fx + fw), y1: String(fy + fh), x2: String(fx + fw / 2), y2: String(fy + fh * 0.3), stroke: '#10b981', 'stroke-width': '0.6' }));
         } else if (comp === 'center') {
-          guideG.appendChild(svgEl('circle', { cx: String(W / 2), cy: String(H / 2), r: '20', fill: 'none', stroke: '#ef4444', 'stroke-width': '1', 'stroke-dasharray': '4,2' }));
+          guideG.appendChild(svgEl('circle', { cx: String(fx + fw / 2), cy: String(fy + fh / 2), r: '8', fill: 'none', stroke: '#ef4444', 'stroke-width': '0.8' }));
         } else if (comp === 'negative-space') {
-          guideG.appendChild(svgEl('rect', { x: '6', y: '6', width: String(W - 12), height: String(H - 12), fill: 'none', stroke: '#8b5cf6', 'stroke-width': '1', 'stroke-dasharray': '6,3', rx: '3' }));
+          guideG.appendChild(svgEl('rect', { x: String(fx + 3), y: String(fy + 3), width: String(fw - 6), height: String(fh - 6), fill: 'none', stroke: '#8b5cf6', 'stroke-width': '0.8', 'stroke-dasharray': '3,2', rx: '2' }));
         }
       });
       svg.appendChild(guideG);
     }
 
-    // 情報バッジ（左上・右上）
-    let badgeY = 6;
-    if (!keepFlags.focalLength && currentValues.focalLength) {
-      const g = svgEl('g', { transform: `translate(5, ${badgeY})` });
-      g.appendChild(svgEl('rect', { x: '0', y: '0', width: '32', height: '14', rx: '3', fill: 'rgba(59,130,246,0.8)' }));
-      const t = svgEl('text', { x: '16', y: '10.5', 'text-anchor': 'middle', 'font-size': '7', fill: 'white', 'font-weight': 'bold', 'font-family': 'system-ui,sans-serif' });
-      t.textContent = `${currentValues.focalLength}mm`;
-      g.appendChild(t);
-      svg.appendChild(g);
+    // === 7. ラベル ===
+    if (!keepFlags.focalLength && fl) {
+      const t = svgEl('text', { x: String(camX), y: String(Math.round(camY) - 10), 'text-anchor': 'middle', 'font-size': '8', fill: '#8b5cf6', 'font-weight': 'bold', 'font-family': 'system-ui,sans-serif' });
+      t.textContent = `${fl}mm`;
+      svg.appendChild(t);
     }
-    if (!keepFlags.angle && currentValues.angle) {
-      const labelMap = { 'worms-eye': '地面', 'low': '低い', 'eye-level': '目線', 'high': '斜め上', 'birds-eye': '真上' };
-      const label = labelMap[currentValues.angle] || '';
-      const g = svgEl('g', { transform: `translate(${W - 33}, ${badgeY})` });
-      g.appendChild(svgEl('rect', { x: '0', y: '0', width: '28', height: '14', rx: '3', fill: 'rgba(139,92,246,0.8)' }));
-      const t = svgEl('text', { x: '14', y: '10.5', 'text-anchor': 'middle', 'font-size': '7', fill: 'white', 'font-weight': 'bold', 'font-family': 'system-ui,sans-serif' });
-      t.textContent = label;
-      g.appendChild(t);
-      svg.appendChild(g);
+    if (!keepFlags.angle) {
+      const angleLabels = { 'worms-eye': '地面から', 'low': '低い', 'eye-level': '目線', 'high': '斜め上', 'birds-eye': '真上' };
+      const t = svgEl('text', { x: String(camX), y: String(Math.round(camY) + 18), 'text-anchor': 'middle', 'font-size': '7', fill: '#6b7280', 'font-family': 'system-ui,sans-serif' });
+      t.textContent = angleLabels[angle] || '';
+      svg.appendChild(t);
     }
-    if (!keepFlags.depthOfField && currentValues.depthOfField) {
-      const g = svgEl('g', { transform: `translate(5, ${H - 18})` });
-      g.appendChild(svgEl('rect', { x: '0', y: '0', width: '28', height: '14', rx: '3', fill: 'rgba(0,0,0,0.4)' }));
-      const t = svgEl('text', { x: '14', y: '10.5', 'text-anchor': 'middle', 'font-size': '7', fill: 'white', 'font-family': 'system-ui,sans-serif' });
-      t.textContent = `f/${parseFloat(currentValues.depthOfField).toFixed(1)}`;
-      g.appendChild(t);
-      svg.appendChild(g);
+    if (!keepFlags.shotType) {
+      const shotLabels = { 'extreme-close': '超接写', 'close-up': '接写', 'medium': '上半身', 'full': '全身', 'wide': '広い' };
+      const midX = (camX + subjectX) / 2;
+      const t = svgEl('text', { x: String(Math.round(midX)), y: String(groundY + 14), 'text-anchor': 'middle', 'font-size': '7', fill: '#6b7280', 'font-family': 'system-ui,sans-serif' });
+      t.textContent = shotLabels[shotType] || '';
+      svg.appendChild(t);
     }
 
     container.appendChild(svg);
