@@ -963,7 +963,7 @@ const UI = (() => {
 
       // カメラ・構図
       if (json.camera) {
-        groupItems.push({ id: 'camera', type: 'camera', name: 'カメラ・構図', data: json.camera });
+        groupItems.push({ id: 'camera', type: 'camera', name: 'カメラ・構図 β', data: json.camera });
       }
 
       // 全体・雰囲気（統合）
