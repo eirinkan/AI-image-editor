@@ -840,14 +840,15 @@
 
   <!-- 画像拡大モーダル -->
   <div id="imageZoomModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center cursor-zoom-out" style="backdrop-filter: blur(4px);">
-    <div class="flex flex-col items-end max-w-[90vw] max-h-[90vh]">
+    <div class="flex flex-col items-end max-w-[90vw] max-h-[90vh] overflow-auto">
       <button id="zoomMarkerToggle" class="hidden mb-2 bg-white/90 hover:bg-white text-gray-700 dark:bg-gray-700/90 dark:hover:bg-gray-700 dark:text-gray-200 rounded-full px-3 py-1.5 text-xs font-medium shadow-lg transition-all cursor-pointer" style="pointer-events: auto;">
         マーカー非表示
       </button>
       <div id="imageZoomWrapper" class="relative inline-block">
-        <img id="imageZoomImg" class="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-2xl" alt="拡大画像">
+        <img id="imageZoomImg" class="max-w-[90vw] max-h-[70vh] object-contain rounded-lg shadow-2xl" alt="拡大画像">
         <div id="zoomMarkerOverlay" class="absolute inset-0 pointer-events-none rounded-lg overflow-hidden"></div>
       </div>
+      <div id="zoomGroupList" class="hidden mt-2 w-full flex flex-wrap gap-2" style="pointer-events: auto; cursor: default;"></div>
     </div>
   </div>
 

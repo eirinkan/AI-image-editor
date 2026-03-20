@@ -229,6 +229,39 @@ const UI = (() => {
                 toggleBtn.classList.add('hidden');
               }
             }
+            // グループ・リージョン一覧を画像下に表示
+            const zoomGroupList = document.getElementById('zoomGroupList');
+            if (zoomGroupList) {
+              zoomGroupList.innerHTML = '';
+              if (id === 'previewImage') {
+                // STEP2のグループカードをクローン
+                const groupHeader = document.querySelector('#elementsList .category-header');
+                if (groupHeader) {
+                  const cards = [];
+                  let el = groupHeader.nextElementSibling;
+                  // 次のcategory-headerまでのカードを収集
+                  while (el && !el.classList.contains('category-header')) {
+                    if (el.classList.contains('element-card')) {
+                      cards.push(el);
+                    }
+                    el = el.nextElementSibling;
+                  }
+                  cards.forEach(card => {
+                    const clone = card.cloneNode(true);
+                    clone.style.pointerEvents = 'auto';
+                    clone.style.cursor = 'pointer';
+                    clone.addEventListener('click', (ev) => {
+                      ev.stopPropagation();
+                      card.click();
+                    });
+                    zoomGroupList.appendChild(clone);
+                  });
+                }
+                zoomGroupList.classList.remove('hidden');
+              } else {
+                zoomGroupList.classList.add('hidden');
+              }
+            }
             zoomModal.classList.remove('hidden');
           });
         }
