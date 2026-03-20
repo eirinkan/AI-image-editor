@@ -363,6 +363,14 @@ Output ONLY the updated JSON, no other text.`;
           parts.push(desc);
         });
       }
+      if (spec.people) {
+        spec.people.forEach(person => {
+          let desc = person.description || '';
+          if (person.clothing) desc += `, clothing: ${person.clothing}`;
+          if (person.pose) desc += `, pose: ${person.pose}`;
+          parts.push(desc);
+        });
+      }
       if (spec.regions) {
         spec.regions.forEach(region => {
           let desc = region.name || region.name_en || '';

@@ -870,13 +870,27 @@ const UI = (() => {
     {
       const groupItems = [];
 
-      // 同種オブジェクトの自動グループ化（フィルタ済みオブジェクトで）
-      if (filteredObjects.length > 0) {
-        const groups = computeAutoGroups(filteredObjects);
-        groups.forEach((group, i) => {
-          const memberIds = group.members.map(member => member.id || `obj_${json.objects.indexOf(member)}`);
-          groupItems.push({ id: `group_${i}`, type: 'group', name: `${group.name}（${group.members.length}個）`, data: { ...group, members: group.members, memberIds }, cardClass: 'group-card' });
-        });
+      // 同種要素の自動グループ化（オブジェクト＋人物を統合して処理）
+      {
+        // 人物にnameプロパティを付与して統一（computeAutoGroupsはname/name_enを使う）
+        const peopleWithName = filteredPeople.map(p => ({ ...p, _srcType: 'person', name: p.name || p.description, name_en: p.name_en || '' }));
+        const objectsWithSrc = filteredObjects.map(o => ({ ...o, _srcType: 'object' }));
+        const combined = [...objectsWithSrc, ...peopleWithName];
+
+        if (combined.length > 0) {
+          const groups = computeAutoGroups(combined);
+          groups.forEach((group, i) => {
+            const memberIds = group.members.map(member => {
+              if (member._srcType === 'person') {
+                const orig = filteredPeople.find(p => p.id === member.id || p.description === member.description);
+                return member.id || `person_${json.people.indexOf(orig)}`;
+              }
+              const orig = filteredObjects.find(o => o.id === member.id || (o.name === member.name && o.name_en === member.name_en));
+              return member.id || `obj_${json.objects.indexOf(orig)}`;
+            });
+            groupItems.push({ id: `group_${i}`, type: 'group', name: `${group.name}（${group.members.length}個）`, data: { ...group, members: group.members, memberIds }, cardClass: 'group-card' });
+          });
+        }
       }
 
       // リージョン（フィルタ済み・マーカー番号付き）
@@ -2182,7 +2196,7 @@ const UI = (() => {
         if (el.type === 'group' && el.data?.members) {
           entry.isGroup = true;
           entry.memberCount = el.data.members.length;
-          entry.memberNames = el.data.members.map(m => m.name || m.name_en).filter(Boolean);
+          entry.memberNames = el.data.members.map(m => m.name || m.name_en || m.description).filter(Boolean);
         }
         instructions.push(entry);
       }
