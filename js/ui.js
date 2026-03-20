@@ -251,8 +251,8 @@ const UI = (() => {
                     const elId = card.dataset.elementId;
                     if (elId === 'camera' || elId === 'global') return;
                     const clone = card.cloneNode(true);
-                    // ダークUI用スタイル: 白文字・半透明背景・コンパクト
-                    clone.className = 'text-white bg-white/15 border border-white/30 rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-white/30 transition-all cursor-pointer';
+                    // 白背景・黒文字のコンパクトボタン
+                    clone.className = 'text-gray-800 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-gray-100 transition-all cursor-pointer shadow-sm';
                     clone.style.pointerEvents = 'auto';
                     clone.addEventListener('click', (ev) => {
                       ev.stopPropagation();
@@ -262,6 +262,11 @@ const UI = (() => {
                     });
                     zoomGroupList.appendChild(clone);
                   });
+                }
+                // 画像の横幅に合わせる
+                const wrapperEl = document.getElementById('imageZoomWrapper');
+                if (wrapperEl) {
+                  zoomGroupList.style.width = wrapperEl.offsetWidth + 'px';
                 }
                 zoomGroupList.classList.remove('hidden');
               } else {
@@ -948,7 +953,7 @@ const UI = (() => {
       }
 
       // 全体・雰囲気（統合）
-      groupItems.push({ id: 'global', type: 'global', name: '全体・雰囲気', data: json });
+      groupItems.push({ id: 'global', type: 'global', name: '全体', data: json });
 
       if (groupItems.length > 0) {
         elements.elementsList.appendChild(createCategoryHeader(ICONS.group, `グループ (${groupItems.length})`));
@@ -1346,7 +1351,14 @@ const UI = (() => {
 
       const header = document.createElement('div');
       header.className = 'flex items-center justify-between';
-      const groupTag = el.type === 'group' ? '<span class="px-1.5 py-0.5 text-[10px] font-bold bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded">グループ</span>' : '';
+      const typeLabels = {
+        group: { text: 'グループ', bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400' },
+        region: { text: 'リージョン', bg: 'bg-green-100 dark:bg-green-900/30', color: 'text-green-600 dark:text-green-400' },
+        global: { text: '全体', bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400' },
+        camera: { text: 'カメラ', bg: 'bg-gray-100 dark:bg-gray-700', color: 'text-gray-600 dark:text-gray-400' },
+      };
+      const labelInfo = typeLabels[el.type];
+      const groupTag = labelInfo ? `<span class="px-1.5 py-0.5 text-[10px] font-bold ${labelInfo.bg} ${labelInfo.color} rounded">${labelInfo.text}</span>` : '';
       header.innerHTML = `
         <div class="flex items-center gap-2">
           <span class="font-medium text-sm text-blue-600">${escapeHtml(el.name)}</span>
@@ -1369,7 +1381,7 @@ const UI = (() => {
         setTimeout(() => CameraEditor.render(editorContainer, el.data), 0);
       } else {
         // プリセット対象タイプならプリセットボタンを追加
-        const presetTypes = ['global', 'region', 'group'];
+        const presetTypes = ['global'];
         if (presetTypes.includes(el.type)) {
           const presetBtn = document.createElement('button');
           presetBtn.type = 'button';
