@@ -4,21 +4,21 @@ const CameraEditor = (() => {
   // プリセット定義
   const PRESETS = [
     // 人物系
-    { name: 'ポートレート', category: 'people', desc: '人物を美しく撮る定番', values: { angle: 'eye-level', shotType: 'medium', focalLength: 85, depthOfField: 2.0, composition: ['rule-of-thirds'] } },
-    { name: '全身スナップ', category: 'people', desc: '人物全体をバランスよく', values: { angle: 'eye-level', shotType: 'full', focalLength: 50, depthOfField: 5.6, composition: ['center'] } },
-    { name: '顔アップ', category: 'people', desc: '表情にフォーカス', values: { angle: 'eye-level', shotType: 'close-up', focalLength: 85, depthOfField: 1.8, composition: ['center'] } },
-    { name: '見上げ迫力', category: 'people', desc: '被写体を大きく力強く', values: { angle: 'low', shotType: 'full', focalLength: 24, depthOfField: 8.0, composition: ['center'] } },
-    { name: 'シネマティック', category: 'people', desc: '映画的な雰囲気', values: { angle: 'eye-level', shotType: 'medium', focalLength: 35, depthOfField: 2.0, composition: ['negative-space'] } },
-    { name: 'ドラマチック', category: 'people', desc: '視線誘導で印象的に', values: { angle: 'high', shotType: 'medium', focalLength: 85, depthOfField: 2.8, composition: ['leading-lines'] } },
+    { name: 'ポートレート', category: 'people', desc: '人物を美しく撮る定番', values: { angle: 'eye-level', shotType: 'medium', focalLength: 85, depthOfField: 2.0 } },
+    { name: '全身スナップ', category: 'people', desc: '人物全体をバランスよく', values: { angle: 'eye-level', shotType: 'full', focalLength: 50, depthOfField: 5.6 } },
+    { name: '顔アップ', category: 'people', desc: '表情にフォーカス', values: { angle: 'eye-level', shotType: 'close-up', focalLength: 85, depthOfField: 1.8 } },
+    { name: '見上げ迫力', category: 'people', desc: '被写体を大きく力強く', values: { angle: 'low', shotType: 'full', focalLength: 24, depthOfField: 8.0 } },
+    { name: 'シネマティック', category: 'people', desc: '映画的な雰囲気', values: { angle: 'eye-level', shotType: 'medium', focalLength: 35, depthOfField: 2.0 } },
+    { name: 'ドラマチック', category: 'people', desc: '視線誘導で印象的に', values: { angle: 'high', shotType: 'medium', focalLength: 85, depthOfField: 2.8 } },
     // 商品系
-    { name: '商品クローズアップ', category: 'product', desc: '商品ディテールを美しく', values: { angle: 'eye-level', shotType: 'close-up', focalLength: 100, depthOfField: 2.8, composition: ['center'] } },
-    { name: 'フラットレイ', category: 'product', desc: '物を並べて真上から', values: { angle: 'birds-eye', shotType: 'wide', focalLength: 35, depthOfField: 11, composition: ['symmetry'] } },
-    { name: '雰囲気商品', category: 'product', desc: '生活感のある商品写真', values: { angle: 'high', shotType: 'medium', focalLength: 50, depthOfField: 2.0, composition: ['rule-of-thirds'] } },
+    { name: '商品クローズアップ', category: 'product', desc: '商品ディテールを美しく', values: { angle: 'eye-level', shotType: 'close-up', focalLength: 100, depthOfField: 2.8 } },
+    { name: 'フラットレイ', category: 'product', desc: '物を並べて真上から', values: { angle: 'birds-eye', shotType: 'wide', focalLength: 35, depthOfField: 11 } },
+    { name: '雰囲気商品', category: 'product', desc: '生活感のある商品写真', values: { angle: 'high', shotType: 'medium', focalLength: 50, depthOfField: 2.0 } },
     // 風景・建物系
-    { name: '風景パノラマ', category: 'landscape', desc: '広大な風景をくっきり', values: { angle: 'eye-level', shotType: 'wide', focalLength: 24, depthOfField: 11, composition: ['rule-of-thirds'] } },
-    { name: '建物見上げ', category: 'landscape', desc: '建物を迫力ある構図で', values: { angle: 'low', shotType: 'wide', focalLength: 24, depthOfField: 8.0, composition: ['leading-lines'] } },
-    { name: '街並みスナップ', category: 'landscape', desc: '奥行きのある街並み', values: { angle: 'eye-level', shotType: 'wide', focalLength: 35, depthOfField: 5.6, composition: ['leading-lines'] } },
-    { name: 'ミニチュア風', category: 'landscape', desc: 'ジオラマ風のかわいい俯瞰', values: { angle: 'birds-eye', shotType: 'wide', focalLength: 200, depthOfField: 2.0, composition: ['center'] } },
+    { name: '風景パノラマ', category: 'landscape', desc: '広大な風景をくっきり', values: { angle: 'eye-level', shotType: 'wide', focalLength: 24, depthOfField: 11 } },
+    { name: '建物見上げ', category: 'landscape', desc: '建物を迫力ある構図で', values: { angle: 'low', shotType: 'wide', focalLength: 24, depthOfField: 8.0 } },
+    { name: '街並みスナップ', category: 'landscape', desc: '奥行きのある街並み', values: { angle: 'eye-level', shotType: 'wide', focalLength: 35, depthOfField: 5.6 } },
+    { name: 'ミニチュア風', category: 'landscape', desc: 'ジオラマ風のかわいい俯瞰', values: { angle: 'birds-eye', shotType: 'wide', focalLength: 200, depthOfField: 2.0 } },
   ];
 
   const PRESET_CATEGORIES = [
@@ -76,17 +76,7 @@ const CameraEditor = (() => {
         return `moderate depth of field at f/${v}`;
       },
     },
-    composition: {
-      label: '構図',
-      type: 'multi-select',
-      options: [
-        { value: 'rule-of-thirds', label: '三分割', icon: '▦', prompt: 'rule of thirds composition, subject aligned to grid intersection points', desc: '画面を3×3に分割し、交点に被写体を置く。自然で安定した構図' },
-        { value: 'symmetry', label: '対称', icon: '⟷', prompt: 'perfectly symmetrical composition, mirror-like balance on both sides', desc: '左右または上下を鏡のように対称に。建物や水面の反射に最適' },
-        { value: 'leading-lines', label: '導線', icon: '╲', prompt: 'leading lines composition, strong diagonal or converging lines guiding the eye toward the subject', desc: '道や線で視線を被写体に誘導。奥行きと動きが生まれる' },
-        { value: 'center', label: '中央', icon: '◎', prompt: 'centered subject composition, subject perfectly centered in frame', desc: '被写体をど真ん中に。力強さとインパクトを出す定番構図' },
-        { value: 'negative-space', label: '余白', icon: '□', prompt: 'negative space composition, subject surrounded by large areas of empty space', desc: '被写体の周りに大きな余白。孤独感や静けさ、映画的な印象' },
-      ],
-    },
+    // 構図は削除（既存画像の編集では配置変更が不自然になるため）
   };
 
   // 現在の値
@@ -102,7 +92,6 @@ const CameraEditor = (() => {
       shotType: true,
       focalLength: true,
       depthOfField: true,
-      composition: true,
     };
 
     // カメラ情報がある場合でも、デフォルトは「変更しない」
@@ -153,15 +142,7 @@ const CameraEditor = (() => {
         }
       }
 
-      values.composition = [];
-      const comp = (cameraJson.composition || '').toLowerCase();
-      if (comp) {
-        if (comp.includes('third')) values.composition.push('rule-of-thirds');
-        if (comp.includes('symmetr')) values.composition.push('symmetry');
-        if (comp.includes('leading')) values.composition.push('leading-lines');
-        if (comp.includes('center')) values.composition.push('center');
-        if (comp.includes('negative space') || comp.includes('余白')) values.composition.push('negative-space');
-      }
+      // 構図の推論は廃止
     }
 
     keepFlags = keeps;
@@ -277,7 +258,6 @@ const CameraEditor = (() => {
       shotType: false,
       focalLength: false,
       depthOfField: false,
-      composition: false,
     };
     // 全体を再描画（inferFromJsonをスキップ）
     presetApplied = true;
@@ -297,7 +277,7 @@ const CameraEditor = (() => {
     if (!container) return;
     container.innerHTML = '';
 
-    const hasAny = !keepFlags.angle || !keepFlags.shotType || !keepFlags.focalLength || !keepFlags.depthOfField || !keepFlags.composition;
+    const hasAny = !keepFlags.angle || !keepFlags.shotType || !keepFlags.focalLength || !keepFlags.depthOfField;
     if (!hasAny) {
       container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#9ca3af;font-size:11px;text-align:center;padding:12px;">設定を変更すると<br>プレビュー表示</div>';
       return;
@@ -472,8 +452,8 @@ const CameraEditor = (() => {
     twoCol.appendChild(rightCol);
     container.appendChild(twoCol);
 
-    // 残りのコントロール（レンズ・ボケ・構図）は通常配置
-    ['focalLength', 'depthOfField', 'composition'].forEach(key => {
+    // 残りのコントロール（レンズ・ボケ）は通常配置
+    ['focalLength', 'depthOfField'].forEach(key => {
       const ctrl = CONTROLS[key];
       const section = document.createElement('div');
       section.className = 'camera-control-section';
@@ -482,8 +462,7 @@ const CameraEditor = (() => {
       label.textContent = ctrl.label;
       section.appendChild(label);
       if (key === 'focalLength') section.appendChild(renderFocalLengthVisual(key, ctrl));
-      else if (key === 'depthOfField') section.appendChild(renderDepthOfFieldVisual(key, ctrl));
-      else section.appendChild(renderCompositionVisual(key, ctrl));
+      else section.appendChild(renderDepthOfFieldVisual(key, ctrl));
       container.appendChild(section);
     });
 
@@ -1030,13 +1009,7 @@ const CameraEditor = (() => {
     // focalLength — プロンプトに含めない（画風に影響するため、プレビューのみで表示）
     // depthOfField — プロンプトに含めない（同上）
 
-    // composition（keepなら除外）
-    if (!keepFlags.composition && currentValues.composition && currentValues.composition.length > 0) {
-      currentValues.composition.forEach(v => {
-        const opt = CONTROLS.composition.options.find(o => o.value === v);
-        if (opt) parts.push(opt.prompt);
-      });
-    }
+    // composition — 削除済み（既存画像の編集では構図変更が不自然になるため）
 
     return parts.length > 0 ? `Change camera to: ${parts.join(', ')}` : '';
   }

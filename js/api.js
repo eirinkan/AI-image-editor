@@ -433,8 +433,7 @@ Output ONLY the updated JSON, no other text.`;
         if (shotType) parts.push(`Shot type: ${shotType}`);
         // focal_length, depth_of_field はプロンプトに含めない（画風に影響するため）
         if (cam.perspective) parts.push(`Perspective: ${cam.perspective}`);
-        // compositionがshot typeとして使われた場合は重複出力しない
-        if (cam.composition && !compositionIsShot) parts.push(`Composition: ${cam.composition}`);
+        // composition — プロンプトに含めない（既存画像の編集では構図変更が不自然になるため）
       }
       return parts.join('\n');
     }
