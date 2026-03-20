@@ -249,7 +249,6 @@ const CameraEditor = (() => {
       shotType: preset.values.shotType,
       focalLength: preset.values.focalLength,
       depthOfField: preset.values.depthOfField,
-      composition: [...preset.values.composition],
       _presetCategory: preset.category, // プレビュー被写体切り替え用
     };
     // 全てのkeepフラグを外す
