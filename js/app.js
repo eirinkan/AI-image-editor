@@ -415,7 +415,22 @@ const App = (() => {
 
       // Step 1: JSONを一括更新
       UI.updateLoadingStep(1);
-      const updatedJson = await GeminiAPI.updateJson(state.currentJson, editInstructions, signal);
+      let updatedJson;
+
+      // カメラ要素のみの場合: cameraフィールドだけLLMで更新し、他は保護
+      const cameraOnly = editInstructions.length === 1 && editInstructions[0].instruction.startsWith('Change camera to:');
+      if (cameraOnly) {
+        // JSONをdeepcopy（他フィールドを保護）
+        const safeCopy = JSON.parse(JSON.stringify(state.currentJson));
+        // cameraフィールドだけ抽出してLLMに更新させる
+        const cameraOnlyJson = { camera: safeCopy.camera || {} };
+        const cameraUpdated = await GeminiAPI.updateJson(cameraOnlyJson, editInstructions, signal);
+        // cameraフィールドだけ上書き、他は元のまま
+        safeCopy.camera = cameraUpdated.camera || cameraOnlyJson.camera;
+        updatedJson = safeCopy;
+      } else {
+        updatedJson = await GeminiAPI.updateJson(state.currentJson, editInstructions, signal);
+      }
       state.pendingJson = updatedJson; // リカバリ用に保持
 
       // 少し間を空けてから画像生成に入る
