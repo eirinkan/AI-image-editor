@@ -763,6 +763,14 @@ button {
   min-height: 44px;
 }
 
+/* 画像削除ボタンをフローから外す */
+#removeImage {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 20;
+}
+
 .history-dl-btn {
   min-width: 32px;
   min-height: 32px;
