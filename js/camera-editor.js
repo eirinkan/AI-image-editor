@@ -39,22 +39,22 @@ const CameraEditor = (() => {
       label: 'アングル（高さ）',
       type: 'select',
       options: [
-        { value: 'worms-eye', label: '地面から', icon: '🐛', prompt: "Extreme low angle worm's eye view" },
-        { value: 'low', label: '低い', icon: '⬇️', prompt: 'Low angle shot looking slightly upward' },
-        { value: 'eye-level', label: '目線', icon: '👁', prompt: 'Eye-level shot' },
-        { value: 'high', label: '斜め上', icon: '📐', prompt: 'High angle shot looking down at 45 degrees' },
-        { value: 'birds-eye', label: '真上', icon: '🦅', prompt: "Bird's eye view, directly overhead" },
+        { value: 'worms-eye', label: '地面から', icon: '🐛', prompt: "extreme low-angle shot, worm's eye view from ground level looking steeply upward" },
+        { value: 'low', label: '低い', icon: '⬇️', prompt: 'low-angle shot, camera positioned below subject looking upward' },
+        { value: 'eye-level', label: '目線', icon: '👁', prompt: 'eye-level shot, camera at subject eye height, straight-on perspective' },
+        { value: 'high', label: '斜め上', icon: '📐', prompt: 'elevated shot, high-angle shot looking down at 45 degrees' },
+        { value: 'birds-eye', label: '真上', icon: '🦅', prompt: "bird's eye view, directly overhead top-down perspective" },
       ],
     },
     shotType: {
       label: '距離（ショットタイプ）',
       type: 'select',
       options: [
-        { value: 'extreme-close', label: '超接写', icon: '🔍', prompt: 'Extreme close-up macro shot' },
-        { value: 'close-up', label: '接写', icon: '👤', prompt: 'Close-up shot' },
-        { value: 'medium', label: '上半身', icon: '🧑', prompt: 'Medium shot' },
-        { value: 'full', label: '全身', icon: '🧍', prompt: 'Full body shot' },
-        { value: 'wide', label: '広い', icon: '🏠', prompt: 'Wide establishing shot' },
+        { value: 'extreme-close', label: '超接写', icon: '🔍', prompt: 'extreme close-up macro shot, filling the frame with fine detail' },
+        { value: 'close-up', label: '接写', icon: '👤', prompt: 'close-up shot, subject fills frame from face to shoulders' },
+        { value: 'medium', label: '上半身', icon: '🧑', prompt: 'medium shot, waist-up framing of subject' },
+        { value: 'full', label: '全身', icon: '🧍', prompt: 'full body shot, entire figure visible from head to toe' },
+        { value: 'wide', label: '広い', icon: '🏠', prompt: 'wide shot, subject small within expansive environment and surroundings' },
       ],
     },
     focalLength: {
@@ -80,11 +80,11 @@ const CameraEditor = (() => {
       label: '構図',
       type: 'multi-select',
       options: [
-        { value: 'rule-of-thirds', label: '三分割', icon: '▦', prompt: 'rule of thirds composition' },
-        { value: 'symmetry', label: '対称', icon: '⟷', prompt: 'symmetrical composition' },
-        { value: 'leading-lines', label: '導線', icon: '╲', prompt: 'leading lines drawing the eye' },
-        { value: 'center', label: '中央', icon: '◎', prompt: 'centered subject composition' },
-        { value: 'negative-space', label: '余白', icon: '□', prompt: 'negative space composition' },
+        { value: 'rule-of-thirds', label: '三分割', icon: '▦', prompt: 'rule of thirds composition, subject aligned to grid intersection points', desc: '画面を3×3に分割し、交点に被写体を置く。自然で安定した構図' },
+        { value: 'symmetry', label: '対称', icon: '⟷', prompt: 'perfectly symmetrical composition, mirror-like balance on both sides', desc: '左右または上下を鏡のように対称に。建物や水面の反射に最適' },
+        { value: 'leading-lines', label: '導線', icon: '╲', prompt: 'leading lines composition, strong diagonal or converging lines guiding the eye toward the subject', desc: '道や線で視線を被写体に誘導。奥行きと動きが生まれる' },
+        { value: 'center', label: '中央', icon: '◎', prompt: 'centered subject composition, subject perfectly centered in frame', desc: '被写体をど真ん中に。力強さとインパクトを出す定番構図' },
+        { value: 'negative-space', label: '余白', icon: '□', prompt: 'negative space composition, subject surrounded by large areas of empty space', desc: '被写体の周りに大きな余白。孤独感や静けさ、映画的な印象' },
       ],
     },
   };
@@ -348,13 +348,23 @@ const CameraEditor = (() => {
         bgG.appendChild(svgEl('ellipse', { cx: String(W / 2), cy: String(tableY), rx: '80', ry: String(ry), fill: '#e2e8f0' }));
       }
     } else {
-      // 人物: 建物 + 地面（地平線に合わせる）
-      const bldgH = Math.min(80, groundY - 5);
+      // 人物: 建物 + 地面（地平線・焦点距離に合わせる）
+      // 焦点距離による圧縮効果: 望遠→建物が大きく中央寄り、広角→建物が小さく端に
+      const fl = currentValues.focalLength || 50;
+      const compress = Math.min(2.0, Math.max(0.5, fl / 50)); // 50mm基準で0.5〜2.0倍
+      const bldgH = Math.min(80, groundY - 5) * Math.min(1.3, Math.max(0.7, compress * 0.8));
+      const bldgW = Math.round(24 * Math.min(1.5, compress));
+      // 広角: 建物が端に広がる、望遠: 建物が中央に寄る
+      const spread = Math.max(0.3, 1.2 - compress * 0.3); // 広角=1.0, 望遠=0.6
+      const lx1 = Math.round(10 * spread);
+      const lx2 = Math.round(42 * spread);
+      const rx1 = W - Math.round((W - 170) * spread) - bldgW;
+      const rx2 = W - Math.round((W - 200) * spread) - bldgW;
       if (bldgH > 10) {
-        bgG.appendChild(svgEl('rect', { x: '10', y: String(groundY - bldgH), width: '28', height: String(bldgH), fill: '#cbd5e1', rx: '2' }));
-        bgG.appendChild(svgEl('rect', { x: '42', y: String(groundY - bldgH * 0.7), width: '22', height: String(bldgH * 0.7), fill: '#94a3b8', rx: '2' }));
-        bgG.appendChild(svgEl('rect', { x: '170', y: String(groundY - bldgH * 0.9), width: '26', height: String(bldgH * 0.9), fill: '#cbd5e1', rx: '2' }));
-        bgG.appendChild(svgEl('rect', { x: '200', y: String(groundY - bldgH * 0.6), width: '24', height: String(bldgH * 0.6), fill: '#94a3b8', rx: '2' }));
+        bgG.appendChild(svgEl('rect', { x: String(lx1), y: String(groundY - bldgH), width: String(bldgW), height: String(bldgH), fill: '#cbd5e1', rx: '2' }));
+        bgG.appendChild(svgEl('rect', { x: String(lx2), y: String(groundY - bldgH * 0.7), width: String(Math.round(bldgW * 0.8)), height: String(bldgH * 0.7), fill: '#94a3b8', rx: '2' }));
+        bgG.appendChild(svgEl('rect', { x: String(rx1), y: String(groundY - bldgH * 0.9), width: String(bldgW), height: String(bldgH * 0.9), fill: '#cbd5e1', rx: '2' }));
+        bgG.appendChild(svgEl('rect', { x: String(rx2), y: String(groundY - bldgH * 0.6), width: String(Math.round(bldgW * 0.8)), height: String(bldgH * 0.6), fill: '#94a3b8', rx: '2' }));
       }
       bgG.appendChild(svgEl('rect', { x: '0', y: String(groundY), width: String(W), height: String(H - groundY), fill: '#86efac' }));
     }
@@ -921,23 +931,23 @@ const CameraEditor = (() => {
     return wrap;
   }
 
-  // 5. 構図 — ミニキャンバスSVGボタン
+  // 5. 構図 — 解説付きカード
   function renderCompositionVisual(key, ctrl) {
     const wrap = document.createElement('div');
     wrap.className = 'space-y-2';
 
     if (!currentValues[key]) currentValues[key] = [];
 
-    // カード群のコンテナ
+    // カード群のコンテナ（縦並び）
     const cardsContainer = document.createElement('div');
-    cardsContainer.className = 'flex flex-wrap gap-2';
+    cardsContainer.className = 'comp-card-container';
 
     // 「今までと同じ」チェックボックス
     const { keepRow, keepCheck } = createKeepCheckboxRow(key, (isKeep) => {
       keepFlags[key] = isKeep;
       if (isKeep) {
         currentValues[key] = [];
-        cardsContainer.querySelectorAll('.comp-visual-btn').forEach(b => b.classList.remove('selected'));
+        cardsContainer.querySelectorAll('.comp-card').forEach(b => b.classList.remove('selected'));
         cardsContainer.style.opacity = '0.4';
         /* pointerEvents維持: クリックでkeep解除可能 */
       } else {
@@ -1006,19 +1016,26 @@ const CameraEditor = (() => {
     ctrl.options.forEach(opt => {
       const btn = document.createElement('button');
       const isSelected = !keepFlags[key] && currentValues[key].includes(opt.value);
-      btn.className = `comp-visual-btn${isSelected ? ' selected' : ''}`;
+      btn.className = `comp-card${isSelected ? ' selected' : ''}`;
 
-      const svg = svgEl('svg', { width: '48', height: '48', viewBox: '0 0 48 48' });
-      // 枠線
+      const svg = svgEl('svg', { width: '36', height: '36', viewBox: '0 0 48 48' });
       svg.appendChild(svgEl('rect', { x: '0.5', y: '0.5', width: '47', height: '47', rx: '3', fill: 'white', stroke: '#e5e7eb', 'stroke-width': '1' }));
-      // パターン描画
       if (compDefs[opt.value]) compDefs[opt.value](svg);
 
-      btn.appendChild(svg);
+      const textWrap = document.createElement('div');
+      textWrap.className = 'comp-card-text';
       const lbl = document.createElement('span');
-      lbl.className = 'card-label';
+      lbl.className = 'comp-card-name';
       lbl.textContent = opt.label;
-      btn.appendChild(lbl);
+      textWrap.appendChild(lbl);
+      if (opt.desc) {
+        const descEl = document.createElement('span');
+        descEl.className = 'comp-card-desc';
+        descEl.textContent = opt.desc;
+        textWrap.appendChild(descEl);
+      }
+      btn.appendChild(svg);
+      btn.appendChild(textWrap);
 
       btn.addEventListener('click', () => {
         keepFlags[key] = false;
