@@ -267,6 +267,7 @@ const CameraEditor = (() => {
       focalLength: preset.values.focalLength,
       depthOfField: preset.values.depthOfField,
       composition: [...preset.values.composition],
+      _presetCategory: preset.category, // プレビュー被写体切り替え用
     };
     // 全てのkeepフラグを外す
     keepFlags = {
@@ -283,23 +284,9 @@ const CameraEditor = (() => {
     }
   }
 
-  // 組み合わせプレビューSVGを描画
-  function renderCombinedPreview(container) {
-    const section = document.createElement('div');
-    section.className = 'camera-control-section';
-
-    const title = document.createElement('p');
-    title.className = 'text-xs font-medium text-gray-500 dark:text-gray-400 mb-2';
-    title.textContent = '組み合わせプレビュー';
-    section.appendChild(title);
-
-    const previewWrap = document.createElement('div');
-    previewWrap.id = 'cameraCombinedPreview';
-    previewWrap.className = 'combined-preview-container';
-    updateCombinedPreviewSvg(previewWrap);
-    section.appendChild(previewWrap);
-
-    container.appendChild(section);
+  // 被写体カテゴリを判定（プリセットカテゴリ or デフォルト）
+  function getSubjectCategory() {
+    return currentValues._presetCategory || 'people';
   }
 
   // 組み合わせプレビューSVGを更新
@@ -308,63 +295,87 @@ const CameraEditor = (() => {
     if (!container) return;
     container.innerHTML = '';
 
+    // 何も設定されていない場合はプレースホルダー
+    const hasAny = !keepFlags.angle || !keepFlags.shotType || !keepFlags.focalLength || !keepFlags.depthOfField || !keepFlags.composition;
+    if (!hasAny) {
+      container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#9ca3af;font-size:11px;text-align:center;padding:12px;">設定を変更すると<br>プレビュー表示</div>';
+      return;
+    }
+
     const W = 240, H = 160;
     const svg = svgEl('svg', { width: '100%', height: '100%', viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'xMidYMid meet' });
+    const category = getSubjectCategory();
 
-    // 背景（空 + 地面）
+    // 背景
     const bgG = svgEl('g');
-    bgG.appendChild(svgEl('rect', { x: '0', y: '0', width: String(W), height: String(H), fill: '#e0f2fe', rx: '8' }));
-    // 建物
-    bgG.appendChild(svgEl('rect', { x: '10', y: '30', width: '30', height: '100', fill: '#cbd5e1', rx: '2' }));
-    bgG.appendChild(svgEl('rect', { x: '45', y: '50', width: '25', height: '80', fill: '#94a3b8', rx: '2' }));
-    bgG.appendChild(svgEl('rect', { x: '170', y: '35', width: '28', height: '95', fill: '#cbd5e1', rx: '2' }));
-    bgG.appendChild(svgEl('rect', { x: '205', y: '55', width: '25', height: '75', fill: '#94a3b8', rx: '2' }));
-    // 地面
-    bgG.appendChild(svgEl('rect', { x: '0', y: '120', width: String(W), height: '40', fill: '#86efac', rx: '0' }));
+    bgG.appendChild(svgEl('rect', { x: '0', y: '0', width: String(W), height: String(H), fill: '#e0f2fe', rx: '4' }));
+
+    if (category === 'landscape') {
+      // 風景背景: 山 + 木
+      bgG.appendChild(svgEl('path', { d: 'M0,100 L40,40 L80,90 L120,30 L160,80 L200,50 L240,100 Z', fill: '#94a3b8' }));
+      bgG.appendChild(svgEl('path', { d: 'M0,110 L60,60 L100,95 L140,55 L180,85 L240,65 L240,110 Z', fill: '#64748b' }));
+      bgG.appendChild(svgEl('rect', { x: '0', y: '110', width: String(W), height: '50', fill: '#86efac' }));
+      // 木
+      bgG.appendChild(svgEl('rect', { x: '30', y: '95', width: '4', height: '18', fill: '#92400e' }));
+      bgG.appendChild(svgEl('ellipse', { cx: '32', cy: '90', rx: '10', ry: '14', fill: '#22c55e' }));
+      bgG.appendChild(svgEl('rect', { x: '190', y: '90', width: '5', height: '22', fill: '#92400e' }));
+      bgG.appendChild(svgEl('ellipse', { cx: '192', cy: '84', rx: '12', ry: '16', fill: '#16a34a' }));
+    } else if (category === 'product') {
+      // 商品背景: シンプルなスタジオ風
+      bgG.appendChild(svgEl('rect', { x: '0', y: '0', width: String(W), height: String(H), fill: '#f1f5f9', rx: '4' }));
+      bgG.appendChild(svgEl('ellipse', { cx: String(W / 2), cy: '130', rx: '90', ry: '15', fill: '#e2e8f0' }));
+    } else {
+      // 人物背景: 建物 + 地面
+      bgG.appendChild(svgEl('rect', { x: '10', y: '30', width: '30', height: '100', fill: '#cbd5e1', rx: '2' }));
+      bgG.appendChild(svgEl('rect', { x: '45', y: '50', width: '25', height: '80', fill: '#94a3b8', rx: '2' }));
+      bgG.appendChild(svgEl('rect', { x: '170', y: '35', width: '28', height: '95', fill: '#cbd5e1', rx: '2' }));
+      bgG.appendChild(svgEl('rect', { x: '205', y: '55', width: '25', height: '75', fill: '#94a3b8', rx: '2' }));
+      bgG.appendChild(svgEl('rect', { x: '0', y: '120', width: String(W), height: '40', fill: '#86efac' }));
+    }
     svg.appendChild(bgG);
 
-    // 被写体（人物） — ショットタイプで表示範囲を変える
+    // 被写体
     const shotType = currentValues.shotType || 'medium';
     const angle = currentValues.angle || 'eye-level';
 
-    // 人物のスケールと位置をショットタイプで調整
     const shotScales = {
-      'extreme-close': { scale: 4.0, personY: -40 },
-      'close-up': { scale: 2.5, personY: -10 },
-      'medium': { scale: 1.5, personY: 20 },
-      'full': { scale: 1.0, personY: 40 },
-      'wide': { scale: 0.6, personY: 60 },
+      'extreme-close': { scale: 4.0, y: -40 },
+      'close-up': { scale: 2.5, y: -10 },
+      'medium': { scale: 1.5, y: 20 },
+      'full': { scale: 1.0, y: 40 },
+      'wide': { scale: 0.6, y: 60 },
     };
     const shotDef = shotScales[shotType] || shotScales['medium'];
 
-    // アングルによる人物のY位置調整
-    const angleOffsets = {
-      'worms-eye': -15,
-      'low': -8,
-      'eye-level': 0,
-      'high': 8,
-      'birds-eye': 20,
-    };
-    const angleOffset = angleOffsets[angle] || 0;
+    const angleOffsets = { 'worms-eye': -15, 'low': -8, 'eye-level': 0, 'high': 8, 'birds-eye': 20 };
+    const angleOff = angleOffsets[angle] || 0;
 
-    // 人物描画
-    const personG = svgEl('g', {
-      transform: `translate(120, ${shotDef.personY + angleOffset}) scale(${shotDef.scale})`,
-    });
-    personG.appendChild(svgEl('path', {
-      d: 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5',
-      fill: '#6d28d9',
-    }));
-    svg.appendChild(personG);
+    if (category === 'people') {
+      // 人物シルエット
+      const g = svgEl('g', { transform: `translate(120, ${shotDef.y + angleOff}) scale(${shotDef.scale})` });
+      g.appendChild(svgEl('path', { d: 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5', fill: '#6d28d9' }));
+      svg.appendChild(g);
+    } else if (category === 'product') {
+      // 商品シルエット（箱 + 小瓶）
+      const prodScale = shotDef.scale * 0.8;
+      const g = svgEl('g', { transform: `translate(120, ${shotDef.y + angleOff + 10}) scale(${prodScale})` });
+      // メイン商品（箱）
+      g.appendChild(svgEl('rect', { x: '-14', y: '-20', width: '28', height: '24', rx: '3', fill: '#6d28d9' }));
+      g.appendChild(svgEl('rect', { x: '-12', y: '-18', width: '24', height: '4', rx: '1', fill: '#8b5cf6' }));
+      // 小瓶
+      g.appendChild(svgEl('rect', { x: '18', y: '-14', width: '10', height: '18', rx: '2', fill: '#7c3aed' }));
+      g.appendChild(svgEl('rect', { x: '20', y: '-18', width: '6', height: '5', rx: '1', fill: '#a78bfa' }));
+      svg.appendChild(g);
+    }
+    // 風景: 被写体なし（背景のみ）
 
-    // ボケ効果（背景にぼかし）
+    // ボケ効果
     const dof = currentValues.depthOfField;
     if (dof && !keepFlags.depthOfField) {
       const maxBlur = 3;
       const ratio = 1 - (dof - 1.4) / (16 - 1.4);
       const blurPx = Math.max(0, ratio * maxBlur);
       if (blurPx > 0.3) {
-        // SVG filterでぼかし
         const filterId = 'combinedDofBlur';
         const defs = svgEl('defs');
         const filter = svgEl('filter', { id: filterId, x: '-10%', y: '-10%', width: '120%', height: '120%' });
@@ -375,80 +386,63 @@ const CameraEditor = (() => {
       }
     }
 
-    // 構図ガイドライン（オーバーレイ）
+    // 構図ガイドライン
     const compositions = (!keepFlags.composition && currentValues.composition) ? currentValues.composition : [];
-    const guideG = svgEl('g', { opacity: '0.6' });
-
-    compositions.forEach(comp => {
-      if (comp === 'rule-of-thirds') {
-        // 三分割線
-        for (let i = 1; i <= 2; i++) {
-          const x = (i / 3) * W;
-          const y = (i / 3) * H;
-          guideG.appendChild(svgEl('line', { x1: String(x), y1: '0', x2: String(x), y2: String(H), stroke: '#f59e0b', 'stroke-width': '1', 'stroke-dasharray': '6,3' }));
-          guideG.appendChild(svgEl('line', { x1: '0', y1: String(y), x2: String(W), y2: String(y), stroke: '#f59e0b', 'stroke-width': '1', 'stroke-dasharray': '6,3' }));
-        }
-        // 交点
-        for (let i = 1; i <= 2; i++) {
-          for (let j = 1; j <= 2; j++) {
-            guideG.appendChild(svgEl('circle', { cx: String((i / 3) * W), cy: String((j / 3) * H), r: '4', fill: 'rgba(245,158,11,0.5)', stroke: '#f59e0b', 'stroke-width': '1' }));
+    if (compositions.length > 0) {
+      const guideG = svgEl('g', { opacity: '0.5' });
+      compositions.forEach(comp => {
+        if (comp === 'rule-of-thirds') {
+          for (let i = 1; i <= 2; i++) {
+            guideG.appendChild(svgEl('line', { x1: String((i / 3) * W), y1: '0', x2: String((i / 3) * W), y2: String(H), stroke: '#f59e0b', 'stroke-width': '0.8', 'stroke-dasharray': '4,2' }));
+            guideG.appendChild(svgEl('line', { x1: '0', y1: String((i / 3) * H), x2: String(W), y2: String((i / 3) * H), stroke: '#f59e0b', 'stroke-width': '0.8', 'stroke-dasharray': '4,2' }));
           }
+          for (let i = 1; i <= 2; i++) for (let j = 1; j <= 2; j++) {
+            guideG.appendChild(svgEl('circle', { cx: String((i / 3) * W), cy: String((j / 3) * H), r: '3', fill: 'rgba(245,158,11,0.4)', stroke: '#f59e0b', 'stroke-width': '0.8' }));
+          }
+        } else if (comp === 'symmetry') {
+          guideG.appendChild(svgEl('line', { x1: String(W / 2), y1: '0', x2: String(W / 2), y2: String(H), stroke: '#3b82f6', 'stroke-width': '1', 'stroke-dasharray': '6,3' }));
+        } else if (comp === 'leading-lines') {
+          const vpX = W / 2, vpY = H * 0.35;
+          [[0, H], [W, H], [0, 0], [W, 0]].forEach(([sx, sy]) => {
+            guideG.appendChild(svgEl('line', { x1: String(sx), y1: String(sy), x2: String(vpX), y2: String(vpY), stroke: '#10b981', 'stroke-width': '0.8', 'stroke-dasharray': '4,2' }));
+          });
+          guideG.appendChild(svgEl('circle', { cx: String(vpX), cy: String(vpY), r: '4', fill: 'rgba(16,185,129,0.3)', stroke: '#10b981', 'stroke-width': '1' }));
+        } else if (comp === 'center') {
+          guideG.appendChild(svgEl('circle', { cx: String(W / 2), cy: String(H / 2), r: '20', fill: 'none', stroke: '#ef4444', 'stroke-width': '1', 'stroke-dasharray': '4,2' }));
+        } else if (comp === 'negative-space') {
+          guideG.appendChild(svgEl('rect', { x: '6', y: '6', width: String(W - 12), height: String(H - 12), fill: 'none', stroke: '#8b5cf6', 'stroke-width': '1', 'stroke-dasharray': '6,3', rx: '3' }));
         }
-      } else if (comp === 'symmetry') {
-        // 中央対称線
-        guideG.appendChild(svgEl('line', { x1: String(W / 2), y1: '0', x2: String(W / 2), y2: String(H), stroke: '#3b82f6', 'stroke-width': '1.5', 'stroke-dasharray': '8,4' }));
-        guideG.appendChild(svgEl('line', { x1: '0', y1: String(H / 2), x2: String(W), y2: String(H / 2), stroke: '#3b82f6', 'stroke-width': '1.5', 'stroke-dasharray': '8,4' }));
-      } else if (comp === 'leading-lines') {
-        // 消失点に向かう導線
-        const vpX = W / 2, vpY = H * 0.35;
-        [[0, H], [W, H], [0, 0], [W, 0]].forEach(([sx, sy]) => {
-          guideG.appendChild(svgEl('line', { x1: String(sx), y1: String(sy), x2: String(vpX), y2: String(vpY), stroke: '#10b981', 'stroke-width': '1', 'stroke-dasharray': '5,3' }));
-        });
-        guideG.appendChild(svgEl('circle', { cx: String(vpX), cy: String(vpY), r: '5', fill: 'rgba(16,185,129,0.4)', stroke: '#10b981', 'stroke-width': '1.5' }));
-      } else if (comp === 'center') {
-        // 中央十字 + 円
-        guideG.appendChild(svgEl('line', { x1: String(W / 2), y1: String(H * 0.15), x2: String(W / 2), y2: String(H * 0.85), stroke: '#ef4444', 'stroke-width': '1', 'stroke-dasharray': '5,3' }));
-        guideG.appendChild(svgEl('line', { x1: String(W * 0.15), y1: String(H / 2), x2: String(W * 0.85), y2: String(H / 2), stroke: '#ef4444', 'stroke-width': '1', 'stroke-dasharray': '5,3' }));
-        guideG.appendChild(svgEl('circle', { cx: String(W / 2), cy: String(H / 2), r: '25', fill: 'none', stroke: '#ef4444', 'stroke-width': '1.5', 'stroke-dasharray': '5,3' }));
-      } else if (comp === 'negative-space') {
-        // 余白エリアを示す半透明の枠
-        guideG.appendChild(svgEl('rect', { x: '8', y: '8', width: String(W - 16), height: String(H - 16), fill: 'none', stroke: '#8b5cf6', 'stroke-width': '1.5', 'stroke-dasharray': '8,4', rx: '4' }));
-        // 被写体は小さいことを示すマーク
-        guideG.appendChild(svgEl('circle', { cx: String(W * 0.7), cy: String(H * 0.65), r: '12', fill: 'none', stroke: '#8b5cf6', 'stroke-width': '1', 'stroke-dasharray': '3,2' }));
-      }
-    });
-    svg.appendChild(guideG);
-
-    // アングルインジケーター（右下）
-    if (!keepFlags.angle && currentValues.angle) {
-      const indG = svgEl('g', { transform: `translate(${W - 35}, 12)` });
-      const angleLabelMap = { 'worms-eye': '地面', 'low': '低い', 'eye-level': '目線', 'high': '斜め上', 'birds-eye': '真上' };
-      indG.appendChild(svgEl('rect', { x: '0', y: '0', width: '30', height: '16', rx: '4', fill: 'rgba(139,92,246,0.85)' }));
-      const txt = svgEl('text', { x: '15', y: '12', 'text-anchor': 'middle', 'font-size': '8', fill: 'white', 'font-weight': 'bold' });
-      txt.textContent = angleLabelMap[currentValues.angle] || '';
-      indG.appendChild(txt);
-      svg.appendChild(indG);
+      });
+      svg.appendChild(guideG);
     }
 
-    // レンズ情報（左下）
+    // 情報バッジ（左上・右上）
+    let badgeY = 6;
     if (!keepFlags.focalLength && currentValues.focalLength) {
-      const lensG = svgEl('g', { transform: `translate(5, 12)` });
-      lensG.appendChild(svgEl('rect', { x: '0', y: '0', width: '34', height: '16', rx: '4', fill: 'rgba(59,130,246,0.85)' }));
-      const txt = svgEl('text', { x: '17', y: '12', 'text-anchor': 'middle', 'font-size': '8', fill: 'white', 'font-weight': 'bold' });
-      txt.textContent = `${currentValues.focalLength}mm`;
-      lensG.appendChild(txt);
-      svg.appendChild(lensG);
+      const g = svgEl('g', { transform: `translate(5, ${badgeY})` });
+      g.appendChild(svgEl('rect', { x: '0', y: '0', width: '32', height: '14', rx: '3', fill: 'rgba(59,130,246,0.8)' }));
+      const t = svgEl('text', { x: '16', y: '10.5', 'text-anchor': 'middle', 'font-size': '7', fill: 'white', 'font-weight': 'bold', 'font-family': 'system-ui,sans-serif' });
+      t.textContent = `${currentValues.focalLength}mm`;
+      g.appendChild(t);
+      svg.appendChild(g);
     }
-
-    // 何も設定されていない場合のメッセージ
-    const hasAny = !keepFlags.angle || !keepFlags.shotType || !keepFlags.focalLength || !keepFlags.depthOfField || !keepFlags.composition;
-    if (!hasAny) {
-      const msgG = svgEl('g');
-      msgG.appendChild(svgEl('rect', { x: String(W / 2 - 70), y: String(H / 2 - 12), width: '140', height: '24', rx: '6', fill: 'rgba(0,0,0,0.4)' }));
-      const msg = svgEl('text', { x: String(W / 2), y: String(H / 2 + 4), 'text-anchor': 'middle', 'font-size': '11', fill: 'white' });
-      msg.textContent = '設定を変更するとプレビュー表示';
-      msgG.appendChild(msg);
-      svg.appendChild(msgG);
+    if (!keepFlags.angle && currentValues.angle) {
+      const labelMap = { 'worms-eye': '地面', 'low': '低い', 'eye-level': '目線', 'high': '斜め上', 'birds-eye': '真上' };
+      const label = labelMap[currentValues.angle] || '';
+      const g = svgEl('g', { transform: `translate(${W - 33}, ${badgeY})` });
+      g.appendChild(svgEl('rect', { x: '0', y: '0', width: '28', height: '14', rx: '3', fill: 'rgba(139,92,246,0.8)' }));
+      const t = svgEl('text', { x: '14', y: '10.5', 'text-anchor': 'middle', 'font-size': '7', fill: 'white', 'font-weight': 'bold', 'font-family': 'system-ui,sans-serif' });
+      t.textContent = label;
+      g.appendChild(t);
+      svg.appendChild(g);
+    }
+    if (!keepFlags.depthOfField && currentValues.depthOfField) {
+      const g = svgEl('g', { transform: `translate(5, ${H - 18})` });
+      g.appendChild(svgEl('rect', { x: '0', y: '0', width: '28', height: '14', rx: '3', fill: 'rgba(0,0,0,0.4)' }));
+      const t = svgEl('text', { x: '14', y: '10.5', 'text-anchor': 'middle', 'font-size': '7', fill: 'white', 'font-family': 'system-ui,sans-serif' });
+      t.textContent = `f/${parseFloat(currentValues.depthOfField).toFixed(1)}`;
+      g.appendChild(t);
+      svg.appendChild(g);
     }
 
     container.appendChild(svg);
@@ -473,26 +467,54 @@ const CameraEditor = (() => {
     divider.className = 'camera-divider';
     container.appendChild(divider);
 
-    Object.entries(CONTROLS).forEach(([key, ctrl]) => {
+    // 2カラムレイアウト: 左にアングル・距離、右にプレビュー
+    const twoCol = document.createElement('div');
+    twoCol.className = 'camera-two-col';
+
+    const leftCol = document.createElement('div');
+    leftCol.className = 'camera-col-left';
+
+    const rightCol = document.createElement('div');
+    rightCol.className = 'camera-col-right';
+
+    // プレビューを右カラムに配置
+    const previewWrap = document.createElement('div');
+    previewWrap.id = 'cameraCombinedPreview';
+    previewWrap.className = 'combined-preview-container';
+    rightCol.appendChild(previewWrap);
+
+    // アングルと距離は左カラムに
+    ['angle', 'shotType'].forEach(key => {
+      const ctrl = CONTROLS[key];
       const section = document.createElement('div');
       section.className = 'camera-control-section';
-
       const label = document.createElement('p');
       label.className = 'text-xs font-medium text-gray-500 dark:text-gray-400 mb-2';
       label.textContent = ctrl.label;
       section.appendChild(label);
-
       if (key === 'angle') section.appendChild(renderAngleVisual(key, ctrl));
-      else if (key === 'shotType') section.appendChild(renderShotTypeVisual(key, ctrl));
-      else if (key === 'focalLength') section.appendChild(renderFocalLengthVisual(key, ctrl));
-      else if (key === 'depthOfField') section.appendChild(renderDepthOfFieldVisual(key, ctrl));
-      else if (key === 'composition') section.appendChild(renderCompositionVisual(key, ctrl));
-
-      container.appendChild(section);
+      else section.appendChild(renderShotTypeVisual(key, ctrl));
+      leftCol.appendChild(section);
     });
 
-    // 組み合わせプレビュー
-    renderCombinedPreview(container);
+    twoCol.appendChild(leftCol);
+    twoCol.appendChild(rightCol);
+    container.appendChild(twoCol);
+
+    // 残りのコントロール（レンズ・ボケ・構図）は通常配置
+    ['focalLength', 'depthOfField', 'composition'].forEach(key => {
+      const ctrl = CONTROLS[key];
+      const section = document.createElement('div');
+      section.className = 'camera-control-section';
+      const label = document.createElement('p');
+      label.className = 'text-xs font-medium text-gray-500 dark:text-gray-400 mb-2';
+      label.textContent = ctrl.label;
+      section.appendChild(label);
+      if (key === 'focalLength') section.appendChild(renderFocalLengthVisual(key, ctrl));
+      else if (key === 'depthOfField') section.appendChild(renderDepthOfFieldVisual(key, ctrl));
+      else section.appendChild(renderCompositionVisual(key, ctrl));
+      container.appendChild(section);
+    });
 
     updatePreview();
   }

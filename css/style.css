@@ -858,14 +858,34 @@ button {
   margin: 8px 0;
 }
 
+/* 2カラムレイアウト（アングル・距離 + プレビュー） */
+.camera-two-col {
+  display: flex;
+  gap: 12px;
+}
+
+.camera-col-left {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.camera-col-right {
+  flex: 1 1 0;
+  min-width: 160px;
+  display: flex;
+  align-items: stretch;
+}
+
 /* 組み合わせプレビュー */
 .combined-preview-container {
   width: 100%;
-  aspect-ratio: 3 / 2;
   border: 1.5px solid #e5e7eb;
   border-radius: 10px;
   overflow: hidden;
   background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .combined-preview-container svg {
