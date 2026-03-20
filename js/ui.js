@@ -251,10 +251,13 @@ const UI = (() => {
                     const elId = card.dataset.elementId;
                     if (elId === 'camera' || elId === 'global') return;
                     const clone = card.cloneNode(true);
+                    // ダークUI用スタイル: 白文字・半透明背景・コンパクト
+                    clone.className = 'text-white bg-white/15 border border-white/30 rounded-lg px-2.5 py-1.5 text-xs font-medium hover:bg-white/30 transition-all cursor-pointer';
                     clone.style.pointerEvents = 'auto';
-                    clone.style.cursor = 'pointer';
                     clone.addEventListener('click', (ev) => {
                       ev.stopPropagation();
+                      // 選択状態をトグル
+                      clone.classList.toggle('zoom-group-selected');
                       card.click();
                     });
                     zoomGroupList.appendChild(clone);
@@ -1338,7 +1341,7 @@ const UI = (() => {
 
     visibleElements.forEach((el, i) => {
       const row = document.createElement('div');
-      row.className = 'edit-instruction-row border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-2';
+      row.className = 'edit-instruction-row py-3 space-y-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0';
       row.dataset.instructionFor = el.id;
 
       const header = document.createElement('div');
@@ -1398,11 +1401,16 @@ const UI = (() => {
 
         // 通常: テキストエリア
         const textarea = document.createElement('textarea');
-        textarea.rows = 2;
-        textarea.className = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none';
+        textarea.rows = 1;
+        textarea.className = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none overflow-hidden';
         textarea.placeholder = getPlaceholder(el.type);
         textarea.dataset.elementId = el.id;
         if (savedValues[el.id]) textarea.value = savedValues[el.id];
+        // 自動拡張
+        const autoResize = () => { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; };
+        textarea.addEventListener('input', autoResize);
+        textarea.addEventListener('focus', autoResize);
+        if (savedValues[el.id]) setTimeout(autoResize, 0);
         row.appendChild(textarea);
         container.appendChild(row);
 
