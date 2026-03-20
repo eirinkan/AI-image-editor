@@ -39,11 +39,11 @@ const CameraEditor = (() => {
       label: 'アングル（高さ）',
       type: 'select',
       options: [
-        { value: 'worms-eye', label: '地面から', icon: '🐛', prompt: "view looking steeply upward from ground level. The horizon line is at the very bottom edge. We see undersides of subjects (chins, belly). Sky and ceiling dominate the upper frame. Subjects tower above the viewer" },
-        { value: 'low', label: '低い', icon: '⬇️', prompt: 'view looking slightly upward from below subject height. The horizon line moves to the lower third of the frame. Subjects appear taller and more imposing. We see slightly under their chins. More sky visible above' },
-        { value: 'eye-level', label: '目線', icon: '👁', prompt: 'straight-on view at subject eye height. The horizon line is near the middle of the frame. Natural everyday perspective' },
-        { value: 'high', label: '斜め上', icon: '📐', prompt: 'view looking downward at roughly 45 degrees from above. The horizon line moves to the upper third of the frame. We see more of the ground and tops of heads. Subjects appear smaller. More ground/floor surface visible' },
-        { value: 'birds-eye', label: '真上', icon: '🦅', prompt: "view looking straight down from directly above. No horizon line visible. We see only the tops of everything: tops of heads, rooftops, ground surface fills the frame. All subjects seen from directly overhead" },
+        { value: 'worms-eye', label: '地面から', icon: '🐛', prompt: "extreme low-angle shot, worm's eye view from ground level looking steeply upward" },
+        { value: 'low', label: '低い', icon: '⬇️', prompt: 'low-angle shot, camera positioned below subject looking upward' },
+        { value: 'eye-level', label: '目線', icon: '👁', prompt: 'eye-level shot, camera at subject eye height, straight-on perspective' },
+        { value: 'high', label: '斜め上', icon: '📐', prompt: 'elevated shot, high-angle shot looking down at 45 degrees' },
+        { value: 'birds-eye', label: '真上', icon: '🦅', prompt: "bird's eye view, directly overhead top-down perspective" },
       ],
     },
     shotType: {
@@ -1011,6 +1011,8 @@ const CameraEditor = (() => {
     // composition — 削除済み（既存画像の編集では構図変更が不自然になるため）
 
     if (parts.length === 0) return '';
+    // 左右回転を防止: 元画像の水平方向の視点を維持する指示を追加
+    parts.push('keep the same horizontal viewing angle as the original image (do not orbit left or right around the subject)');
     return `Change camera to: ${parts.join(', ')}`;
   }
 

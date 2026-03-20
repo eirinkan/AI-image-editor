@@ -447,18 +447,19 @@ Output ONLY the updated JSON, no other text.`;
       const isCameraOnly = hasCameraDiff && Object.keys(diff).length === 1;
 
       if (isCameraOnly) {
-        // カメラのみ変更: 視覚的変化を具体的に指示し、要素保護を徹底
-        return `Tilt the camera vertically to change the viewing angle of this image. Think of it as tilting a camera on a fixed tripod — the camera does NOT move left, right, forward, or backward. It only tilts up or down.
+        // カメラのみ変更: 要素の位置関係を保護するため、最小限のプロンプト
+        return `Change ONLY the camera angle/perspective of this image.
 
+Camera change:
 ${changeDesc}
 
-ABSOLUTE RULES (violation = failure):
-1. LEFT-RIGHT ARRANGEMENT: If element A is to the left of element B in the original, A must STILL be to the left of B. Never mirror or swap horizontal positions.
-2. FACING DIRECTION: Every person, animal, and object must face the SAME direction as in the original. Do not flip or reverse any subject.
-3. NO ADDITIONS OR REMOVALS: The exact same set of elements must appear. Do not add new objects or remove existing ones.
-4. APPEARANCE: All characters keep their exact same design, clothing, colors, pose, and proportions.
-5. ART STYLE: Keep the identical illustration/rendering style. Do not change to a different visual style.
-6. HORIZONTAL POSITION: The camera does NOT orbit around the scene. It only tilts up or down on a fixed tripod. The left-right viewing direction stays the same.
+CRITICAL RULES:
+- Change ONLY the camera viewpoint. Everything else must stay EXACTLY as it is.
+- Every person, object, and element must remain in the SAME position relative to each other.
+- Do NOT move, add, remove, or rearrange any elements in the scene.
+- Do NOT change the art style, colors, character designs, poses, or clothing.
+- The spatial layout and composition of elements must be preserved — only the viewing angle changes.
+- Do NOT orbit the camera horizontally (left/right). Only change the vertical angle (up/down).
 Generate the edited image.`;
       }
 
