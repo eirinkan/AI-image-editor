@@ -1010,7 +1010,10 @@ const CameraEditor = (() => {
 
     // composition — 削除済み（既存画像の編集では構図変更が不自然になるため）
 
-    return parts.length > 0 ? `Change camera to: ${parts.join(', ')}` : '';
+    if (parts.length === 0) return '';
+    // 左右回転を防止: 元画像の水平方向の視点を維持する指示を追加
+    parts.push('keep the same horizontal viewing angle as the original image (do not orbit left or right around the subject)');
+    return `Change camera to: ${parts.join(', ')}`;
   }
 
   // プレビュー更新
