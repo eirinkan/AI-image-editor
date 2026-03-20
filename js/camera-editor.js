@@ -1022,15 +1022,8 @@ const CameraEditor = (() => {
       if (opt) parts.push(opt.prompt);
     }
 
-    // focalLength（keepなら除外）
-    if (!keepFlags.focalLength && currentValues.focalLength) {
-      parts.push(CONTROLS.focalLength.toPrompt(currentValues.focalLength));
-    }
-
-    // depthOfField（keepなら除外）
-    if (!keepFlags.depthOfField && currentValues.depthOfField) {
-      parts.push(CONTROLS.depthOfField.toPrompt(currentValues.depthOfField));
-    }
+    // focalLength — プロンプトに含めない（画風に影響するため、プレビューのみで表示）
+    // depthOfField — プロンプトに含めない（同上）
 
     // composition（keepなら除外）
     if (!keepFlags.composition && currentValues.composition && currentValues.composition.length > 0) {

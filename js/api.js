@@ -412,8 +412,7 @@ Output ONLY the updated JSON, no other text.`;
         const compositionIsShot = cam.composition && shotTypePattern.test(cam.composition);
         const shotType = cam.shot_type || (compositionIsShot ? cam.composition : null);
         if (shotType) parts.push(`Shot type: ${shotType}`);
-        if (cam.focal_length) parts.push(`Focal length: ${cam.focal_length}`);
-        if (cam.depth_of_field) parts.push(`Depth of field: ${cam.depth_of_field}`);
+        // focal_length, depth_of_field はプロンプトに含めない（画風に影響するため）
         if (cam.perspective) parts.push(`Perspective: ${cam.perspective}`);
         // compositionがshot typeとして使われた場合は重複出力しない
         if (cam.composition && !compositionIsShot) parts.push(`Composition: ${cam.composition}`);
