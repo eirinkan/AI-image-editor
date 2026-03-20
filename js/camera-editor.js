@@ -387,55 +387,32 @@ const CameraEditor = (() => {
     const dof = currentValues.depthOfField;
     if (dof && !keepFlags.depthOfField) {
       const dofLabel = dof <= 2.8 ? 'ボケ強' : dof >= 11 ? 'くっきり' : '適度';
-      const t = svgEl('text', { x: String(W / 2), y: String(H - 5), 'text-anchor': 'middle', 'font-size': '8', fill: '#9ca3af', 'font-family': 'system-ui,sans-serif' });
+      // 右下に配置
+      const t = svgEl('text', { x: String(W - 5), y: String(H - 5), 'text-anchor': 'end', 'font-size': '7', fill: '#9ca3af', 'font-family': 'system-ui,sans-serif' });
       t.textContent = `f/${parseFloat(dof).toFixed(1)} ${dofLabel}`;
       svg.appendChild(t);
     }
 
-    // === 6. 構図 → 小さなフレーム内にガイドライン（独立） ===
-    const compositions = (!keepFlags.composition && currentValues.composition) ? currentValues.composition : [];
-    if (compositions.length > 0) {
-      // 右上に小さな写真フレームを表示してガイドラインを描画
-      const fx = W - 65, fy = 5, fw = 58, fh = 38;
-      svg.appendChild(svgEl('rect', { x: String(fx), y: String(fy), width: String(fw), height: String(fh), fill: 'white', stroke: '#e5e7eb', 'stroke-width': '1', rx: '2' }));
-      const guideG = svgEl('g', { opacity: '0.6' });
-      compositions.forEach(comp => {
-        if (comp === 'rule-of-thirds') {
-          for (let i = 1; i <= 2; i++) {
-            guideG.appendChild(svgEl('line', { x1: String(fx + (i / 3) * fw), y1: String(fy), x2: String(fx + (i / 3) * fw), y2: String(fy + fh), stroke: '#f59e0b', 'stroke-width': '0.6' }));
-            guideG.appendChild(svgEl('line', { x1: String(fx), y1: String(fy + (i / 3) * fh), x2: String(fx + fw), y2: String(fy + (i / 3) * fh), stroke: '#f59e0b', 'stroke-width': '0.6' }));
-          }
-        } else if (comp === 'symmetry') {
-          guideG.appendChild(svgEl('line', { x1: String(fx + fw / 2), y1: String(fy), x2: String(fx + fw / 2), y2: String(fy + fh), stroke: '#3b82f6', 'stroke-width': '0.8', 'stroke-dasharray': '3,2' }));
-        } else if (comp === 'leading-lines') {
-          guideG.appendChild(svgEl('line', { x1: String(fx), y1: String(fy + fh), x2: String(fx + fw / 2), y2: String(fy + fh * 0.3), stroke: '#10b981', 'stroke-width': '0.6' }));
-          guideG.appendChild(svgEl('line', { x1: String(fx + fw), y1: String(fy + fh), x2: String(fx + fw / 2), y2: String(fy + fh * 0.3), stroke: '#10b981', 'stroke-width': '0.6' }));
-        } else if (comp === 'center') {
-          guideG.appendChild(svgEl('circle', { cx: String(fx + fw / 2), cy: String(fy + fh / 2), r: '8', fill: 'none', stroke: '#ef4444', 'stroke-width': '0.8' }));
-        } else if (comp === 'negative-space') {
-          guideG.appendChild(svgEl('rect', { x: String(fx + 3), y: String(fy + 3), width: String(fw - 6), height: String(fh - 6), fill: 'none', stroke: '#8b5cf6', 'stroke-width': '0.8', 'stroke-dasharray': '3,2', rx: '2' }));
-        }
-      });
-      svg.appendChild(guideG);
-    }
-
-    // === 7. ラベル ===
-    if (!keepFlags.focalLength && fl) {
-      const t = svgEl('text', { x: String(camX), y: String(Math.round(camY) - 10), 'text-anchor': 'middle', 'font-size': '8', fill: '#8b5cf6', 'font-weight': 'bold', 'font-family': 'system-ui,sans-serif' });
-      t.textContent = `${fl}mm`;
-      svg.appendChild(t);
-    }
+    // === 7. ラベル（被らないよう配置） ===
+    // カメラ横にレンズ+アングルをまとめて表示
+    const labelParts = [];
+    if (!keepFlags.focalLength && fl) labelParts.push(`${fl}mm`);
     if (!keepFlags.angle) {
       const angleLabels = { 'worms-eye': '地面から', 'low': '低い', 'eye-level': '目線', 'high': '斜め上', 'birds-eye': '真上' };
-      const t = svgEl('text', { x: String(camX), y: String(Math.round(camY) + 18), 'text-anchor': 'middle', 'font-size': '7', fill: '#6b7280', 'font-family': 'system-ui,sans-serif' });
-      t.textContent = angleLabels[angle] || '';
+      labelParts.push(angleLabels[angle] || '');
+    }
+    if (labelParts.length > 0) {
+      // カメラの上に表示（上に余裕がなければ右横に）
+      const labelY = camY > 25 ? Math.round(camY) - 12 : Math.round(camY) + 20;
+      const t = svgEl('text', { x: String(camX + 4), y: String(labelY), 'text-anchor': 'middle', 'font-size': '7', fill: '#8b5cf6', 'font-weight': 'bold', 'font-family': 'system-ui,sans-serif' });
+      t.textContent = labelParts.join(' / ');
       svg.appendChild(t);
     }
+    // 距離ラベル（左下）
     if (!keepFlags.shotType) {
       const shotLabels = { 'extreme-close': '超接写', 'close-up': '接写', 'medium': '上半身', 'full': '全身', 'wide': '広い' };
-      const midX = (camX + subjectX) / 2;
-      const t = svgEl('text', { x: String(Math.round(midX)), y: String(groundY + 14), 'text-anchor': 'middle', 'font-size': '7', fill: '#6b7280', 'font-family': 'system-ui,sans-serif' });
-      t.textContent = shotLabels[shotType] || '';
+      const t = svgEl('text', { x: '5', y: String(H - 5), 'text-anchor': 'start', 'font-size': '7', fill: '#6b7280', 'font-family': 'system-ui,sans-serif' });
+      t.textContent = `距離: ${shotLabels[shotType] || ''}`;
       svg.appendChild(t);
     }
 
