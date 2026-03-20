@@ -31,6 +31,7 @@ const CameraEditor = (() => {
   let currentContainer = null;
   let currentCameraJson = null;
   let presetApplied = false; // プリセット適用時にinferFromJsonをスキップするフラグ
+  let selectedPresetName = null; // 現在選択中のプリセット名
 
   // コントロール定義
   const CONTROLS = {
@@ -240,7 +241,7 @@ const CameraEditor = (() => {
     const filtered = PRESETS.filter(p => p.category === currentPresetCategory);
     filtered.forEach(preset => {
       const btn = document.createElement('button');
-      btn.className = 'preset-btn';
+      btn.className = `preset-btn${selectedPresetName === preset.name ? ' selected' : ''}`;
       const nameSpan = document.createElement('span');
       nameSpan.className = 'preset-btn-name';
       nameSpan.textContent = preset.name;
@@ -260,6 +261,7 @@ const CameraEditor = (() => {
 
   // プリセットを適用
   function applyPreset(preset) {
+    selectedPresetName = preset.name;
     // 値を適用
     currentValues = {
       angle: preset.values.angle,
@@ -757,19 +759,11 @@ const CameraEditor = (() => {
     sliderRow.appendChild(valueDisplay);
     wrap.appendChild(sliderRow);
 
-    // 画角SVG
-    const svgContainer = document.createElement('div');
-    svgContainer.className = 'focal-svg-container';
-    const fovSvg = createFovSvg(val);
-    svgContainer.appendChild(fovSvg);
-    wrap.appendChild(svgContainer);
-
     // keepチェック時にスライダーをdisabledにする
     function applyKeepState(isKeep) {
       keepFlags[key] = isKeep;
       input.disabled = isKeep;
       sliderRow.style.opacity = isKeep ? '0.4' : '1';
-      svgContainer.style.opacity = isKeep ? '0.4' : '1';
       updatePreview();
     }
     applyKeepState(!!keepFlags[key]);
@@ -784,24 +778,17 @@ const CameraEditor = (() => {
       keepFlags[key] = false;
       keepCheck.checked = false;
       sliderRow.style.opacity = '1';
-      svgContainer.style.opacity = '1';
       valueDisplay.textContent = `${v}${ctrl.unit || ''}`;
-      // 画角SVG更新
-      svgContainer.innerHTML = '';
-      svgContainer.appendChild(createFovSvg(v));
       updatePreview();
     });
 
     return wrap;
   }
 
-  // 画角（FoV）扇形SVGを生成
+  // 画角（FoV）扇形SVGを生成（未使用・将来用に保持）
   function createFovSvg(focalLength) {
-    // 焦点距離→画角の近似変換（35mmフルフレーム基準）
     const fovDeg = 2 * Math.atan(18 / focalLength) * 180 / Math.PI;
     const svg = svgEl('svg', { width: '160', height: '50', viewBox: '0 0 160 50' });
-
-    // カメラ位置（左端中央）
     const cx = 10, cy = 25;
     const len = 140;
     const halfRad = (fovDeg / 2) * Math.PI / 180;
@@ -875,66 +862,11 @@ const CameraEditor = (() => {
     sliderRow.appendChild(valueDisplay);
     wrap.appendChild(sliderRow);
 
-    // ボケプレビュー（3層SVG）
-    const previewContainer = document.createElement('div');
-    previewContainer.className = 'dof-preview-container';
-
-    // 背景層（建物シルエット）
-    const bgSvg = svgEl('svg', { width: '100%', height: '100%', viewBox: '0 0 200 60', preserveAspectRatio: 'none', style: 'position:absolute;inset:0;' });
-    // 空
-    bgSvg.appendChild(svgEl('rect', { x: '0', y: '0', width: '200', height: '60', fill: '#bfdbfe' }));
-    // 建物
-    bgSvg.appendChild(svgEl('rect', { x: '10', y: '10', width: '25', height: '50', fill: '#94a3b8' }));
-    bgSvg.appendChild(svgEl('rect', { x: '40', y: '20', width: '20', height: '40', fill: '#a1a1aa' }));
-    bgSvg.appendChild(svgEl('rect', { x: '140', y: '15', width: '22', height: '45', fill: '#94a3b8' }));
-    bgSvg.appendChild(svgEl('rect', { x: '170', y: '25', width: '25', height: '35', fill: '#a1a1aa' }));
-    // 地面
-    bgSvg.appendChild(svgEl('rect', { x: '0', y: '48', width: '200', height: '12', fill: '#86efac' }));
-
-    const bgLayer = document.createElement('div');
-    bgLayer.className = 'dof-layer background';
-    bgLayer.appendChild(bgSvg);
-
-    // 被写体層（人物）
-    const subSvg = svgEl('svg', { width: '40', height: '55', viewBox: '0 0 40 46', style: 'display:block;' });
-    subSvg.appendChild(svgEl('path', { d: PERSON_PATH, fill: '#6d28d9' }));
-    const subLayer = document.createElement('div');
-    subLayer.className = 'dof-layer subject';
-    subLayer.style.cssText = 'bottom:4px;';
-    subLayer.appendChild(subSvg);
-
-    // 前景層（草）
-    const fgSvg = svgEl('svg', { width: '100%', height: '20', viewBox: '0 0 200 20', preserveAspectRatio: 'none', style: 'display:block;' });
-    for (let i = 0; i < 200; i += 8) {
-      const h = 6 + Math.random() * 10;
-      fgSvg.appendChild(svgEl('line', { x1: String(i), y1: '20', x2: String(i + 2), y2: String(20 - h), stroke: '#22c55e', 'stroke-width': '2', 'stroke-linecap': 'round' }));
-    }
-    const fgLayer = document.createElement('div');
-    fgLayer.className = 'dof-layer foreground';
-    fgLayer.appendChild(fgSvg);
-
-    previewContainer.appendChild(bgLayer);
-    previewContainer.appendChild(subLayer);
-    previewContainer.appendChild(fgLayer);
-    wrap.appendChild(previewContainer);
-
-    // blur更新関数
-    function updateDofBlur(fValue) {
-      // f/1.4→blur 4px, f/16→blur 0px
-      const maxBlur = 4;
-      const ratio = 1 - (fValue - 1.4) / (16 - 1.4);
-      const blurPx = Math.max(0, ratio * maxBlur);
-      bgLayer.style.filter = `blur(${blurPx.toFixed(1)}px)`;
-      fgLayer.style.filter = `blur(${(blurPx * 0.7).toFixed(1)}px)`;
-    }
-    updateDofBlur(val);
-
     // keepチェック時にスライダーをdisabledにする
     function applyKeepState(isKeep) {
       keepFlags[key] = isKeep;
       input.disabled = isKeep;
       sliderRow.style.opacity = isKeep ? '0.4' : '1';
-      previewContainer.style.opacity = isKeep ? '0.4' : '1';
       updatePreview();
     }
     applyKeepState(!!keepFlags[key]);
@@ -949,9 +881,7 @@ const CameraEditor = (() => {
       keepFlags[key] = false;
       keepCheck.checked = false;
       sliderRow.style.opacity = '1';
-      previewContainer.style.opacity = '1';
       valueDisplay.textContent = `f/${v.toFixed(1)}`;
-      updateDofBlur(v);
       updatePreview();
     });
 

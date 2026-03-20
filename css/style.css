@@ -608,7 +608,7 @@ button {
 /* ========== ビジュアルカメラエディタ ========== */
 
 .camera-control-section {
-  padding-bottom: 8px;
+  padding-bottom: 6px;
 }
 
 .cam-select-btn {
@@ -838,11 +838,21 @@ button {
   transform: scale(0.97);
 }
 
+.preset-btn.selected {
+  border-color: #8b5cf6;
+  background: #f5f3ff;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
 .preset-btn-name {
   font-size: 12px;
   font-weight: 600;
   color: #374151;
   line-height: 1.3;
+}
+
+.preset-btn.selected .preset-btn-name {
+  color: #6d28d9;
 }
 
 .preset-btn-desc {
@@ -1022,6 +1032,11 @@ button {
 .dark .preset-btn:hover {
   border-color: #7C3AED;
   background: #2D1F4E;
+}
+.dark .preset-btn.selected {
+  border-color: #7C3AED;
+  background: #2D1F4E;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.3);
 }
 .dark .preset-btn-name {
   color: #E5E7EB;
