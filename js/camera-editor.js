@@ -383,30 +383,33 @@ const CameraEditor = (() => {
     const subjectRatio = shotSizeMap[shotType] || 0.6;
     // 焦点距離による被写体サイズ変化（望遠=大きく、広角=小さく）
     const flForSubject = currentValues.focalLength || 50;
-    const focalZoom = Math.min(1.3, Math.max(0.7, flForSubject / 70)); // 70mm基準で0.7〜1.3倍
-    const subjectH = Math.min(H * 0.9, H * subjectRatio * focalZoom);
+    const focalZoom = Math.min(1.3, Math.max(0.7, flForSubject / 70));
+    // アングルによる被写体サイズ変化（低い=近い=大きく、高い=見下ろし=やや小さく）
+    const angleScaleMap = { 'worms-eye': 1.3, 'low': 1.15, 'eye-level': 1.0, 'high': 0.9, 'birds-eye': 0.6 };
+    const angleScale = angleScaleMap[angle] || 1.0;
+    // 最終被写体サイズ（フレーム内に収まるようクランプ）
+    const rawSubjectH = H * subjectRatio * focalZoom * angleScale;
+    const subjectH = Math.min(groundY - 2, Math.min(H * 0.92, rawSubjectH));
     const subjectCenterX = W / 2;
-    // 被写体中心Y: フレーム中央を基準に、アングルで少しずらす
-    // 低いアングル→被写体がやや上、高いアングル→被写体がやや下
-    const angleCenterMap = {
-      'worms-eye': H * 0.38,
-      'low': H * 0.42,
-      'eye-level': H * 0.48,
-      'high': H * 0.52,
-      'birds-eye': H * 0.50,
-    };
-    const subjectCenterY = angleCenterMap[angle] || H * 0.48;
+    // 被写体の足元 = 地面（地平線）に固定
+    const subjectBottom = groundY;
+    const subjectCenterY = subjectBottom - subjectH / 2;
 
     if (category === 'people') {
+      // 人物パスの座標: 頭=-16, 足=+19, 高さ=35単位, 中心は約+1.5
       const personNativeH = 35;
       const scale = subjectH / personNativeH;
-      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(subjectCenterY)}) scale(${scale.toFixed(2)})` });
+      // 足元(+19*scale)が地面に来るように配置
+      const personY = subjectBottom - 19 * scale;
+      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(personY)}) scale(${scale.toFixed(2)})` });
       g.appendChild(svgEl('path', { d: 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5', fill: '#6d28d9' }));
       svg.appendChild(g);
     } else if (category === 'product') {
       const prodH = subjectH * 0.7;
       const prodW = prodH * 1.2;
-      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(subjectCenterY)})` });
+      // 商品の底辺を地面に合わせる
+      const prodCenterY = subjectBottom - prodH / 2;
+      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(prodCenterY)})` });
       const bw = prodW * 0.6, bh = prodH;
       g.appendChild(svgEl('rect', { x: String(-bw / 2), y: String(-bh / 2), width: String(bw), height: String(bh), rx: '3', fill: '#6d28d9' }));
       g.appendChild(svgEl('rect', { x: String(-bw / 2 + 2), y: String(-bh / 2 + 2), width: String(bw - 4), height: String(bh * 0.15), rx: '1', fill: '#8b5cf6' }));
@@ -1020,6 +1023,7 @@ const CameraEditor = (() => {
       const btn = document.createElement('button');
       const isSelected = !keepFlags[key] && currentValues[key].includes(opt.value);
       btn.className = `comp-card${isSelected ? ' selected' : ''}`;
+      btn.dataset.value = opt.value;
 
       const svg = svgEl('svg', { width: '36', height: '36', viewBox: '0 0 48 48' });
       svg.appendChild(svgEl('rect', { x: '0.5', y: '0.5', width: '47', height: '47', rx: '3', fill: 'white', stroke: '#e5e7eb', 'stroke-width': '1' }));
@@ -1040,16 +1044,35 @@ const CameraEditor = (() => {
       btn.appendChild(svg);
       btn.appendChild(textWrap);
 
+      // 排他グループ: 被写体の位置に関する構図は1つだけ選べる
+      const exclusiveGroup = ['rule-of-thirds', 'center', 'negative-space'];
+
       btn.addEventListener('click', () => {
         keepFlags[key] = false;
         keepCheck.checked = false;
         cardsContainer.style.opacity = '1';
-        /* pointerEvents不要 */
         const idx = currentValues[key].indexOf(opt.value);
         if (idx >= 0) {
+          // 既に選択中 → 解除
           currentValues[key].splice(idx, 1);
           btn.classList.remove('selected');
         } else {
+          // 排他グループ内の他の選択を解除
+          if (exclusiveGroup.includes(opt.value)) {
+            exclusiveGroup.forEach(exVal => {
+              if (exVal !== opt.value) {
+                const exIdx = currentValues[key].indexOf(exVal);
+                if (exIdx >= 0) currentValues[key].splice(exIdx, 1);
+              }
+            });
+            // UIの選択状態も更新
+            cardsContainer.querySelectorAll('.comp-card').forEach(card => {
+              const cardValue = card.dataset.value;
+              if (exclusiveGroup.includes(cardValue) && cardValue !== opt.value) {
+                card.classList.remove('selected');
+              }
+            });
+          }
           currentValues[key].push(opt.value);
           btn.classList.add('selected');
         }
