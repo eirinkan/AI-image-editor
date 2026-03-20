@@ -370,56 +370,59 @@ const CameraEditor = (() => {
     }
     svg.appendChild(bgG);
 
-    // 被写体（常にフレーム内に収まるように配置）
+    // 被写体のフレーミング
+    // 考え方: 人物は常に全身を描画。ショットタイプ・レンズ・アングルで
+    // 「カメラのズーム倍率」を決め、顔を中心にフレーミングする。
     const shotType = currentValues.shotType || 'medium';
-    // 被写体の高さ（フレーム高さに対する比率、最大0.85で収まるように制限）
-    const shotSizeMap = {
-      'extreme-close': 0.85, // フレームいっぱい
-      'close-up': 0.75,      // 肩上
-      'medium': 0.6,         // 上半身
-      'full': 0.45,          // 全身
-      'wide': 0.28,          // 全身+周囲
+    // ショットタイプ = カメラのズーム倍率（顔中心でどこまで写すか）
+    const shotZoomMap = {
+      'extreme-close': 4.0,  // 顔のパーツ
+      'close-up': 2.8,       // 顔全体
+      'medium': 1.6,         // 上半身
+      'full': 1.0,           // 全身ちょうど
+      'wide': 0.65,          // 全身+周囲
     };
-    const subjectRatio = shotSizeMap[shotType] || 0.6;
-    // 焦点距離による被写体サイズ変化（望遠=大きく、広角=小さく）
+    const shotZoom = shotZoomMap[shotType] || 1.0;
+    // 焦点距離によるズーム（50mm基準でリニア）
     const flForSubject = currentValues.focalLength || 50;
-    const focalZoom = Math.min(1.3, Math.max(0.85, flForSubject / 70)); // 広角でも0.85以上
-    // アングルによる被写体サイズ変化（低い=近い=迫力=大きく、高い=見下ろし=小さく）
-    const angleScaleMap = { 'worms-eye': 1.8, 'low': 1.4, 'eye-level': 1.0, 'high': 0.85, 'birds-eye': 0.5 };
+    const focalZoom = flForSubject / 50;
+    // アングルによる近接効果
+    const angleScaleMap = { 'worms-eye': 1.5, 'low': 1.2, 'eye-level': 1.0, 'high': 0.9, 'birds-eye': 0.5 };
     const angleScale = angleScaleMap[angle] || 1.0;
-    // 最終被写体サイズ
-    const rawSubjectH = H * subjectRatio * focalZoom * angleScale;
-    const subjectH = Math.min(H * 0.95, rawSubjectH);
+    // 総合ズーム倍率
+    const totalZoom = shotZoom * focalZoom * angleScale;
+    // 人物の基本サイズ（全身がフレームにちょうど収まるサイズ = zoom 1.0時）
+    const basePersonH = H * 0.85; // 全身時のフレーム比率
+    const subjectH = Math.min(H * 3, basePersonH * totalZoom); // 上限3倍（はみ出し許容）
     const subjectCenterX = W / 2;
-    // 被写体の足元 = 地面（地平線）に固定
+    // 被写体の足元 = 地面に固定
     const subjectBottom = groundY;
-    const subjectCenterY = subjectBottom - subjectH / 2;
 
     if (category === 'people') {
-      // アングル別の人物シルエット（視点の違いを反映）
-      const scale = subjectH / 35;
-      const personY = subjectBottom - 19 * scale;
-      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(personY)}) scale(${scale.toFixed(2)})` });
+      // 人物パスの座標: 頭頂=-16, 顔中心=-13, 足元=+19, 全高=35単位
+      const personScale = subjectH / 35;
 
-      if (angle === 'worms-eye' || angle === 'low') {
-        // 下から見上げ: 足が大きく広がり、頭が小さく、体が上に向かって細くなる
-        const taper = angle === 'worms-eye' ? 0.6 : 0.8; // 頭の縮小率
-        g.appendChild(svgEl('ellipse', { cx: '0', cy: '-14', rx: String(4 * taper), ry: String(4 * taper), fill: '#6d28d9' })); // 頭（小さく）
-        g.appendChild(svgEl('path', { d: `M${-5 * taper},-8 L${5 * taper},-8 L7,2 L7,12 L3,12 L3,0 L-3,0 L-3,12 L-7,12 L-7,2 Z`, fill: '#6d28d9' })); // 体（台形：上が狭く下が広い）
-        g.appendChild(svgEl('path', { d: 'M-7,12 L-9,19 L-5,19 L-3,12 M3,12 L5,19 L9,19 L7,12', fill: '#6d28d9' })); // 足（広がる）
-      } else if (angle === 'high') {
-        // 上から見下ろし: 頭が大きく、体が短く圧縮、肩が目立つ
-        g.appendChild(svgEl('ellipse', { cx: '0', cy: '-13', rx: '7', ry: '7', fill: '#6d28d9' })); // 頭（大きく）
-        g.appendChild(svgEl('path', { d: 'M-8,-5 L8,-5 L6,6 L4,6 L4,14 L2,19 L-2,19 L-4,14 L-4,6 L-6,6 Z', fill: '#6d28d9' })); // 体+肩（逆台形：上が広く下が狭い）
-      } else if (angle === 'birds-eye') {
-        // 真上から: 頭頂部の円+肩の楕円のみ
-        g.appendChild(svgEl('ellipse', { cx: '0', cy: '0', rx: '10', ry: '7', fill: '#7c3aed' })); // 肩
-        g.appendChild(svgEl('circle', { cx: '0', cy: '-2', r: '7', fill: '#6d28d9' })); // 頭頂部
+      if (angle === 'birds-eye') {
+        // 真上から: 人物を上から見た形
+        const topScale = personScale * 0.7;
+        const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(H * 0.45)}) scale(${topScale.toFixed(2)})` });
+        g.appendChild(svgEl('ellipse', { cx: '0', cy: '4', rx: '6', ry: '14', fill: '#7c3aed' })); // 体
+        g.appendChild(svgEl('ellipse', { cx: '0', cy: '-4', rx: '13', ry: '5', fill: '#7c3aed' })); // 肩
+        g.appendChild(svgEl('circle', { cx: '0', cy: '-10', r: '7', fill: '#6d28d9' })); // 頭頂
+        g.appendChild(svgEl('ellipse', { cx: '-3', cy: '18', rx: '3', ry: '2', fill: '#5b21b6' })); // 左足
+        g.appendChild(svgEl('ellipse', { cx: '3', cy: '18', rx: '3', ry: '2', fill: '#5b21b6' })); // 右足
+        svg.appendChild(g);
       } else {
-        // 目線: 通常の正面シルエット
-        g.appendChild(svgEl('path', { d: 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5', fill: '#6d28d9' }));
+        // 正面シルエット（全身を常に描画）
+        // 顔中心(パス内y=-13)がフレーム中央付近に来るよう配置
+        // 足元がgroundYに来るよう計算
+        const feetY = groundY;
+        const personOriginY = feetY - 19 * personScale; // 原点(0,0)のY座標
+        const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(personOriginY)}) scale(${personScale.toFixed(2)})` });
+        const basePath = 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5';
+        g.appendChild(svgEl('path', { d: basePath, fill: '#6d28d9' }));
+        svg.appendChild(g);
       }
-      svg.appendChild(g);
     } else if (category === 'product') {
       const prodH = subjectH * 0.7;
       const prodW = prodH * 1.2;
