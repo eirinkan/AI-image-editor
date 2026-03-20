@@ -383,39 +383,69 @@ const CameraEditor = (() => {
     const subjectRatio = shotSizeMap[shotType] || 0.6;
     // 焦点距離による被写体サイズ変化（望遠=大きく、広角=小さく）
     const flForSubject = currentValues.focalLength || 50;
-    const focalZoom = Math.min(1.3, Math.max(0.7, flForSubject / 70));
-    // アングルによる被写体サイズ変化（低い=近い=大きく、高い=見下ろし=やや小さく）
-    const angleScaleMap = { 'worms-eye': 1.3, 'low': 1.15, 'eye-level': 1.0, 'high': 0.9, 'birds-eye': 0.6 };
+    const focalZoom = Math.min(1.3, Math.max(0.85, flForSubject / 70)); // 広角でも0.85以上
+    // アングルによる被写体サイズ変化（低い=近い=迫力=大きく、高い=見下ろし=小さく）
+    const angleScaleMap = { 'worms-eye': 1.8, 'low': 1.4, 'eye-level': 1.0, 'high': 0.85, 'birds-eye': 0.5 };
     const angleScale = angleScaleMap[angle] || 1.0;
-    // 最終被写体サイズ（フレーム内に収まるようクランプ）
+    // 最終被写体サイズ
     const rawSubjectH = H * subjectRatio * focalZoom * angleScale;
-    const subjectH = Math.min(groundY - 2, Math.min(H * 0.92, rawSubjectH));
+    const subjectH = Math.min(H * 0.95, rawSubjectH);
     const subjectCenterX = W / 2;
     // 被写体の足元 = 地面（地平線）に固定
     const subjectBottom = groundY;
     const subjectCenterY = subjectBottom - subjectH / 2;
 
     if (category === 'people') {
-      // 人物パスの座標: 頭=-16, 足=+19, 高さ=35単位, 中心は約+1.5
-      const personNativeH = 35;
-      const scale = subjectH / personNativeH;
-      // 足元(+19*scale)が地面に来るように配置
+      // アングル別の人物シルエット（視点の違いを反映）
+      const scale = subjectH / 35;
       const personY = subjectBottom - 19 * scale;
       const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(personY)}) scale(${scale.toFixed(2)})` });
-      g.appendChild(svgEl('path', { d: 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5', fill: '#6d28d9' }));
+
+      if (angle === 'worms-eye' || angle === 'low') {
+        // 下から見上げ: 足が大きく広がり、頭が小さく、体が上に向かって細くなる
+        const taper = angle === 'worms-eye' ? 0.6 : 0.8; // 頭の縮小率
+        g.appendChild(svgEl('ellipse', { cx: '0', cy: '-14', rx: String(4 * taper), ry: String(4 * taper), fill: '#6d28d9' })); // 頭（小さく）
+        g.appendChild(svgEl('path', { d: `M${-5 * taper},-8 L${5 * taper},-8 L7,2 L7,12 L3,12 L3,0 L-3,0 L-3,12 L-7,12 L-7,2 Z`, fill: '#6d28d9' })); // 体（台形：上が狭く下が広い）
+        g.appendChild(svgEl('path', { d: 'M-7,12 L-9,19 L-5,19 L-3,12 M3,12 L5,19 L9,19 L7,12', fill: '#6d28d9' })); // 足（広がる）
+      } else if (angle === 'high') {
+        // 上から見下ろし: 頭が大きく、体が短く圧縮、肩が目立つ
+        g.appendChild(svgEl('ellipse', { cx: '0', cy: '-13', rx: '7', ry: '7', fill: '#6d28d9' })); // 頭（大きく）
+        g.appendChild(svgEl('path', { d: 'M-8,-5 L8,-5 L6,6 L4,6 L4,14 L2,19 L-2,19 L-4,14 L-4,6 L-6,6 Z', fill: '#6d28d9' })); // 体+肩（逆台形：上が広く下が狭い）
+      } else if (angle === 'birds-eye') {
+        // 真上から: 頭頂部の円+肩の楕円のみ
+        g.appendChild(svgEl('ellipse', { cx: '0', cy: '0', rx: '10', ry: '7', fill: '#7c3aed' })); // 肩
+        g.appendChild(svgEl('circle', { cx: '0', cy: '-2', r: '7', fill: '#6d28d9' })); // 頭頂部
+      } else {
+        // 目線: 通常の正面シルエット
+        g.appendChild(svgEl('path', { d: 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5', fill: '#6d28d9' }));
+      }
       svg.appendChild(g);
     } else if (category === 'product') {
       const prodH = subjectH * 0.7;
       const prodW = prodH * 1.2;
-      // 商品の底辺を地面に合わせる
       const prodCenterY = subjectBottom - prodH / 2;
       const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${Math.round(prodCenterY)})` });
       const bw = prodW * 0.6, bh = prodH;
-      g.appendChild(svgEl('rect', { x: String(-bw / 2), y: String(-bh / 2), width: String(bw), height: String(bh), rx: '3', fill: '#6d28d9' }));
-      g.appendChild(svgEl('rect', { x: String(-bw / 2 + 2), y: String(-bh / 2 + 2), width: String(bw - 4), height: String(bh * 0.15), rx: '1', fill: '#8b5cf6' }));
-      const vw = prodW * 0.2, vh = prodH * 0.7;
-      g.appendChild(svgEl('rect', { x: String(bw / 2 + 4), y: String(-vh / 2 + bh * 0.15), width: String(vw), height: String(vh), rx: '2', fill: '#7c3aed' }));
-      g.appendChild(svgEl('rect', { x: String(bw / 2 + 5), y: String(-vh / 2 + bh * 0.15 - 4), width: String(vw - 2), height: '5', rx: '1', fill: '#a78bfa' }));
+
+      if (angle === 'birds-eye') {
+        // 真上: 商品を上から見た形（長方形の上面）
+        g.appendChild(svgEl('rect', { x: String(-bw / 2), y: String(-bw / 2), width: String(bw), height: String(bw), rx: '3', fill: '#6d28d9' }));
+        g.appendChild(svgEl('rect', { x: String(-bw / 2 + 3), y: String(-bw / 2 + 3), width: String(bw - 6), height: String(bw - 6), rx: '1', fill: '#8b5cf6', opacity: '0.3' }));
+      } else if (angle === 'high') {
+        // 斜め上: 上面が少し見える（台形）
+        const topW = bw * 0.7;
+        g.appendChild(svgEl('path', { d: `M${-topW / 2},${-bh / 2} L${topW / 2},${-bh / 2} L${bw / 2},${bh / 2} L${-bw / 2},${bh / 2} Z`, fill: '#6d28d9' }));
+        g.appendChild(svgEl('rect', { x: String(-topW / 2 + 2), y: String(-bh / 2 + 2), width: String(topW - 4), height: String(bh * 0.12), rx: '1', fill: '#8b5cf6' }));
+      } else {
+        // 目線・低い: 正面から
+        g.appendChild(svgEl('rect', { x: String(-bw / 2), y: String(-bh / 2), width: String(bw), height: String(bh), rx: '3', fill: '#6d28d9' }));
+        g.appendChild(svgEl('rect', { x: String(-bw / 2 + 2), y: String(-bh / 2 + 2), width: String(bw - 4), height: String(bh * 0.15), rx: '1', fill: '#8b5cf6' }));
+      }
+      // 小瓶（真上以外）
+      if (angle !== 'birds-eye') {
+        const vw = prodW * 0.2, vh = prodH * 0.7;
+        g.appendChild(svgEl('rect', { x: String(bw / 2 + 4), y: String(-vh / 2 + bh * 0.15), width: String(vw), height: String(vh), rx: '2', fill: '#7c3aed' }));
+      }
       svg.appendChild(g);
     }
     // 風景: 被写体なし
