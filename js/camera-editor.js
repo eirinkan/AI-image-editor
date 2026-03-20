@@ -968,6 +968,11 @@ const CameraEditor = (() => {
       const exclusiveGroup = ['rule-of-thirds', 'center', 'negative-space'];
 
       btn.addEventListener('click', () => {
+        // keepがtrueからfalseに切り替わる瞬間、JSON由来の初期値をクリア
+        if (keepFlags[key]) {
+          currentValues[key] = [];
+          cardsContainer.querySelectorAll('.comp-card').forEach(c => c.classList.remove('selected'));
+        }
         keepFlags[key] = false;
         keepCheck.checked = false;
         cardsContainer.style.opacity = '1';
