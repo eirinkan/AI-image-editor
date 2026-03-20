@@ -828,7 +828,8 @@ const UI = (() => {
     // マーカーインデックスカウンター（objects→text_elements→peopleの順）
     let markerIndex = 1;
 
-    // オブジェクト → テキスト → 人物（flattenElementsと同じ順序）
+    // 個別要素のカードを先に生成（markerIndex割り当て）し、後でDOMに追加
+    const individualCards = document.createDocumentFragment();
     filteredObjects.forEach((obj) => {
       const origIndex = json.objects.indexOf(obj);
       const card = createElementCard({
@@ -838,7 +839,7 @@ const UI = (() => {
         data: obj,
         markerIndex: markerIndex,
       });
-      elements.elementsList.appendChild(card);
+      individualCards.appendChild(card);
       markerIndex++;
     });
     filteredTextElements.forEach((te) => {
@@ -850,7 +851,7 @@ const UI = (() => {
         data: te,
         markerIndex: markerIndex,
       });
-      elements.elementsList.appendChild(card);
+      individualCards.appendChild(card);
       markerIndex++;
     });
     filteredPeople.forEach((p, i) => {
@@ -862,11 +863,11 @@ const UI = (() => {
         data: p,
         markerIndex: markerIndex,
       });
-      elements.elementsList.appendChild(card);
+      individualCards.appendChild(card);
       markerIndex++;
     });
 
-    // グループ（同種オブジェクト・リージョン・環境設定を統合）
+    // グループ（同種オブジェクト・リージョン・環境設定を統合）— 先に表示
     {
       const groupItems = [];
 
@@ -969,6 +970,9 @@ const UI = (() => {
         });
       }
     }
+
+    // 個別要素を後に表示（グループの下）
+    elements.elementsList.appendChild(individualCards);
 
     // 画像上にマーカーを描画 & マーカーカラム表示
     renderMarkers(json);
