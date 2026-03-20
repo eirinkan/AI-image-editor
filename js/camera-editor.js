@@ -308,68 +308,90 @@ const CameraEditor = (() => {
     const svg = svgEl('svg', { width: '100%', height: '100%', viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'xMidYMid meet' });
     const category = getSubjectCategory();
 
-    // 背景
+    // アングル → 地平線の高さ（低いアングル＝地平線が下、高いアングル＝地平線が上）
+    const angle = currentValues.angle || 'eye-level';
+    const horizonMap = { 'worms-eye': 0.92, 'low': 0.78, 'eye-level': 0.65, 'high': 0.45, 'birds-eye': 0.15 };
+    const horizonRatio = horizonMap[angle] || 0.65;
+    const groundY = Math.round(H * horizonRatio);
+
+    // 背景描画
     const bgG = svgEl('g');
+    // 空
     bgG.appendChild(svgEl('rect', { x: '0', y: '0', width: String(W), height: String(H), fill: '#e0f2fe', rx: '4' }));
 
     if (category === 'landscape') {
-      // 風景背景: 山 + 木
-      bgG.appendChild(svgEl('path', { d: 'M0,100 L40,40 L80,90 L120,30 L160,80 L200,50 L240,100 Z', fill: '#94a3b8' }));
-      bgG.appendChild(svgEl('path', { d: 'M0,110 L60,60 L100,95 L140,55 L180,85 L240,65 L240,110 Z', fill: '#64748b' }));
-      bgG.appendChild(svgEl('rect', { x: '0', y: '110', width: String(W), height: '50', fill: '#86efac' }));
+      // 風景: 山を地平線に合わせて描画
+      const mh = groundY; // 山の底辺
+      bgG.appendChild(svgEl('path', { d: `M0,${mh} L40,${mh - 50} L80,${mh - 10} L120,${mh - 60} L160,${mh - 20} L200,${mh - 40} L240,${mh} Z`, fill: '#94a3b8' }));
+      bgG.appendChild(svgEl('path', { d: `M0,${mh} L60,${mh - 35} L100,${mh - 5} L140,${mh - 40} L180,${mh - 15} L240,${mh - 25} L240,${mh} Z`, fill: '#64748b' }));
+      bgG.appendChild(svgEl('rect', { x: '0', y: String(groundY), width: String(W), height: String(H - groundY), fill: '#86efac' }));
       // 木
-      bgG.appendChild(svgEl('rect', { x: '30', y: '95', width: '4', height: '18', fill: '#92400e' }));
-      bgG.appendChild(svgEl('ellipse', { cx: '32', cy: '90', rx: '10', ry: '14', fill: '#22c55e' }));
-      bgG.appendChild(svgEl('rect', { x: '190', y: '90', width: '5', height: '22', fill: '#92400e' }));
-      bgG.appendChild(svgEl('ellipse', { cx: '192', cy: '84', rx: '12', ry: '16', fill: '#16a34a' }));
+      if (groundY < H - 10) {
+        bgG.appendChild(svgEl('rect', { x: '35', y: String(groundY - 16), width: '4', height: '16', fill: '#92400e' }));
+        bgG.appendChild(svgEl('ellipse', { cx: '37', cy: String(groundY - 20), rx: '10', ry: '12', fill: '#22c55e' }));
+        bgG.appendChild(svgEl('rect', { x: '190', y: String(groundY - 20), width: '4', height: '20', fill: '#92400e' }));
+        bgG.appendChild(svgEl('ellipse', { cx: '192', cy: String(groundY - 24), rx: '12', ry: '14', fill: '#16a34a' }));
+      }
     } else if (category === 'product') {
-      // 商品背景: シンプルなスタジオ風
+      // 商品: スタジオ背景
       bgG.appendChild(svgEl('rect', { x: '0', y: '0', width: String(W), height: String(H), fill: '#f1f5f9', rx: '4' }));
-      bgG.appendChild(svgEl('ellipse', { cx: String(W / 2), cy: '130', rx: '90', ry: '15', fill: '#e2e8f0' }));
+      const tableY = Math.round(H * 0.7);
+      bgG.appendChild(svgEl('ellipse', { cx: String(W / 2), cy: String(tableY), rx: '80', ry: '12', fill: '#e2e8f0' }));
     } else {
-      // 人物背景: 建物 + 地面
-      bgG.appendChild(svgEl('rect', { x: '10', y: '30', width: '30', height: '100', fill: '#cbd5e1', rx: '2' }));
-      bgG.appendChild(svgEl('rect', { x: '45', y: '50', width: '25', height: '80', fill: '#94a3b8', rx: '2' }));
-      bgG.appendChild(svgEl('rect', { x: '170', y: '35', width: '28', height: '95', fill: '#cbd5e1', rx: '2' }));
-      bgG.appendChild(svgEl('rect', { x: '205', y: '55', width: '25', height: '75', fill: '#94a3b8', rx: '2' }));
-      bgG.appendChild(svgEl('rect', { x: '0', y: '120', width: String(W), height: '40', fill: '#86efac' }));
+      // 人物: 建物 + 地面（地平線に合わせる）
+      const bldgH = Math.min(80, groundY - 5);
+      if (bldgH > 10) {
+        bgG.appendChild(svgEl('rect', { x: '10', y: String(groundY - bldgH), width: '28', height: String(bldgH), fill: '#cbd5e1', rx: '2' }));
+        bgG.appendChild(svgEl('rect', { x: '42', y: String(groundY - bldgH * 0.7), width: '22', height: String(bldgH * 0.7), fill: '#94a3b8', rx: '2' }));
+        bgG.appendChild(svgEl('rect', { x: '170', y: String(groundY - bldgH * 0.9), width: '26', height: String(bldgH * 0.9), fill: '#cbd5e1', rx: '2' }));
+        bgG.appendChild(svgEl('rect', { x: '200', y: String(groundY - bldgH * 0.6), width: '24', height: String(bldgH * 0.6), fill: '#94a3b8', rx: '2' }));
+      }
+      bgG.appendChild(svgEl('rect', { x: '0', y: String(groundY), width: String(W), height: String(H - groundY), fill: '#86efac' }));
     }
     svg.appendChild(bgG);
 
-    // 被写体
+    // 被写体（ショットタイプ＝被写体の大きさ、常にフレーム内に収まる）
     const shotType = currentValues.shotType || 'medium';
-    const angle = currentValues.angle || 'eye-level';
-
-    const shotScales = {
-      'extreme-close': { scale: 4.0, y: -40 },
-      'close-up': { scale: 2.5, y: -10 },
-      'medium': { scale: 1.5, y: 20 },
-      'full': { scale: 1.0, y: 40 },
-      'wide': { scale: 0.6, y: 60 },
+    // 被写体の高さ（フレーム高さに対する比率）
+    const shotSizeMap = {
+      'extreme-close': 1.8,  // 顔のアップ（はみ出す）
+      'close-up': 1.2,       // 肩上
+      'medium': 0.7,         // 上半身
+      'full': 0.5,           // 全身
+      'wide': 0.3,           // 全身+周囲
     };
-    const shotDef = shotScales[shotType] || shotScales['medium'];
-
-    const angleOffsets = { 'worms-eye': -15, 'low': -8, 'eye-level': 0, 'high': 8, 'birds-eye': 20 };
-    const angleOff = angleOffsets[angle] || 0;
+    const subjectRatio = shotSizeMap[shotType] || 0.7;
+    const subjectH = H * subjectRatio;
+    // 被写体の底辺 = 地平線（地面に立っている）
+    const subjectBottom = groundY;
+    const subjectCenterX = W / 2;
 
     if (category === 'people') {
-      // 人物シルエット
-      const g = svgEl('g', { transform: `translate(120, ${shotDef.y + angleOff}) scale(${shotDef.scale})` });
+      // 人物シルエット（頭頂=-16, 足元=+19 → 高さ35単位）
+      const personNativeH = 35;
+      const scale = subjectH / personNativeH;
+      const personTopY = subjectBottom - subjectH;
+      const personCenterY = subjectBottom - subjectH / 2;
+      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${personCenterY}) scale(${scale})` });
       g.appendChild(svgEl('path', { d: 'M0,-16 a6,6 0 1,0 0.01,0 M-6,-8 h12 q5,0 5,5 v10 h-5 v14 h-4 v-14 h-3 v14 h-4 v-14 h-5 v-10 q0,-5 5,-5', fill: '#6d28d9' }));
       svg.appendChild(g);
     } else if (category === 'product') {
-      // 商品シルエット（箱 + 小瓶）
-      const prodScale = shotDef.scale * 0.8;
-      const g = svgEl('g', { transform: `translate(120, ${shotDef.y + angleOff + 10}) scale(${prodScale})` });
-      // メイン商品（箱）
-      g.appendChild(svgEl('rect', { x: '-14', y: '-20', width: '28', height: '24', rx: '3', fill: '#6d28d9' }));
-      g.appendChild(svgEl('rect', { x: '-12', y: '-18', width: '24', height: '4', rx: '1', fill: '#8b5cf6' }));
+      // 商品シルエット
+      const prodH = subjectH * 0.6;
+      const prodW = prodH * 1.2;
+      const prodY = Math.round(H * 0.7) - prodH;
+      const g = svgEl('g', { transform: `translate(${subjectCenterX}, ${prodY + prodH / 2})` });
+      // メイン箱
+      const bw = prodW * 0.6, bh = prodH;
+      g.appendChild(svgEl('rect', { x: String(-bw / 2), y: String(-bh / 2), width: String(bw), height: String(bh), rx: '3', fill: '#6d28d9' }));
+      g.appendChild(svgEl('rect', { x: String(-bw / 2 + 2), y: String(-bh / 2 + 2), width: String(bw - 4), height: String(bh * 0.15), rx: '1', fill: '#8b5cf6' }));
       // 小瓶
-      g.appendChild(svgEl('rect', { x: '18', y: '-14', width: '10', height: '18', rx: '2', fill: '#7c3aed' }));
-      g.appendChild(svgEl('rect', { x: '20', y: '-18', width: '6', height: '5', rx: '1', fill: '#a78bfa' }));
+      const vw = prodW * 0.2, vh = prodH * 0.7;
+      g.appendChild(svgEl('rect', { x: String(bw / 2 + 4), y: String(-vh / 2 + bh * 0.15), width: String(vw), height: String(vh), rx: '2', fill: '#7c3aed' }));
+      g.appendChild(svgEl('rect', { x: String(bw / 2 + 5), y: String(-vh / 2 + bh * 0.15 - 4), width: String(vw - 2), height: '5', rx: '1', fill: '#a78bfa' }));
       svg.appendChild(g);
     }
-    // 風景: 被写体なし（背景のみ）
+    // 風景: 被写体なし
 
     // ボケ効果
     const dof = currentValues.depthOfField;
@@ -537,10 +559,10 @@ const CameraEditor = (() => {
         delete currentValues[key];
         cardsContainer.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
         cardsContainer.style.opacity = '0.4';
-        cardsContainer.style.pointerEvents = 'none';
+        /* pointerEvents維持: クリックでkeep解除可能 */
       } else {
         cardsContainer.style.opacity = '1';
-        cardsContainer.style.pointerEvents = '';
+        /* pointerEvents不要 */
       }
       updatePreview();
     });
@@ -549,7 +571,7 @@ const CameraEditor = (() => {
     // 初期状態反映
     if (keepFlags[key]) {
       cardsContainer.style.opacity = '0.4';
-      cardsContainer.style.pointerEvents = 'none';
+      /* pointerEvents維持: クリックでkeep解除可能 */
     }
 
     // 各アングルのカメラ位置・角度定義
@@ -598,7 +620,7 @@ const CameraEditor = (() => {
         keepCheck.checked = false;
         currentValues[key] = opt.value;
         cardsContainer.style.opacity = '1';
-        cardsContainer.style.pointerEvents = '';
+        /* pointerEvents不要 */
         cardsContainer.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         updatePreview();
@@ -627,10 +649,10 @@ const CameraEditor = (() => {
         delete currentValues[key];
         cardsContainer.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
         cardsContainer.style.opacity = '0.4';
-        cardsContainer.style.pointerEvents = 'none';
+        /* pointerEvents維持: クリックでkeep解除可能 */
       } else {
         cardsContainer.style.opacity = '1';
-        cardsContainer.style.pointerEvents = '';
+        /* pointerEvents不要 */
       }
       updatePreview();
     });
@@ -639,7 +661,7 @@ const CameraEditor = (() => {
     // 初期状態反映
     if (keepFlags[key]) {
       cardsContainer.style.opacity = '0.4';
-      cardsContainer.style.pointerEvents = 'none';
+      /* pointerEvents維持: クリックでkeep解除可能 */
     }
 
     // 各ショットタイプのクリップ範囲（人物の見える範囲をyで制御）
@@ -697,7 +719,7 @@ const CameraEditor = (() => {
         keepCheck.checked = false;
         currentValues[key] = opt.value;
         cardsContainer.style.opacity = '1';
-        cardsContainer.style.pointerEvents = '';
+        /* pointerEvents不要 */
         cardsContainer.querySelectorAll('.cam-visual-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         updatePreview();
@@ -762,7 +784,7 @@ const CameraEditor = (() => {
     // keepチェック時にスライダーをdisabledにする
     function applyKeepState(isKeep) {
       keepFlags[key] = isKeep;
-      input.disabled = isKeep;
+      /* disabledにしない: スライダー操作でkeep自動解除 */
       sliderRow.style.opacity = isKeep ? '0.4' : '1';
       updatePreview();
     }
@@ -865,7 +887,7 @@ const CameraEditor = (() => {
     // keepチェック時にスライダーをdisabledにする
     function applyKeepState(isKeep) {
       keepFlags[key] = isKeep;
-      input.disabled = isKeep;
+      /* disabledにしない: スライダー操作でkeep自動解除 */
       sliderRow.style.opacity = isKeep ? '0.4' : '1';
       updatePreview();
     }
@@ -906,10 +928,10 @@ const CameraEditor = (() => {
         currentValues[key] = [];
         cardsContainer.querySelectorAll('.comp-visual-btn').forEach(b => b.classList.remove('selected'));
         cardsContainer.style.opacity = '0.4';
-        cardsContainer.style.pointerEvents = 'none';
+        /* pointerEvents維持: クリックでkeep解除可能 */
       } else {
         cardsContainer.style.opacity = '1';
-        cardsContainer.style.pointerEvents = '';
+        /* pointerEvents不要 */
       }
       updatePreview();
     });
@@ -918,7 +940,7 @@ const CameraEditor = (() => {
     // 初期状態反映
     if (keepFlags[key]) {
       cardsContainer.style.opacity = '0.4';
-      cardsContainer.style.pointerEvents = 'none';
+      /* pointerEvents維持: クリックでkeep解除可能 */
     }
 
     // 各構図のSVGパターン定義
@@ -991,7 +1013,7 @@ const CameraEditor = (() => {
         keepFlags[key] = false;
         keepCheck.checked = false;
         cardsContainer.style.opacity = '1';
-        cardsContainer.style.pointerEvents = '';
+        /* pointerEvents不要 */
         const idx = currentValues[key].indexOf(opt.value);
         if (idx >= 0) {
           currentValues[key].splice(idx, 1);
