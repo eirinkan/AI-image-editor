@@ -355,6 +355,8 @@ Output ONLY the updated JSON, no other text.`;
     let rule2;
     if (isBirdsEye) {
       rule2 = "RULE 2: Each character's body orientation on the ground plane must stay the same — the head-to-feet axis must point the same compass direction as the original. Facial features are not visible from directly above; show only hair and the top of the head.";
+    } else if (isWormsEye) {
+      rule2 = 'RULE 2: Every character and animal must face the EXACT same direction as the original — this is critical even from a low angle. If a character faced left in the original, they must still face left. If an animal faced right, it must still face right. Do not mirror, rotate, or flip any subject.';
     } else {
       rule2 = 'RULE 2: Every character and animal must face the EXACT same direction as the original. Do not rotate or flip any subject to face the camera or a new direction.';
     }
@@ -363,6 +365,8 @@ Output ONLY the updated JSON, no other text.`;
     let rule3;
     if (isWormsEye) {
       rule3 = 'RULE 3: Keep the same characters and main objects. From this extreme low angle, the sky naturally dominates the background and some objects may be partially out of frame or obscured — this is acceptable. Do not invent new prominent objects (e.g. vehicles, buildings) that did not exist in the original.';
+    } else if (isBirdsEye) {
+      rule3 = 'RULE 3: Show the EXACT same set of characters, animals, and objects as the original — no more, no less. Imagine lifting the camera straight up above the original scene and looking down. Every element stays in its place on the ground.';
     } else {
       rule3 = 'RULE 3: Do NOT add, remove, or duplicate any object, person, or animal. The EXACT same set of elements must appear, no more, no less.';
     }
@@ -376,6 +380,7 @@ RULE 1: Apply the camera angle change.
 ${rule2}
 ${rule3}
 RULE 4: All elements must keep the same spatial arrangement relative to each other (left/right order, front/back order, overlapping order, and relative distances between them).
+RULE 5: Preserve the art style, rendering technique, and color palette of the original image. If the original is illustration/anime/cartoon style, the result must remain in that same style — do not shift toward photorealism or 3D rendering.
 Generate the edited image.`;
   }
 
