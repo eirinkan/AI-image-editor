@@ -1770,11 +1770,14 @@ const UI = (() => {
         const thumbUrl = EditHistory.getThumbnailUrl(entry);
         const item = document.createElement('div');
         item.className = `history-mobile-item flex flex-col items-center gap-1 p-1.5 rounded-lg cursor-pointer transition-all ${isCurrent ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'}`;
+        const mCandCount = entry.candidates && entry.candidates.results ? entry.candidates.results.length : 0;
+        const mCandBadge = mCandCount > 0 ? `<span class="absolute bottom-0.5 right-0.5 w-4 h-4 flex items-center justify-center text-[8px] font-bold bg-purple-500 text-white rounded-full leading-none">${mCandCount}</span>` : '';
         item.innerHTML = `
           <div class="relative w-full aspect-[3/2] rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 ${isBefore ? 'ring-2 ring-yellow-500' : ''}">
             ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 text-[9px]">No img</div>'}
             ${isCurrent ? '<span class="absolute top-0.5 left-0.5 px-0.5 py-0 text-[7px] font-bold bg-blue-500 text-white rounded leading-tight">編集中</span>' : ''}
             ${isBefore ? '<span class="absolute bottom-0.5 left-0.5 px-0.5 py-0 text-[7px] font-bold bg-yellow-500 text-white rounded leading-tight">Before</span>' : ''}
+            ${mCandBadge}
           </div>
           <span class="text-[9px] font-medium text-gray-600 dark:text-gray-300 text-center leading-tight line-clamp-1 w-full">${escapeHtml(entry.label)}</span>
         `;
@@ -1821,6 +1824,8 @@ const UI = (() => {
 
       const thumbUrl = EditHistory.getThumbnailUrl(entry);
       const isBefore = entry.id === customBeforeEntryId;
+      const candCount = entry.candidates && entry.candidates.results ? entry.candidates.results.length : 0;
+      const candBadge = candCount > 0 ? `<span class="absolute bottom-0.5 right-0.5 z-10 w-5 h-5 flex items-center justify-center text-[9px] font-bold bg-purple-500 text-white rounded-full leading-none">${candCount}</span>` : '';
       item.innerHTML = `
         <div class="relative w-full aspect-[3/2]">
           <button class="history-del-btn absolute z-20 rounded-full bg-gray-400/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:!bg-red-500 transition-all" style="width:18px;height:18px;top:-9px;right:-9px" title="削除">
@@ -1829,6 +1834,7 @@ const UI = (() => {
           <div class="relative w-full h-full rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 history-thumb ${isCurrent ? 'ring-2 ring-blue-500' : ''} ${isBefore ? 'ring-2 ring-yellow-500' : ''}">
             ${isCurrent ? '<span class="absolute top-0.5 left-0.5 z-10 px-1 py-0.5 text-[8px] font-bold bg-blue-500 text-white rounded">編集中</span>' : ''}
             ${isBefore ? '<span class="absolute bottom-0.5 left-0.5 z-10 px-1 py-0.5 text-[8px] font-bold bg-yellow-500 text-white rounded">Before</span>' : ''}
+            ${candBadge}
             ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" alt="v${i}">` : '<div class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-400 text-xs">No img</div>'}
             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <button class="history-dl-btn text-white/90 hover:text-blue-300 transition-colors p-1" title="ダウンロード">
