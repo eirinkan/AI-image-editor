@@ -236,6 +236,8 @@ const App = (() => {
     state.currentImage = imageData;
     state.currentJson = null;
     state.originalJson = null;
+    state.selectedElements = [];
+    UI.clearSelectedElements();
     EditHistory.clear();
 
     // プレビュー画像を準備（分析後にuploadPanelで使用するため）
@@ -258,6 +260,8 @@ const App = (() => {
     state.currentImage = imageData;
     state.currentJson = null;
     state.originalJson = null;
+    state.selectedElements = [];
+    UI.clearSelectedElements();
     EditHistory.clear();
     autoSave();
   }
@@ -472,6 +476,7 @@ const App = (() => {
 
         UI.hideLoading();
         UI.showSuccess('画像の生成が完了しました');
+        state.selectedElements = [];
         UI.clearSelectedElements();
         autoSave();
       } else {
@@ -508,6 +513,7 @@ const App = (() => {
 
         UI.hideLoading();
         UI.showSuccess(`${generateCount}枚の画像を生成しました。画像をクリックして採用してください。`);
+        state.selectedElements = [];
         UI.clearSelectedElements();
         autoSave();
       }
