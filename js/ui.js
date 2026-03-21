@@ -1530,7 +1530,9 @@ const UI = (() => {
   // 履歴復元用の結果表示（グリッド・選択状態に触れない）
   function showResultFromHistory(imageData, beforeImage) {
     elements.resultSection.classList.remove('hidden');
-    // グリッドには触れない（選択状態を維持）
+    // 候補グリッドを非表示にする（候補付きエントリはshowMultiResultで表示）
+    elements.resultGrid.classList.add('hidden');
+    elements.compareContainer.classList.remove('hidden');
 
     // compareContainerのAfter画像を更新
     elements.resultImage.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
