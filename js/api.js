@@ -354,7 +354,7 @@ Output ONLY the updated JSON, no other text.`;
     // RULE 2: 向き保持（アングルに応じて表現を変える）
     let rule2;
     if (isBirdsEye) {
-      rule2 = "RULE 2 (CRITICAL): Each character's body must point the same direction as the original, now seen from above. If a character faced RIGHT in the original, their head must point toward the RIGHT edge of the frame and their feet toward the LEFT edge when viewed from above. If they faced LEFT, head points LEFT, feet point RIGHT. The head-to-feet axis on the ground plane reveals the facing direction from overhead. Only the tops of heads and hair are visible — no faces.";
+      rule2 = "RULE 2 (CRITICAL): Imagine the entire scene is frozen in place and only the camera moves straight up. Every character and animal stays EXACTLY where they are, facing EXACTLY the same direction — nothing on the ground moves or rotates. If a character was facing right, you now see the top of their head with their body extending to the right. Only the tops of heads and hair are visible — no faces.";
     } else if (isWormsEye) {
       rule2 = 'RULE 2 (CRITICAL): The facing direction of every character and animal must be IDENTICAL to the original. Looking up from below does NOT change which way subjects face — only the vertical angle changes. Check each subject: which side of the frame is their face/nose pointing toward in the original? It must point toward that SAME side in the result. Do not mirror, rotate, or flip any subject.';
     } else {
