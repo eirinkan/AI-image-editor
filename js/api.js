@@ -353,9 +353,7 @@ Output ONLY the updated JSON, no other text.`;
 
     // RULE 2: 向き保持（アングルに応じて表現を変える）
     let rule2;
-    if (isBirdsEye) {
-      rule2 = "RULE 2 (CRITICAL): Imagine the entire scene is frozen in place and only the camera moves straight up. Every character and animal stays EXACTLY where they are, facing EXACTLY the same direction — nothing on the ground moves or rotates. If a character was facing right, you now see the top of their head with their body extending to the right. Only the tops of heads and hair are visible — no faces.";
-    } else if (isWormsEye) {
+    if (isWormsEye) {
       rule2 = 'RULE 2 (CRITICAL): The facing direction of every character and animal must be IDENTICAL to the original. Looking up from below does NOT change which way subjects face — only the vertical angle changes. Check each subject: which side of the frame is their face/nose pointing toward in the original? It must point toward that SAME side in the result. Do not mirror, rotate, or flip any subject.';
     } else {
       rule2 = 'RULE 2: Every character and animal must face the EXACT same direction as the original. Do not rotate or flip any subject to face the camera or a new direction.';
@@ -365,19 +363,12 @@ Output ONLY the updated JSON, no other text.`;
     let rule3;
     if (isWormsEye) {
       rule3 = 'RULE 3: Keep the same characters and main objects. From this extreme low angle, the sky naturally dominates the background and some objects may be partially out of frame or obscured — this is acceptable. Do not invent new prominent objects (e.g. vehicles, buildings) that did not exist in the original.';
-    } else if (isBirdsEye) {
-      rule3 = 'RULE 3: Show the EXACT same set of characters, animals, and objects as the original — no more, no less. Imagine lifting the camera straight up above the original scene and looking down. Every element stays in its place on the ground.';
     } else {
       rule3 = 'RULE 3: Do NOT add, remove, or duplicate any object, person, or animal. The EXACT same set of elements must appear, no more, no less.';
     }
 
-    // RULE 4: 空間配置（アングルに応じて表現を変える）
-    let rule4;
-    if (isBirdsEye) {
-      rule4 = 'RULE 4: The spatial positions must match the original. What was on the LEFT stays on the LEFT when viewed from above. What was on the RIGHT stays on the RIGHT. Elements that were closer to the viewer (lower in the original frame) appear toward the BOTTOM edge from above. Elements further away (upper in the original frame) appear toward the TOP edge. The distances between elements stay the same.';
-    } else {
-      rule4 = 'RULE 4: All elements must keep the same spatial arrangement relative to each other (left/right order, front/back order, overlapping order, and relative distances between them).';
-    }
+    // RULE 4: 空間配置
+    const rule4 = 'RULE 4: All elements must keep the same spatial arrangement relative to each other (left/right order, front/back order, overlapping order, and relative distances between them).';
 
     return `Change the camera angle of this image.
 
