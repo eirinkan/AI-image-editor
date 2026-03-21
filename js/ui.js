@@ -961,10 +961,10 @@ const UI = (() => {
         });
       }
 
-      // カメラ・構図
-      if (json.camera) {
-        groupItems.push({ id: 'camera', type: 'camera', name: 'カメラ β', data: json.camera });
-      }
+      // カメラ・構図（機能停止中 — JSON定義ベースの編集と相性が悪いため無効化）
+      // if (json.camera) {
+      //   groupItems.push({ id: 'camera', type: 'camera', name: 'カメラ β', data: json.camera });
+      // }
 
       // 全体・雰囲気（統合）
       groupItems.push({ id: 'global', type: 'global', name: '全体', data: json });
