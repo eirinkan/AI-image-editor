@@ -371,6 +371,14 @@ Output ONLY the updated JSON, no other text.`;
       rule3 = 'RULE 3: Do NOT add, remove, or duplicate any object, person, or animal. The EXACT same set of elements must appear, no more, no less.';
     }
 
+    // RULE 4: 空間配置（アングルに応じて表現を変える）
+    let rule4;
+    if (isBirdsEye) {
+      rule4 = 'RULE 4: The spatial positions must match the original. What was on the LEFT stays on the LEFT when viewed from above. What was on the RIGHT stays on the RIGHT. Elements that were closer to the viewer (lower in the original frame) appear toward the BOTTOM edge from above. Elements further away (upper in the original frame) appear toward the TOP edge. The distances between elements stay the same.';
+    } else {
+      rule4 = 'RULE 4: All elements must keep the same spatial arrangement relative to each other (left/right order, front/back order, overlapping order, and relative distances between them).';
+    }
+
     return `Change the camera angle of this image.
 
 New camera: ${cameraDescription}
@@ -379,7 +387,7 @@ Follow these rules strictly:
 RULE 1: Apply the camera angle change.
 ${rule2}
 ${rule3}
-RULE 4: All elements must keep the same spatial arrangement relative to each other (left/right order, front/back order, overlapping order, and relative distances between them).
+${rule4}
 RULE 5: Preserve the art style, rendering technique, and color palette of the original image. If the original is illustration/anime/cartoon style, the result must remain in that same style — do not shift toward photorealism or 3D rendering.
 Generate the edited image.`;
   }
