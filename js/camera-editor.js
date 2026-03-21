@@ -50,11 +50,11 @@ const CameraEditor = (() => {
       label: '距離（ショットタイプ）',
       type: 'select',
       options: [
-        { value: 'extreme-close', label: '超接写', icon: '🔍', prompt: 'extreme close-up of the main subject, tightly cropped to show fine details of the subject' },
-        { value: 'close-up', label: '接写', icon: '👤', prompt: 'close-up shot, subject fills frame from face to shoulders' },
-        { value: 'medium', label: '上半身', icon: '🧑', prompt: 'medium shot, waist-up framing of subject' },
-        { value: 'full', label: '全身', icon: '🧍', prompt: 'full body shot, entire figure visible from head to toe' },
-        { value: 'wide', label: '広い', icon: '🏠', prompt: 'wide shot, subject small within expansive environment and surroundings' },
+        { value: 'extreme-close', label: '超接写', icon: '🔍', prompt: 'extreme close-up. The frame shows only the face or a specific detail of the subject. The bottom of the frame cuts at the chin or upper chest. No background is visible — the subject fills the entire frame' },
+        { value: 'close-up', label: '接写', icon: '👤', prompt: 'close-up shot. The subject fills the frame from head to mid-chest or shoulders. The bottom of the frame cuts around the chest area. Minimal background is visible around the subject' },
+        { value: 'medium', label: '上半身', icon: '🧑', prompt: 'medium shot. The subject is visible from head to waist. The bottom of the frame cuts at the waist or hip level. The subject occupies about 70-80% of the frame height. Some background is visible around the subject' },
+        { value: 'full', label: '全身', icon: '🧍', prompt: 'full body shot. The entire figure is visible from head to feet with small margins above and below. The ground/floor is visible beneath the subject. The subject occupies about 80-90% of the frame height' },
+        { value: 'wide', label: '広い', icon: '🏠', prompt: 'wide shot. The subject appears small within the frame, occupying about 20-30% of the frame height. The surrounding environment is prominently visible and is the visual focus. Much of the background, ground, and sky is visible around the subject' },
       ],
     },
     focalLength: {
@@ -1052,17 +1052,20 @@ const CameraEditor = (() => {
   }
 
   // 画像生成AI向けの直接プロンプト（JSON差分を経由しない）
+  // { text, hasAngleChange, hasShotTypeChange } を返す
   function getImagePrompt() {
     const parts = [];
-    if (!keepFlags.angle && currentValues.angle) {
+    const hasAngleChange = !keepFlags.angle && !!currentValues.angle;
+    const hasShotTypeChange = !keepFlags.shotType && !!currentValues.shotType;
+    if (hasAngleChange) {
       const opt = CONTROLS.angle.options.find(o => o.value === currentValues.angle);
       if (opt) parts.push(opt.prompt);
     }
-    if (!keepFlags.shotType && currentValues.shotType) {
+    if (hasShotTypeChange) {
       const opt = CONTROLS.shotType.options.find(o => o.value === currentValues.shotType);
       if (opt) parts.push(opt.prompt);
     }
-    return parts.join(', ');
+    return { text: parts.join(', '), hasAngleChange, hasShotTypeChange };
   }
 
   // 変更コールバック設定

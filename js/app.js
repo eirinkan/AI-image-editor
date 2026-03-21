@@ -442,7 +442,8 @@ const App = (() => {
       UI.updateLoadingStep(2);
 
       // カメラのみの場合: プロンプトを直接渡す（JSON差分を経由しない）
-      const cameraPromptText = cameraOnly ? CameraEditor.getImagePrompt() : null;
+      const cameraPromptInfo = cameraOnly ? CameraEditor.getImagePrompt() : null;
+      const cameraPromptText = cameraPromptInfo ? cameraPromptInfo.text : null;
 
       if (generateCount === 1) {
         // 1枚の場合: 従来通り
@@ -452,7 +453,8 @@ const App = (() => {
           updatedJson,
           state.referenceImage,
           signal,
-          cameraPromptText
+          cameraPromptText,
+          cameraPromptInfo
         );
 
         const newImageData = { base64: result.base64, mimeType: result.mimeType };
@@ -495,7 +497,8 @@ const App = (() => {
             updatedJson,
             state.referenceImage,
             signal,
-            cameraPromptText
+            cameraPromptText,
+            cameraPromptInfo
           );
           results.push({ base64: result.base64, mimeType: result.mimeType });
         }
