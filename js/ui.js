@@ -2210,58 +2210,39 @@ const UI = (() => {
     });
   }
 
-  function showMultiResult(results, originalImageData, historyLabel, prevCandidates = null) {
+  function showMultiResult(results, originalImageData, historyLabel) {
     elements.resultSection.classList.remove('hidden');
     elements.compareContainer.classList.add('hidden');
     elements.resultGrid.classList.remove('hidden');
     elements.resultGrid.innerHTML = '';
 
-    // グリッドレイアウト用のラッパー（gridをresultGrid直下ではなくラッパーに適用）
-    elements.resultGrid.className = 'mb-6';
-    elements.resultGrid.style.gridTemplateColumns = '';
-
-    // 現在の候補グリッド
-    const currentGrid = document.createElement('div');
+    // グリッドレイアウト
     const cols = results.length <= 2 ? results.length : 2;
-    currentGrid.className = 'grid gap-4';
-    currentGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    renderCandidateCards(currentGrid, results, originalImageData, historyLabel);
-    elements.resultGrid.appendChild(currentGrid);
+    elements.resultGrid.className = `grid gap-4 mb-6`;
+    elements.resultGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
     // 採用DLボタンを非表示にリセット
     if (elements.adoptDownloadBtn) elements.adoptDownloadBtn.classList.add('hidden');
 
-    // 前回の候補セクション（折りたたみ式）
-    if (prevCandidates && prevCandidates.results && prevCandidates.results.length > 0) {
-      const prevSection = document.createElement('div');
-      prevSection.className = 'mt-4 border-t border-gray-200 dark:border-gray-700 pt-3';
-
-      const toggleBtn = document.createElement('button');
-      toggleBtn.className = 'text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-1 mb-3 cursor-pointer';
-      toggleBtn.innerHTML = `<svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg> 前回の候補を表示（${prevCandidates.results.length}枚）`;
-
-      const prevGrid = document.createElement('div');
-      const prevCols = prevCandidates.results.length <= 2 ? prevCandidates.results.length : 2;
-      prevGrid.className = 'hidden grid gap-4 opacity-70';
-      prevGrid.style.gridTemplateColumns = `repeat(${prevCols}, 1fr)`;
-
-      renderCandidateCards(prevGrid, prevCandidates.results, prevCandidates.originalImageData, prevCandidates.historyLabel);
-
-      toggleBtn.addEventListener('click', () => {
-        const isHidden = prevGrid.classList.contains('hidden');
-        prevGrid.classList.toggle('hidden');
-        const arrow = toggleBtn.querySelector('svg');
-        if (arrow) arrow.style.transform = isHidden ? 'rotate(90deg)' : '';
-        toggleBtn.innerHTML = `<svg class="w-4 h-4 transition-transform" style="${isHidden ? 'transform:rotate(90deg)' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg> ${isHidden ? '前回の候補を閉じる' : '前回の候補を表示'}（${prevCandidates.results.length}枚）`;
-      });
-
-      prevSection.appendChild(toggleBtn);
-      prevSection.appendChild(prevGrid);
-      elements.resultGrid.appendChild(prevSection);
-    }
+    renderCandidateCards(elements.resultGrid, results, originalImageData, historyLabel);
 
     requestAnimationFrame(() => {
       elements.resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+
+  // 採用済み画像にチェックマークを付ける（履歴から復元時に使用）
+  function highlightAdoptedCandidate(adoptedImageData) {
+    if (!adoptedImageData) return;
+    const adoptedSrc = `data:${adoptedImageData.mimeType};base64,${adoptedImageData.base64}`;
+    elements.resultGrid.querySelectorAll('.candidate-card').forEach(card => {
+      const img = card.querySelector('img');
+      if (img && img.src === adoptedSrc) {
+        card.classList.remove('border-gray-200', 'dark:border-gray-700');
+        card.classList.add('border-blue-500');
+        const cm = card.querySelector('.absolute.top-2');
+        if (cm) cm.classList.remove('hidden');
+      }
     });
   }
 
@@ -2406,6 +2387,7 @@ const UI = (() => {
     showResult,
     showResultFromHistory,
     showMultiResult,
+    highlightAdoptedCandidate,
     showLoading,
     showLoadingWithSteps,
     updateLoadingStep,

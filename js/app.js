@@ -10,7 +10,6 @@ const App = (() => {
     originalJson: null,      // 変更前のJSON（差分検出用）
     selectedElements: [],    // 選択中の要素 [{ id, type, name, data }]
     pendingJson: null,       // JSON更新成功→画像生成失敗時のリカバリ用
-    previousCandidates: null, // 前回の複数枚生成候補 { results, originalImageData, historyLabel } | null
   };
 
   // AbortController管理
@@ -18,6 +17,8 @@ const App = (() => {
 
   // 複数枚グリッドからの再採用フラグ
   let _multiAdoptEntryCreated = false;
+  // 現在表示中の複数枚候補データ（採用時に履歴に紐づけるため一時保持）
+  let _currentCandidates = null; // { results, originalImageData, historyLabel }
 
   // 現在のプロジェクトID（保存済みの場合）
   let currentProjectId = null;
@@ -178,7 +179,6 @@ const App = (() => {
     state.originalJson = null;
     state.selectedElements = [];
     state.pendingJson = null;
-    state.previousCandidates = null;
     currentProjectId = null;
 
     // 履歴クリア
@@ -510,10 +510,9 @@ const App = (() => {
         const historyLabel = editInstructions
           .map(item => `${item.elementName}: ${item.instruction}`)
           .join(' / ');
-        const prevCandidates = state.previousCandidates;
-        state.previousCandidates = { results, originalImageData: imageBeforeGeneration, historyLabel };
+        _currentCandidates = { results, originalImageData: imageBeforeGeneration, historyLabel };
         _multiAdoptEntryCreated = false; // 新しいグリッド表示時にリセット
-        UI.showMultiResult(results, imageBeforeGeneration, historyLabel, prevCandidates);
+        UI.showMultiResult(results, imageBeforeGeneration, historyLabel);
 
         UI.hideLoading();
         UI.showSuccess(`${generateCount}枚の画像を生成しました。画像をクリックして採用してください。`);
@@ -548,6 +547,10 @@ const App = (() => {
     if (_multiAdoptEntryCreated) {
       // 同じグリッドから再採用 → 現在のエントリを更新
       EditHistory.updateCurrentEntry(imageData);
+      // 候補データも更新
+      if (_currentCandidates) {
+        EditHistory.setCandidates(EditHistory.getCurrentIndex(), _currentCandidates);
+      }
     } else {
       // 初回採用 → 新規エントリ作成
       const label = historyLabel || '画像を採用';
@@ -557,7 +560,12 @@ const App = (() => {
         state.currentJson,
         label,
         currentEntry ? currentEntry.id : 0
-      );
+      ).then(() => {
+        // 候補データを履歴エントリに紐づけ
+        if (_currentCandidates) {
+          EditHistory.setCandidates(EditHistory.getCurrentIndex(), _currentCandidates);
+        }
+      });
       _multiAdoptEntryCreated = true;
     }
     autoSave();
@@ -586,7 +594,17 @@ const App = (() => {
         beforeImage = parentEntry.image;
       }
     }
-    UI.showResultFromHistory(entry.image, beforeImage);
+    // 候補データがあればグリッド表示、なければBefore/After表示
+    if (entry.candidates && entry.candidates.results && entry.candidates.results.length > 0) {
+      _currentCandidates = entry.candidates;
+      _multiAdoptEntryCreated = true; // 再採用時はupdateCurrentEntryを使う
+      UI.showMultiResult(entry.candidates.results, entry.candidates.originalImageData, entry.candidates.historyLabel);
+      // 採用済みの画像にチェックマークを付ける
+      UI.highlightAdoptedCandidate(entry.image);
+    } else {
+      _currentCandidates = null;
+      UI.showResultFromHistory(entry.image, beforeImage);
+    }
 
     // text-to-image履歴の場合は要素一覧をスキップ
     if (entry.json && entry.json.mode === 'text-to-image') {

@@ -154,6 +154,18 @@ const EditHistory = (() => {
     }
   }
 
+  // 候補データを履歴エントリに紐づけ（メモリのみ、シリアライズ対象外）
+  function setCandidates(id, candidates) {
+    if (id < 0 || id >= entries.length) return;
+    entries[id].candidates = candidates;
+  }
+
+  // 候補データを取得
+  function getCandidates(id) {
+    if (id < 0 || id >= entries.length) return null;
+    return entries[id].candidates || null;
+  }
+
   // サムネイル用のDataURLを取得（軽量版があればそれを使用）
   function getThumbnailUrl(entry) {
     if (!entry) return '';
@@ -222,6 +234,8 @@ const EditHistory = (() => {
     onChange,
     getThumbnailUrl,
     downloadImage,
+    setCandidates,
+    getCandidates,
     toSerializable,
     fromSerializable,
   };
