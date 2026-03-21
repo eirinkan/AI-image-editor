@@ -347,14 +347,34 @@ Output ONLY the updated JSON, no other text.`;
 
   // カメラのみ変更時の画像生成プロンプト（JSON差分を経由せず、直接記述を渡す）
   function buildCameraOnlyPrompt(cameraDescription) {
+    // アングル種別を判定してルールを調整
+    const isBirdsEye = cameraDescription.includes("bird's eye") || cameraDescription.includes('top-down') || cameraDescription.includes('90 degrees');
+    const isWormsEye = cameraDescription.includes("worm's eye") || cameraDescription.includes('ground level');
+
+    // RULE 2: 向き保持（アングルに応じて表現を変える）
+    let rule2;
+    if (isBirdsEye) {
+      rule2 = "RULE 2: Each character's body orientation on the ground plane must stay the same — the head-to-feet axis must point the same compass direction as the original. Facial features are not visible from directly above; show only hair and the top of the head.";
+    } else {
+      rule2 = 'RULE 2: Every character and animal must face the EXACT same direction as the original. Do not rotate or flip any subject to face the camera or a new direction.';
+    }
+
+    // RULE 3: オブジェクト保持（地面からは緩和）
+    let rule3;
+    if (isWormsEye) {
+      rule3 = 'RULE 3: Keep the same characters and main objects. From this extreme low angle, the sky naturally dominates the background and some objects may be partially out of frame or obscured — this is acceptable. Do not invent new prominent objects (e.g. vehicles, buildings) that did not exist in the original.';
+    } else {
+      rule3 = 'RULE 3: Do NOT add, remove, or duplicate any object, person, or animal. The EXACT same set of elements must appear, no more, no less.';
+    }
+
     return `Change the camera angle of this image.
 
 New camera: ${cameraDescription}
 
 Follow these rules strictly:
 RULE 1: Apply the camera angle change.
-RULE 2: Every character and animal must face the EXACT same direction as the original. Do not rotate or flip any subject to face the camera or a new direction.
-RULE 3: Do NOT add, remove, or duplicate any object, person, or animal. The EXACT same set of elements must appear, no more, no less.
+${rule2}
+${rule3}
 RULE 4: All elements must keep the same spatial arrangement relative to each other (left/right order, front/back order, overlapping order, and relative distances between them).
 Generate the edited image.`;
   }
