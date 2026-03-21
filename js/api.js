@@ -346,24 +346,8 @@ Output ONLY the updated JSON, no other text.`;
   }
 
   // カメラのみ変更時の画像生成プロンプト（JSON差分を経由せず、直接記述を渡す）
-  function buildCameraOnlyPrompt(cameraDescription, cameraPromptInfo) {
-    const hasAngleChange = cameraPromptInfo?.hasAngleChange ?? true;
-    const hasShotTypeChange = cameraPromptInfo?.hasShotTypeChange ?? false;
-
-    // 距離のみ変更の場合: 専用ルール
-    if (hasShotTypeChange && !hasAngleChange) {
-      return `Change the framing/distance of this image.
-
-New framing: ${cameraDescription}
-
-Follow these rules strictly:
-RULE 1: Change ONLY the camera distance (zoom in or out). Do not move, repose, or reorient any subject. The camera angle, subject positions, poses, and facing directions must remain identical to the original.
-RULE 2: When zooming in, elements naturally go outside the frame — this is expected. When zooming out, background and environment elements that were outside the original frame may become visible — this is natural and acceptable. However, do not add new prominent characters, animals, or large foreground objects that did not exist in the original scene.
-RULE 3: Preserve the art style, rendering technique, and color palette of the original image. If the original is illustration/anime/cartoon style, the result must remain in that same style — do not shift toward photorealism or 3D rendering.
-Generate the edited image.`;
-    }
-
-    // アングル変更を含む場合: 既存ルール
+  function buildCameraOnlyPrompt(cameraDescription) {
+    // アングル種別を判定してルールを調整
     const isBirdsEye = cameraDescription.includes("bird's eye") || cameraDescription.includes('top-down') || cameraDescription.includes('90 degrees');
     const isWormsEye = cameraDescription.includes("worm's eye") || cameraDescription.includes('ground level');
 
@@ -736,9 +720,9 @@ Generate the edited image.`;
   }
 
   // 画像生成
-  async function generateImage(imageData, originalJson, updatedJson, referenceImageData = null, signal = null, cameraPromptText = null, cameraPromptInfo = null) {
+  async function generateImage(imageData, originalJson, updatedJson, referenceImageData = null, signal = null, cameraPromptText = null) {
     const prompt = cameraPromptText
-      ? buildCameraOnlyPrompt(cameraPromptText, cameraPromptInfo)
+      ? buildCameraOnlyPrompt(cameraPromptText)
       : buildGenerationPrompt(originalJson, updatedJson);
 
     const parts = [
