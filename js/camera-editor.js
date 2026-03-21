@@ -39,11 +39,11 @@ const CameraEditor = (() => {
       label: 'アングル（高さ）',
       type: 'select',
       options: [
-        { value: 'worms-eye', label: '地面から', icon: '🐛', prompt: "extreme low-angle shot, worm's eye view from ground level looking steeply upward" },
-        { value: 'low', label: '低い', icon: '⬇️', prompt: 'low-angle shot, camera positioned below subject looking upward' },
-        { value: 'eye-level', label: '目線', icon: '👁', prompt: 'eye-level shot, camera at subject eye height, straight-on perspective' },
-        { value: 'high', label: '斜め上', icon: '📐', prompt: 'elevated shot, high-angle shot looking down at 45 degrees' },
-        { value: 'birds-eye', label: '真上', icon: '🦅', prompt: "bird's eye view, directly overhead top-down perspective" },
+        { value: 'worms-eye', label: '地面から', icon: '🐛', prompt: "extreme low-angle shot, worm's eye view from ground level. The camera is on the ground. The horizon line is at the very bottom of the frame. Subjects tower above the camera. The sky fills most of the background. The ground/floor is visible in the immediate foreground" },
+        { value: 'low', label: '低い', icon: '⬇️', prompt: 'low-angle shot, camera at hip height tilted upward about 20 degrees. The horizon line is in the lower quarter of the frame. Subjects\' chins and jawlines are prominent. More sky/ceiling is visible above subjects than ground below them. Subjects appear taller and more imposing than eye-level' },
+        { value: 'eye-level', label: '目線', icon: '👁', prompt: 'eye-level shot, camera at subject eye height, straight-on perspective. The horizon line is at the middle of the frame' },
+        { value: 'high', label: '斜め上', icon: '📐', prompt: 'high-angle shot, looking down at 45 degrees from above. The horizon line is in the upper third of the frame. The ground/floor is prominently visible. Subjects appear smaller, seen from above' },
+        { value: 'birds-eye', label: '真上', icon: '🦅', prompt: "bird's eye view, directly overhead top-down perspective looking straight down at 90 degrees. The camera is positioned directly above the main subject. The viewer sees the tops of heads, tops of shoulders, and the ground/floor below. No horizon line is visible. Faces are NOT visible — only hair and the top of the head. The entire scene (both subjects and background) is viewed from directly above" },
       ],
     },
     shotType: {
@@ -1012,7 +1012,7 @@ const CameraEditor = (() => {
 
     if (parts.length === 0) return '';
     // 左右回転を防止: 元画像の水平方向の視点を維持する指示を追加
-    parts.push('keep the same horizontal viewing angle as the original image (do not orbit left or right around the subject)');
+    parts.push('keep the same horizontal viewing angle as the original image (do not orbit left, right, or behind the subject — the camera must stay on the same front-facing side as the original)');
     return `Change camera to: ${parts.join(', ')}`;
   }
 

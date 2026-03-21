@@ -347,18 +347,15 @@ Output ONLY the updated JSON, no other text.`;
 
   // カメラのみ変更時の画像生成プロンプト（JSON差分を経由せず、直接記述を渡す）
   function buildCameraOnlyPrompt(cameraDescription) {
-    return `Change ONLY the camera angle/perspective of this image.
+    return `Change the camera angle of this image.
 
 New camera: ${cameraDescription}
 
-CRITICAL RULES:
-- Change ONLY the camera viewpoint. Everything else must stay EXACTLY as it is.
-- Every person, object, and element must remain in the SAME position relative to each other.
-- If element A is to the left of element B, A must STILL be to the left of B.
-- Every person and animal must face the SAME direction as in the original.
-- Do NOT move, add, remove, rearrange, or resize any elements.
-- Do NOT change the art style, colors, character designs, poses, or clothing.
-- Do NOT orbit the camera horizontally (left/right). Only change the vertical angle (up/down).
+Follow these rules strictly:
+RULE 1: Apply the camera angle change.
+RULE 2: Every character and animal must face the EXACT same direction as the original. Do not rotate or flip any subject to face the camera or a new direction.
+RULE 3: Do NOT add, remove, or duplicate any object, person, or animal. The EXACT same set of elements must appear, no more, no less.
+RULE 4: All elements must keep the same spatial arrangement relative to each other (left/right order, front/back order, overlapping order, and relative distances between them).
 Generate the edited image.`;
   }
 
