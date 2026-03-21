@@ -356,7 +356,7 @@ Output ONLY the updated JSON, no other text.`;
     if (isBirdsEye) {
       rule2 = "RULE 2: Each character's body orientation on the ground plane must stay the same — the head-to-feet axis must point the same compass direction as the original. Facial features are not visible from directly above; show only hair and the top of the head.";
     } else if (isWormsEye) {
-      rule2 = 'RULE 2: Every character and animal must face the EXACT same direction as the original — this is critical even from a low angle. If a character faced left in the original, they must still face left. If an animal faced right, it must still face right. Do not mirror, rotate, or flip any subject.';
+      rule2 = 'RULE 2 (CRITICAL): The facing direction of every character and animal must be IDENTICAL to the original. Looking up from below does NOT change which way subjects face — only the vertical angle changes. Check each subject: which side of the frame is their face/nose pointing toward in the original? It must point toward that SAME side in the result. Do not mirror, rotate, or flip any subject.';
     } else {
       rule2 = 'RULE 2: Every character and animal must face the EXACT same direction as the original. Do not rotate or flip any subject to face the camera or a new direction.';
     }
