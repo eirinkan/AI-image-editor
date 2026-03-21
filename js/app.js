@@ -10,6 +10,7 @@ const App = (() => {
     originalJson: null,      // 変更前のJSON（差分検出用）
     selectedElements: [],    // 選択中の要素 [{ id, type, name, data }]
     pendingJson: null,       // JSON更新成功→画像生成失敗時のリカバリ用
+    previousCandidates: null, // 前回の複数枚生成候補 { results, originalImageData, historyLabel } | null
   };
 
   // AbortController管理
@@ -177,6 +178,7 @@ const App = (() => {
     state.originalJson = null;
     state.selectedElements = [];
     state.pendingJson = null;
+    state.previousCandidates = null;
     currentProjectId = null;
 
     // 履歴クリア
@@ -508,8 +510,10 @@ const App = (() => {
         const historyLabel = editInstructions
           .map(item => `${item.elementName}: ${item.instruction}`)
           .join(' / ');
+        const prevCandidates = state.previousCandidates;
+        state.previousCandidates = { results, originalImageData: imageBeforeGeneration, historyLabel };
         _multiAdoptEntryCreated = false; // 新しいグリッド表示時にリセット
-        UI.showMultiResult(results, imageBeforeGeneration, historyLabel);
+        UI.showMultiResult(results, imageBeforeGeneration, historyLabel, prevCandidates);
 
         UI.hideLoading();
         UI.showSuccess(`${generateCount}枚の画像を生成しました。画像をクリックして採用してください。`);
